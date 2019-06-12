@@ -29,7 +29,7 @@ public class ModItems {
         registerRender(tutorialItem);
     }
 
-    private static void registerRender(Item item){
+    private static void registerRender(Item item){ //jkljjjk
         ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation( item.getRegistryName(), "inventory"));
     }
 
