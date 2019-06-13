@@ -25,7 +25,7 @@ public class ModItems {
     }
 
     @SubscribeEvent
-    public static void registerRenders(ModelRegistryEvent event){
+    public static void registerRenderss(ModelRegistryEvent event){
         registerRender(tutorialItem);
     }
 
