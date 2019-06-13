@@ -15,10 +15,12 @@ public class ExampleMod
     @Mod.Instance
     public static ExampleMod instance;
 
+    public static Logger logger;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
+        logger = event.getModLog();
         System.out.println(Reference.MODID + ": preInit");
         ModItems.init();
     }
