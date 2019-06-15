@@ -13,20 +13,20 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Mod.EventBusSubscriber(modid= Reference.MODID)
 public class ModItems {
 
-    static Item tutorialItem;
+    static Item basicIngot;
 
     public static void init() {
-        tutorialItem = new ItemBasic("tutorial_item");
+        basicIngot = new ItemBasic("basic_ingot");
     }
 
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
-        event.getRegistry().registerAll(tutorialItem);
+        event.getRegistry().registerAll(basicIngot);
     }
 
     @SubscribeEvent
     public static void registerRenderss(ModelRegistryEvent event){
-        registerRender(tutorialItem);
+        registerRender(basicIngot);
     }
 
     private static void registerRender(Item item){ //jkljjjk

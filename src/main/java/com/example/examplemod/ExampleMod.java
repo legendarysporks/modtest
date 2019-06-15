@@ -1,5 +1,6 @@
 package com.example.examplemod;
 
+import com.example.examplemod.init.ModBlocks;
 import com.example.examplemod.init.ModItems;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.fml.common.Mod;
@@ -21,6 +22,7 @@ public class ExampleMod
     {
         System.out.println(Reference.MODID + ": preInit");
         ModItems.init();
+        ModBlocks.init();
     }
 
     @EventHandler

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "normal": [
+      { "model": "evansmod:tutorial_block" }
+    ]
+  }
+}
