@@ -3,6 +3,7 @@ package com.example.examplemod.batfight.client;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import com.example.examplemod.batfight.common.BatFightWords;
@@ -42,7 +43,7 @@ public class BatMessageAnimation extends PeriodicBatAnimation {
 
 		// get the word and BOLD it with a formatting code
 		// https://minecraft.gamepedia.com/Formatting_codes
-		text = "§l" + BatFightWords.getWord();
+		text = BatFightWords.getWord();
 
 		// get the display size in Minecraft pixels
 		Minecraft mc = Minecraft.getMinecraft();

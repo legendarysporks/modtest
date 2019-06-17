@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "evansmod:blocks/uru_ore"
+  }
+}
