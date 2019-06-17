@@ -1,6 +1,7 @@
 package com.example.examplemod;
 
-import com.example.examplemod.batfight.client.BatFightClient;
+import com.example.examplemod.batfight.common.BatFight;
+import com.example.examplemod.emp.common.EMPGun;
 import com.example.examplemod.init.ModBlocks;
 import com.example.examplemod.init.ModItems;
 import net.minecraftforge.fml.common.Mod;
@@ -16,7 +17,15 @@ public class ExampleMod
     @Mod.Instance
     public static ExampleMod instance;
 
-    public static Logger logger;
+    private static Logger logger;
+
+    public static void logInfo(String info) {
+        if (logger != null) {
+            logger.info(info);
+        } else {
+            System.out.println(Reference.MODNAME + ":" + info);
+        }
+    }
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -25,7 +34,8 @@ public class ExampleMod
         System.out.println(Reference.MODID + ": preInit");
         ModItems.init();
         ModBlocks.init();
-        BatFightClient.proxy.doPreInit();
+        BatFight.proxy.doPreInit();
+        EMPGun.proxy.doPreInit();
     }
 
     @EventHandler

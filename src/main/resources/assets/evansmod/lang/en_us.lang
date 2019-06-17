@@ -1,3 +1,4 @@
-item.basic_ingot.name=Steel?
-tile.tutorial_block.name=Steel Block?
+item.basic_ingot.name=Basic Ingot
+tile.tutorial_block.name=Basic Block
+item.emp_gun.name=EMP Gun
 tile.uru_ore.name=Uru Ore

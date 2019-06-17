@@ -1,0 +1,49 @@
+{
+  "fire_emp": {
+    "category": "player",
+    "subtitle": "EMP gun fired",
+    "sounds": [
+      "evansmod:items/emp_gun/pulsegun_fired"
+    ]
+  },
+
+  "alien_blaster_fired": {
+    "category": "player",
+    "subtitle": "EMP gun fired",
+    "sounds": [
+      "evansmod:items/emp_gun/alien_blaster_fired"
+    ]
+  },
+
+  "emp_fired": {
+    "category": "player",
+    "subtitle": "EMP gun fired",
+    "sounds": [
+      "evansmod:items/emp_gun/emp_fired"
+    ]
+  },
+
+  "pistol_alien_blaster_fired": {
+    "category": "player",
+    "subtitle": "EMP gun fired",
+    "sounds": [
+      "evansmod:items/emp_gun/pistol_alien_blaster_fired"
+    ]
+  },
+
+  "pulsegun_fired": {
+    "category": "player",
+    "subtitle": "EMP gun fired",
+    "sounds": [
+      "evansmod:items/emp_gun/pulsegun_fired"
+    ]
+  },
+
+  "varmnitrifle_fired": {
+    "category": "player",
+    "subtitle": "EMP gun fired",
+    "sounds": [
+      "evansmod:items/emp_gun/varmnitrifle_fired"
+    ]
+  }
+}
