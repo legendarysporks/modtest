@@ -1,0 +1,9 @@
+{
+  "fire_emp": {
+    "category": "player",
+    "subtitle": "EMP gun fired",
+    "sounds": [
+      "evansmod:items/emp_gun/emp_fired"
+    ]
+  }
+}
