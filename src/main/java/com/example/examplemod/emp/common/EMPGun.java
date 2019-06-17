@@ -1,5 +1,6 @@
 package com.example.examplemod.emp.common;
 
+import com.example.examplemod.ExampleMod;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemArrow;
@@ -10,6 +11,8 @@ import net.minecraftforge.fml.common.SidedProxy;
 import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.utilities.InventoryUtils;
 
+import java.util.Random;
+
 //@Mod.EventBusSubscriber(modid = Reference.MODID)
 public class EMPGun extends GenericItem {
 	private static final boolean ALLOWED_IN_CREATIVE = true;
@@ -18,8 +21,17 @@ public class EMPGun extends GenericItem {
 	public static EMPGun proxy;
 
 	private static String name = "emp_gun";
-	private static String EMPSoundName = "fire_emp";
-	private SoundEvent empBlastSound;
+//	private static String EMPSoundName = "fire_emp";
+//	private SoundEvent empBlastSound;
+
+	private static final String EMPSoundNames[] = {
+			"alien_blaster_fired",
+//			"emp_fired",
+			"pistol_alien_blaster_fired",
+//			"pulsegun_fired",
+			"varmnitrifle_fired",
+	};
+	private static SoundEvent EMPSounds[] = new SoundEvent[EMPSoundNames.length];
 
 	public EMPGun() {
 		super(name, CreativeTabs.COMBAT, 1);
@@ -27,7 +39,10 @@ public class EMPGun extends GenericItem {
 	}
 
 	public void doPreInit() {
-		empBlastSound = createSoundEvent(EMPSoundName);
+//		empBlastSound = createSoundEvent(EMPSoundName);
+		for (int i = 0; i < EMPSoundNames.length; i++) {
+			EMPSounds[i] = createSoundEvent(EMPSoundNames[i]);
+		}
 		EMPProjectile.registerModEntity();
 	}
 
@@ -46,7 +61,11 @@ public class EMPGun extends GenericItem {
 			player.setActiveHand(handIn);
 			ammo.grow(-1);
 			player.swingArm(handIn);
-			world.playSound(player, player.getPosition(), empBlastSound, SoundCategory.PLAYERS, 1.0f, 1.0f);
+			int soundNumber = player.world.rand.nextInt(EMPSounds.length);
+			SoundEvent sound = EMPSounds[soundNumber];
+			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
+			ExampleMod.logInfo("Playing sound: " + EMPSoundNames[soundNumber]);
+//			world.playSound(player, player.getPosition(), empBlastSound, SoundCategory.PLAYERS, 1.0f, 1.0f);
 			if (!world.isRemote) {
 				EMPProjectile projectile = new EMPProjectile(world, player);
 				projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f, 1.6f, 0f);

@@ -35,7 +35,7 @@ public class EMPProjectile extends EntityThrowable {
 				ID,
 				ExampleMod.instance,
 				64,
-				1,
+				10,
 				true);
 	}
 
