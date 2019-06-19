@@ -14,19 +14,25 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class ModItems {
 
     static Item basicIngot;
+    static Item raw_uru;
 
     public static void init() {
+
         basicIngot = new ItemBasic("basic_ingot");
+        raw_uru = new ItemBasic("raw_uru");
     }
+
 
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().registerAll(basicIngot);
+        event.getRegistry().registerAll(raw_uru);
     }
 
     @SubscribeEvent
     public static void registerRenderss(ModelRegistryEvent event){
         registerRender(basicIngot);
+        registerRender(raw_uru);
     }
 
     private static void registerRender(Item item){ //jkljjjk
