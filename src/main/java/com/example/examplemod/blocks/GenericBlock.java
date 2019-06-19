@@ -62,10 +62,13 @@ public class GenericBlock extends Block {
 	@SubscribeEvent
 	public static void registerRenders(ModelRegistryEvent event) {
 		for (GenericBlock block : blocks.values()) {
-			Item item = Item.getItemFromBlock(block);
-			ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
+			registerRender(Item.getItemFromBlock(block));
 			ExampleMod.logInfo(block.getRegistryName() + ".registerRenders");
 		}
+	}
+
+	private static void registerRender(Item item){
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation( item.getRegistryName(), "inventory"));
 	}
 
 	@Override

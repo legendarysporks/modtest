@@ -1,6 +1,7 @@
 package com.example.examplemod;
 
 import com.example.examplemod.batfight.common.BatFight;
+import com.example.examplemod.blocks.GenericBlock;
 import com.example.examplemod.emp.common.EMPGun;
 import com.example.examplemod.init.ModBlocks;
 import com.example.examplemod.init.ModItems;
