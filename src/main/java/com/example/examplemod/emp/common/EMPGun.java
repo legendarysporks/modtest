@@ -21,8 +21,6 @@ public class EMPGun extends GenericItem {
 	public static EMPGun proxy;
 
 	private static String name = "emp_gun";
-//	private static String EMPSoundName = "fire_emp";
-//	private SoundEvent empBlastSound;
 
 	private static final String EMPSoundNames[] = {
 			"alien_blaster_fired",
@@ -39,7 +37,6 @@ public class EMPGun extends GenericItem {
 	}
 
 	public void doPreInit() {
-//		empBlastSound = createSoundEvent(EMPSoundName);
 		for (int i = 0; i < EMPSoundNames.length; i++) {
 			EMPSounds[i] = createSoundEvent(EMPSoundNames[i]);
 		}
@@ -65,7 +62,6 @@ public class EMPGun extends GenericItem {
 			SoundEvent sound = EMPSounds[soundNumber];
 			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
 			ExampleMod.logInfo("Playing sound: " + EMPSoundNames[soundNumber]);
-//			world.playSound(player, player.getPosition(), empBlastSound, SoundCategory.PLAYERS, 1.0f, 1.0f);
 			if (!world.isRemote) {
 				EMPProjectile projectile = new EMPProjectile(world, player);
 				projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f, 1.6f, 0f);
@@ -78,24 +74,6 @@ public class EMPGun extends GenericItem {
 		} else {
 			// out of ammo.  FAIL.
 			return new ActionResult<ItemStack>(EnumActionResult.FAIL, itemstack);
-		}
-	}
-
-	private ItemStack findAmmo(EntityPlayer player) {
-		if (this.isEMPRound(player.getHeldItem(EnumHand.OFF_HAND))) {
-			return player.getHeldItem(EnumHand.OFF_HAND);
-		} else if (this.isEMPRound(player.getHeldItem(EnumHand.MAIN_HAND))) {
-			return player.getHeldItem(EnumHand.MAIN_HAND);
-		} else {
-			for (int i = 0; i < player.inventory.getSizeInventory(); ++i) {
-				ItemStack itemstack = player.inventory.getStackInSlot(i);
-
-				if (this.isEMPRound(itemstack)) {
-					return itemstack;
-				}
-			}
-
-			return ItemStack.EMPTY;
 		}
 	}
 

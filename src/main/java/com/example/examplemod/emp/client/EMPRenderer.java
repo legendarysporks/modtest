@@ -1,6 +1,5 @@
 package com.example.examplemod.emp.client;
 
-import com.example.examplemod.ExampleMod;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.entity.Render;
@@ -15,12 +14,18 @@ import javax.annotation.Nullable;
 
 public class EMPRenderer extends Render<EMPProjectile> {
 	private static final ResourceLocation texture =
-			new ResourceLocation(Reference.MODID, "textures/entity/emp_projectile.png");
+			new ResourceLocation(Reference.MODID, "textures/entity/emp_projectile3.png");
 	private ModelBase model;
 
 	public EMPRenderer(RenderManager manager) {
 		super(manager);
 		model = new Model();
+	}
+
+	@Nullable
+	@Override
+	protected ResourceLocation getEntityTexture(EMPProjectile entity) {
+		return texture;
 	}
 
 	@Override
@@ -30,12 +35,6 @@ public class EMPRenderer extends Render<EMPProjectile> {
 		GL11.glTranslated(x, y - 1.25D, z);
 		model.render(entity, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
 		GL11.glPopMatrix();
-	}
-
-	@Nullable
-	@Override
-	protected ResourceLocation getEntityTexture(EMPProjectile entity) {
-		return texture;
 	}
 
 	private static class Model extends ModelBase {
@@ -74,6 +73,7 @@ public class EMPRenderer extends Render<EMPProjectile> {
 			setRotation(Shape4, 0F, 0F, 0F);
 		}
 
+		@Override
 		public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
 			super.render(entity, f, f1, f2, f3, f4, f5);
 			setRotationAngles(f, f1, f2, f3, f4, f5, entity);
@@ -89,6 +89,7 @@ public class EMPRenderer extends Render<EMPProjectile> {
 			model.rotateAngleZ = z;
 		}
 
+		@Override
 		public void setRotationAngles(float f, float f1, float f2, float f3, float f4, float f5, Entity entity) {
 			super.setRotationAngles(f, f1, f2, f3, f4, f5, entity);
 		}
