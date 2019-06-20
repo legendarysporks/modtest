@@ -1,9 +1,11 @@
 package com.example.examplemod;
 
 import com.example.examplemod.batfight.common.BatFight;
+import com.example.examplemod.blocks.GenericBlock;
 import com.example.examplemod.emp.common.EMPGun;
 import com.example.examplemod.init.ModBlocks;
 import com.example.examplemod.init.ModItems;
+import com.example.examplemod.init.ModRecipes;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -34,6 +36,7 @@ public class ExampleMod
         System.out.println(Reference.MODID + ": preInit");
         ModItems.init();
         ModBlocks.init();
+        ModRecipes.init();
         BatFight.proxy.doPreInit();
         EMPGun.proxy.doPreInit();
     }

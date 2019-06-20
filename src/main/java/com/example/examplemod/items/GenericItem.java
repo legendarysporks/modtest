@@ -23,10 +23,10 @@ public class GenericItem extends Item {
 	private static HashMap<String, SoundEvent> sounds = new HashMap<>();
 
 	public GenericItem(String name) {
-		this(name, CreativeTabs.MISC, 32);
+		this(name, CreativeTabs.MISC, 64);
 	}
 	public GenericItem(String name, CreativeTabs tab) {
-		this(name, tab, 32);
+		this(name, tab, 64);
 	}
 	public GenericItem(String name, int maxStackSize) {
 		this(name, CreativeTabs.MISC, maxStackSize);
