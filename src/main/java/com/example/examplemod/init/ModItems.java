@@ -15,8 +15,10 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class ModItems {
 
     public static Item basicIngot;
+    public static Item empRound;
 
     public static void init() {
         basicIngot = new GenericItem("basic_ingot");
+        empRound = new GenericItem("emp_round");
     }
 }
