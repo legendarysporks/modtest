@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "evansmod:tutorial_block",
+      "data": 0
+    }
+  ],
+  "result": {
+    "item": "evansmod:basic_ingot",
+    "data": 0,
+    "count": 9
+  }
+}
