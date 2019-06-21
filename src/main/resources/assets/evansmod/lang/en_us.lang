@@ -1,6 +1,7 @@
 item.basic_ingot.name=Uru Ingot
 tile.tutorial_block.name=Basic Block
 item.emp_gun.name=EMP Gun
+item.emp_round.name=EMP Round
 tile.uru_ore.name=Uru Ore
 item.raw_uru.name=Raw Uru
 item.thor_hammer.name=Mjolnir

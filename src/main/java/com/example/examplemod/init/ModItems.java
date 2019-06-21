@@ -8,14 +8,16 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid= Reference.MODID)
 public class ModItems {
 
-    static Item basicIngot;
-    static Item raw_uru;
-    static Item thor_hammer;
-    public static void init() {
+    public static Item thor_hammer;
+	public static Item basicIngot;
+	public static Item raw_uru;
+    public static Item empRound;
 
+    public static void init() {
         basicIngot = new GenericItem("basic_ingot");
         raw_uru = new GenericItem("raw_uru");
         thor_hammer = new GenericItem("thor_hammer");
+        empRound = new GenericItem("emp_round");
     }
 
 }
