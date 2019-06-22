@@ -17,36 +17,36 @@ import java.util.HashMap;
 
 @Mod.EventBusSubscriber(modid = Reference.MODID)
 public class GenericItem extends Item {
-	// map holds all GenericItems for registration.
-	//TODO: if you don't need this after registraction, nuke it there when done
 	private static HashMap<String, GenericItem> items = new HashMap<>();
 	private static HashMap<String, SoundEvent> sounds = new HashMap<>();
 
 	public GenericItem(String name) {
 		this(name, CreativeTabs.MISC, 64);
 	}
+
 	public GenericItem(String name, CreativeTabs tab) {
 		this(name, tab, 64);
 	}
+
 	public GenericItem(String name, int maxStackSize) {
 		this(name, CreativeTabs.MISC, maxStackSize);
 	}
+
 	public GenericItem(String name, CreativeTabs tab, int maxStackSize) {
-		ExampleMod.logInfo(">>" + name+".init");
+		ExampleMod.logTrace(name + " consructed");
 		setUnlocalizedName(name);
 		setRegistryName(name);
 		setCreativeTab(tab);
 		setMaxStackSize(maxStackSize);
 		// save this item so it can be registered later
 		items.put(name, this);
-		ExampleMod.logInfo("<<" + name + ".init");
 	}
 
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event) {
 		for (GenericItem i : items.values()) {
 			event.getRegistry().registerAll(i);
-			ExampleMod.logInfo(i.getRegistryName() + ".registerItems");
+			ExampleMod.logTrace(i.getRegistryName() + ".registerItems");
 		}
 	}
 

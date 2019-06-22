@@ -1,6 +1,10 @@
 package com.example.examplemod.emp.common;
 
 import com.example.examplemod.ExampleMod;
+import com.example.examplemod.items.GenericItem;
+import com.example.examplemod.utilities.GenericCommand;
+import com.example.examplemod.utilities.HackFMLEventListener;
+import com.example.examplemod.utilities.InventoryUtils;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemArrow;
@@ -8,13 +12,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.SidedProxy;
-import com.example.examplemod.items.GenericItem;
-import com.example.examplemod.utilities.InventoryUtils;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
-import java.util.Random;
-
-//@Mod.EventBusSubscriber(modid = Reference.MODID)
-public class EMPGun extends GenericItem {
+public class EMPGun extends GenericItem implements HackFMLEventListener {
 	private static final boolean ALLOWED_IN_CREATIVE = true;
 	@SidedProxy(clientSide = "com.example.examplemod.emp.client.EMPGunClient",
 			serverSide = "com.example.examplemod.emp.server.EMPGunServer")
@@ -22,7 +23,7 @@ public class EMPGun extends GenericItem {
 
 	private static String name = "emp_gun";
 
-	private static final String EMPSoundNames[] = {
+	private static final String EMPSoundNames[] = new String[]{
 			"alien_blaster_fired",
 //			"emp_fired",
 			"pistol_alien_blaster_fired",
@@ -34,13 +35,22 @@ public class EMPGun extends GenericItem {
 	public EMPGun() {
 		super(name, CreativeTabs.COMBAT, 1);
 		setMaxDamage(0);
+		ExampleMod.instance.FMLEventBus.subscribe(this);
 	}
 
-	public void doPreInit() {
+	@Override
+	public void handleFMLEvent(FMLPreInitializationEvent event) {
 		for (int i = 0; i < EMPSoundNames.length; i++) {
 			EMPSounds[i] = createSoundEvent(EMPSoundNames[i]);
 		}
 		EMPProjectile.registerModEntity();
+	}
+
+	@Override
+	public void handleFMLEvent(FMLServerStartingEvent event) {
+		GenericCommand cmd = new GenericCommand("emp", "emp <bla bla>", "empgun");
+		cmd.onServerStarting(event);
+		ExampleMod.logTrace("emp command registered");
 	}
 
 	/**
@@ -67,13 +77,13 @@ public class EMPGun extends GenericItem {
 				projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f, 1.6f, 0f);
 				world.spawnEntity(projectile);
 			}
-			return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, itemstack);
+			return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
 		} else if (inCreativeMode) {
 			// in creative mode we don't shoot, we just pass the event along
-			return new ActionResult<ItemStack>(EnumActionResult.PASS, itemstack);
+			return new ActionResult<>(EnumActionResult.PASS, itemstack);
 		} else {
 			// out of ammo.  FAIL.
-			return new ActionResult<ItemStack>(EnumActionResult.FAIL, itemstack);
+			return new ActionResult<>(EnumActionResult.FAIL, itemstack);
 		}
 	}
 
