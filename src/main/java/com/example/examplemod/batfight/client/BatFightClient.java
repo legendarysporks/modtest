@@ -1,6 +1,5 @@
 package com.example.examplemod.batfight.client;
 
-import com.example.examplemod.ExampleMod;
 import com.example.examplemod.batfight.common.BatAnimation;
 import com.example.examplemod.batfight.common.BatFight;
 import net.minecraft.client.Minecraft;
@@ -21,7 +20,6 @@ public class BatFightClient extends BatFight {
 	private HashSet<BatAnimation> animations = new HashSet<>();
 
 	public BatFightClient() {
-		ExampleMod.instance.FMLEventBus.subscribe(this);
 	}
 
 	@Override

@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GenericCommand implements ICommand {
+public class GenericCommand implements ICommand, HackFMLEventListener {
 	private static final String COMMAND_METHOD_PREFIX = "do";
 	private static final String ROOT_COMMAND = COMMAND_METHOD_PREFIX + "it";
 
@@ -30,7 +30,7 @@ public class GenericCommand implements ICommand {
 	private final Map<String, String> help = new HashMap<>();
 
 	@Retention(RetentionPolicy.RUNTIME)
-	@interface Meta {
+	public @interface Meta {
 		String help() default "";
 
 		boolean requiresOp() default false;
@@ -42,8 +42,13 @@ public class GenericCommand implements ICommand {
 		for (String alias : aliases) {
 			aliasList.add(alias);
 		}
-		// browse through the methods of this class and super classes to
-		// find command handler methods
+		buildCommandMapping();
+		subscribeToFMLEvents();
+		ExampleMod.logTrace(name + " command constructed");
+	}
+
+	/* Search through the methods of this class and super classes to find command handler methods */
+	private void buildCommandMapping() {
 		Class clazz = getClass();
 		while (clazz != Object.class) {
 			for (Method method : clazz.getDeclaredMethods()) {
@@ -58,7 +63,6 @@ public class GenericCommand implements ICommand {
 			}
 			clazz = clazz.getSuperclass();
 		}
-		ExampleMod.logTrace(name + " command constructed");
 	}
 
 	/* Check to see if a given method is of the form "void do<bla>(ICommandSender...)" */
@@ -67,8 +71,13 @@ public class GenericCommand implements ICommand {
 		return method.getName().startsWith(COMMAND_METHOD_PREFIX);
 	}
 
-	public void onServerStarting(FMLServerStartingEvent event) {
+	@Override
+	public void handleFMLEvent(FMLServerStartingEvent event) {
 		event.registerServerCommand(this);
+		ExampleMod.logTrace(this.getName() + " command registered");
+	}
+
+	public void onServerStarting(FMLServerStartingEvent event) {
 	}
 
 	@Override

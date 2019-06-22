@@ -1,10 +1,13 @@
 package com.example.examplemod.batfight.common;
 
+import com.google.common.collect.Lists;
+
+import java.util.List;
 import java.util.Random;
 
 public class BatFightWords {
 	private static final Random rand = new Random();
-	private static final String words[] = {
+	private static final List<String> words = Lists.newArrayList(
 			"AIEEE",
 			"AIIEEE",
 			"ARRGH",
@@ -89,10 +92,25 @@ public class BatFightWords {
 			"ZWAPP",
 			"ZZWAP",
 			"ZZZZWAP",
-			"ZZZZZWAP"
-	};
+			"ZZZZZWAP");
+
+	public static void addWord(String word) {
+		words.add(word);
+	}
+
+	public static void removeWord(String word) {
+		words.remove(word);
+	}
+
+	public static void removeAll() {
+		words.clear();
+	}
 
 	public static String getWord() {
-		return words[rand.nextInt(words.length)];
+		if (words.size() > 0) {
+			return words.get(rand.nextInt(words.size()));
+		} else {
+			return "";
+		}
 	}
 }
