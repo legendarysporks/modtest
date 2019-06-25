@@ -6,4 +6,6 @@ import com.example.examplemod.emp.common.EMPGun;
 
 @SideOnly(Side.SERVER)
 public class EMPGunServer extends EMPGun {
+	public EMPGunServer() {
+	}
 }
