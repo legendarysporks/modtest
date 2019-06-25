@@ -67,17 +67,18 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	/* Check to see if a given method is of the form "void do<bla>(ICommandSender...)" */
 	private boolean isCommandMethodSigniture(Method method) {
-		//TODO add check for ICommandSender parameter
-		return method.getName().startsWith(COMMAND_METHOD_PREFIX);
+		if (method.getName().startsWith(COMMAND_METHOD_PREFIX)) {
+			Class<?> paramTypes[] = method.getParameterTypes();
+			return ((paramTypes.length >= 1) && (paramTypes[0] == ICommandSender.class));
+		} else {
+			return false;
+		}
 	}
 
 	@Override
 	public void handleFMLEvent(FMLServerStartingEvent event) {
 		event.registerServerCommand(this);
 		ExampleMod.logTrace(this.getName() + " command registered");
-	}
-
-	public void onServerStarting(FMLServerStartingEvent event) {
 	}
 
 	@Override
