@@ -1,5 +1,7 @@
 package com.example.examplemod.emp.client;
 
+import com.example.examplemod.Reference;
+import com.example.examplemod.emp.common.EMPProjectile;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.entity.Render;
@@ -7,8 +9,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
-import com.example.examplemod.Reference;
-import com.example.examplemod.emp.common.EMPProjectile;
 
 import javax.annotation.Nullable;
 

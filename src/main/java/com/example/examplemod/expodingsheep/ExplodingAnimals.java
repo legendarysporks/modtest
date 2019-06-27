@@ -21,13 +21,50 @@ import java.util.Random;
 @Mod.EventBusSubscriber
 @SideOnly(Side.CLIENT)
 public class ExplodingAnimals implements HackFMLEventListener {
+	private static final TriggerInfo[] triggers = {
+			new TriggerInfo("cow", EntityCow.class),
+			new TriggerInfo("chicken", EntityChicken.class),
+			new TriggerInfo("pig", EntityPig.class),
+			new TriggerInfo("sheep", EntitySheep.class),
+	};
+	private static final HashMap<Class<? extends EntityAnimal>, TriggerInfo> typeToInfoMap = new HashMap<>();
+	private static final HashMap<String, TriggerInfo> nameToInfoMap = new HashMap<>();
+	@Setting
+	private boolean enabled = true;
+
+	{
+		for (TriggerInfo info : triggers) {
+			typeToInfoMap.put(info.targerAnimal, info);
+			nameToInfoMap.put(info.name, info);
+		}
+	}
+
+	public ExplodingAnimals() {
+		subscribeToFMLEvents();
+	}
+
+	@Override
+	public void handleFMLEvent(FMLPreInitializationEvent event) {
+		MinecraftForge.EVENT_BUS.register(this);
+	}
+
+	@SubscribeEvent
+	public void attackEntityEventHandler(AttackEntityEvent event) {
+		if (!enabled) return;
+		Entity target = event.getTarget();
+		World world = target.world;
+		if (world.isRemote) return;
+		TriggerInfo trigger = typeToInfoMap.get(target.getClass());
+		if (trigger != null) {
+			trigger.handleAttach(world, event.getEntityPlayer(), (EntityAnimal) target);
+		}
+	}
+
 	private static class TriggerInfo {
 		private static final int defaulChance = 25;     //chances in 100 entity will explode when attacked
 		private static final int defaultBurnTime = 5;   //seconds animal burns and is "primed" to explode
 		private static final float defaultDamage = 3;   //4 = tnt
 		private static final boolean defaultSmoking = true; //smoke after explosion
-
-		public boolean enabled;
 		public final String name;
 		public final Class<? extends EntityAnimal> targerAnimal;
 		public final int chanceToExplode;
@@ -35,6 +72,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		public final float explosionDamage;
 		public final boolean smoking;
 		private final Random rand = new Random();
+		public boolean enabled;
 
 		public TriggerInfo(String animalName, Class<? extends EntityAnimal> animal) {
 			name = animalName;
@@ -64,47 +102,6 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		private void explode(World world, EntityAnimal animal) {
 			animal.setDead();
 			world.createExplosion(null, animal.posX, animal.posY, animal.posZ, explosionDamage, smoking);
-		}
-	}
-
-	private static final TriggerInfo triggers[] = {
-			new TriggerInfo("cow", EntityCow.class),
-			new TriggerInfo("chicken", EntityChicken.class),
-			new TriggerInfo("pig", EntityPig.class),
-			new TriggerInfo("sheep", EntitySheep.class),
-	};
-
-	private static final HashMap<Class<? extends EntityAnimal>, TriggerInfo> typeToInfoMap = new HashMap<>();
-	private static final HashMap<String, TriggerInfo> nameToInfoMap = new HashMap<>();
-
-	{
-		for (TriggerInfo info : triggers) {
-			typeToInfoMap.put(info.targerAnimal, info);
-			nameToInfoMap.put(info.name, info);
-		}
-	}
-
-	@Setting
-	private boolean enabled = true;
-
-	public ExplodingAnimals() {
-		subscribeToFMLEvents();
-	}
-
-	@Override
-	public void handleFMLEvent(FMLPreInitializationEvent event) {
-		MinecraftForge.EVENT_BUS.register(this);
-	}
-
-	@SubscribeEvent
-	public void attackEntityEventHandler(AttackEntityEvent event) {
-		if (!enabled) return;
-		Entity target = event.getTarget();
-		World world = target.world;
-		if (world.isRemote) return;
-		TriggerInfo trigger = typeToInfoMap.get(target.getClass());
-		if (trigger != null) {
-			trigger.handleAttach(world, event.getEntityPlayer(), (EntityAnimal) target);
 		}
 	}
 }

@@ -13,11 +13,6 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(modid = Reference.MODID, name = Reference.MODNAME, version = Reference.VERSION, acceptedMinecraftVersions = Reference.ACCEPTED_MINECRAFT_VERSIONS)
 public class ExampleMod {
-	@Mod.Instance
-	public static ExampleMod instance;
-
-	private static Logger logger;
-
 	/**
 	 * Since FML events are only dispatched to the main mod class, we want to be able to pass
 	 * them on to interested code ourselves.  These queues essentially allow us to do that.
@@ -25,7 +20,9 @@ public class ExampleMod {
 	 * event will be passed on to its handle method
 	 */
 	public static final HackFMLEventBus FMLEventBus = new HackFMLEventBus();
-
+	@Mod.Instance
+	public static ExampleMod instance;
+	private static Logger logger;
 	/**
 	 * Instance of ExplodingAnimals
 	 */

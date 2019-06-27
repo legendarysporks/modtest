@@ -1,7 +1,5 @@
 package com.example.examplemod.utilities;
 
-import scala.annotation.meta.field;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,11 +16,6 @@ public class GenericSettings {
 	private final Map<String, Field> settingFields = new HashMap<>();
 	private final Map<String, Method> settingGetters = new HashMap<>();
 	private final Map<String, Method> settingSetters = new HashMap<>();
-
-	@Retention(RetentionPolicy.RUNTIME)
-	public @interface Setting {
-		String defaultValue() default "";
-	}
 
 	public GenericSettings(Object target) {
 		this.target = target;
@@ -87,7 +80,7 @@ public class GenericSettings {
 			}
 		} else {
 			Method getter = settingGetters.get(settingName);
-			if (getter != null ) {
+			if (getter != null) {
 				try {
 					return getter.invoke(target).toString();
 				} catch (IllegalAccessException | InvocationTargetException e) {
@@ -104,7 +97,7 @@ public class GenericSettings {
 		if (field != null) {
 			try {
 				field.setAccessible(true);
-				field.set(target , convertValueToType(value, field.getType()));
+				field.set(target, convertValueToType(value, field.getType()));
 				return true;
 			} catch (IllegalAccessException e) {
 				e.printStackTrace();
@@ -116,7 +109,7 @@ public class GenericSettings {
 			if (method != null) {
 				try {
 					method.setAccessible(true);
-					method.invoke(target , convertValueToType(value, field.getType()));
+					method.invoke(target, convertValueToType(value, field.getType()));
 					return true;
 				} catch (IllegalAccessException | InvocationTargetException e) {
 					e.printStackTrace();
@@ -152,6 +145,11 @@ public class GenericSettings {
 			// this should never happen if the locateSettings method works correctly
 			throw new IllegalArgumentException("Can't handle settings of type: " + type.getName());
 		}
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface Setting {
+		String defaultValue() default "";
 	}
 }
 

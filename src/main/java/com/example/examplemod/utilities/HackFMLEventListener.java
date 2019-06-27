@@ -5,7 +5,7 @@ import net.minecraftforge.fml.common.event.*;
 
 public interface HackFMLEventListener {
 	default void subscribeToFMLEvents() {
-		ExampleMod.instance.FMLEventBus.subscribe(this);
+		ExampleMod.FMLEventBus.subscribe(this);
 	}
 
 	default void handleFMLEvent(FMLPreInitializationEvent event) {

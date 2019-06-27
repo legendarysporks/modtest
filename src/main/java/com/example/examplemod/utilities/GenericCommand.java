@@ -29,13 +29,6 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	private final Map<CommandDispatcherKey, CommandDispatcher> commands = new HashMap<>();
 	private final Map<String, String> help = new HashMap<>();
 
-	@Retention(RetentionPolicy.RUNTIME)
-	public @interface Meta {
-		String help() default "";
-
-		boolean requiresOp() default false;
-	}
-
 	public GenericCommand(String name, String usage, String... aliases) {
 		this.name = name;
 		this.usage = usage;
@@ -68,7 +61,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	/* Check to see if a given method is of the form "void do<bla>(ICommandSender...)" */
 	private boolean isCommandMethodSigniture(Method method) {
 		if (method.getName().startsWith(COMMAND_METHOD_PREFIX)) {
-			Class<?> paramTypes[] = method.getParameterTypes();
+			Class<?>[] paramTypes = method.getParameterTypes();
 			return ((paramTypes.length >= 1) && (paramTypes[0] == ICommandSender.class));
 		} else {
 			return false;
@@ -167,6 +160,13 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 	}
 
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface Meta {
+		String help() default "";
+
+		boolean requiresOp() default false;
+	}
+
 	private static class CommandDispatcherKey implements Comparable<CommandDispatcherKey> {
 		public final String name;
 		public final int methodArgCount;
@@ -244,7 +244,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 
 		private Object[] calculateArguments(ICommandSender sender, Object[] argsIn) {
-			Object argsOut[];
+			Object[] argsOut;
 			if (key.isRootCommand()) {
 				// we need to insert the sender in the arguments list
 				// argsIn looks like { "param1", "param2",  ... }

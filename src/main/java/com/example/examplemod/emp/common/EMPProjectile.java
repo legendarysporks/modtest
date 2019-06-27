@@ -11,6 +11,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 
 public class EMPProjectile extends EntityThrowable {
+	private static final String NAME = "emp_projectile";
+	private static final int ID = 120;
 	private static float GRAVITY = 0.0f;
 	private static int SPARKINESS = 1;
 	private static int SPARK_SPEED_MAX = 10;
@@ -18,9 +20,6 @@ public class EMPProjectile extends EntityThrowable {
 	private static double SPARK_SPEED_DIVISOR = 8.0D;
 	private static int LIFETIME_TICKS = 20;
 	private static float EXPLOSION_STRENGTH = 1.75F;
-
-	private static final String NAME = "emp_projectile";
-	private static final int ID = 120;
 	private EntityLivingBase launcher;
 
 	public EMPProjectile(World world) {

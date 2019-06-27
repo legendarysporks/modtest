@@ -2,6 +2,7 @@ package com.example.examplemod.batfight.client;
 
 import com.example.examplemod.batfight.common.BatAnimation;
 import com.example.examplemod.batfight.common.BatFight;
+import com.example.examplemod.utilities.HackFMLEventListener;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityAnimal;
@@ -16,10 +17,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.util.HashSet;
 
 @SideOnly(Side.CLIENT)
-public class BatFightClient extends BatFight {
+public class BatFightClient extends BatFight implements HackFMLEventListener {
 	private HashSet<BatAnimation> animations = new HashSet<>();
 
 	public BatFightClient() {
+		subscribeToFMLEvents();
 	}
 
 	@Override

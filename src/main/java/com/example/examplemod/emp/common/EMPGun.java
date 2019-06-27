@@ -17,22 +17,20 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class EMPGun extends GenericItem implements HackFMLEventListener {
 	private static final String name = "emp_gun";
 	private static final Class<? extends Item> AMMO_CLASS = ItemArrow.class;
-	private static boolean ALLOWED_IN_CREATIVE = true;
-	private static float VELOCITY = 1.6f;
-	private static float INACCURACY = 0.0f;
-
-	@SidedProxy(clientSide = "com.example.examplemod.emp.client.EMPGunClient",
-			serverSide = "com.example.examplemod.emp.server.EMPGunServer")
-	public static EMPGun proxy;
-
-	private static final String EMPSoundNames[] = new String[]{
+	private static final String[] EMPSoundNames = new String[]{
 			"alien_blaster_fired",
 //			"emp_fired",
 			"pistol_alien_blaster_fired",
 //			"pulsegun_fired",
 			"varmnitrifle_fired",
 	};
-	private static SoundEvent EMPSounds[] = new SoundEvent[EMPSoundNames.length];
+	@SidedProxy(clientSide = "com.example.examplemod.emp.client.EMPGunClient",
+			serverSide = "com.example.examplemod.emp.server.EMPGunServer")
+	public static EMPGun proxy;
+	private static boolean ALLOWED_IN_CREATIVE = true;
+	private static float VELOCITY = 1.6f;
+	private static float INACCURACY = 0.0f;
+	private static SoundEvent[] EMPSounds = new SoundEvent[EMPSoundNames.length];
 
 	public EMPGun() {
 		super(name, CreativeTabs.COMBAT, 1);
