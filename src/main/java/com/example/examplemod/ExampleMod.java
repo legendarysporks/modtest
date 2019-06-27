@@ -1,5 +1,6 @@
 package com.example.examplemod;
 
+import com.example.examplemod.expodingsheep.ExplodingAnimals;
 import com.example.examplemod.init.ModBlocks;
 import com.example.examplemod.init.ModItems;
 import com.example.examplemod.init.ModRecipes;
@@ -24,6 +25,11 @@ public class ExampleMod {
 	 * event will be passed on to its handle method
 	 */
 	public static final HackFMLEventBus FMLEventBus = new HackFMLEventBus();
+
+	/**
+	 * Instance of ExplodingAnimals
+	 */
+	private ExplodingAnimals explodingAnimals;
 
 	/**
 	 * Logging method that is safe to call even before the logger has been properly initialized.  Kind
@@ -53,6 +59,8 @@ public class ExampleMod {
 		ModItems.init();
 		ModBlocks.init();
 		ModRecipes.init();
+
+		explodingAnimals = new ExplodingAnimals();
 
 		// notify listeners last so the rest of initialization/construction is done before they are called.
 		FMLEventBus.publish(event);

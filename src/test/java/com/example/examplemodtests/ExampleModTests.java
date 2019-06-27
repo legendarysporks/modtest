@@ -1,7 +1,5 @@
 package com.example.examplemodtests;
 
-import com.example.examplemod.Reference;
-import com.example.examplemod.utilities.HackFMLEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.*;
@@ -36,48 +34,48 @@ public class ExampleModTests {
 		if (logger != null) {
 			logger.log(level, info);
 		} else {
-			System.out.println(Reference.MODNAME + "." + level + ":" + info);
+			System.out.println(MODNAME + "." + level + ":" + info);
 		}
 	}
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		logger = event.getModLog();
-		logTrace(Reference.MODID + ": preInit");
+		logTrace(MODID + ": preInit");
 	}
 
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
-		logTrace(Reference.MODID + ": init");
+		logTrace(MODID + ": init");
 	}
 
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent event) {
-		logTrace(Reference.MODID + ": postInit");
+		logTrace(MODID + ": postInit");
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerAboutToStartEvent event) {
-		logTrace("Server about to start");
+		logTrace(MODID + ": Server about to start");
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerStartingEvent event) {
-		logTrace("Server starting");
+		logTrace(MODID + ": Server starting");
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerStartedEvent event) {
-		logTrace("Server started");
+		logTrace(MODID + ": Server started");
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerStoppingEvent event) {
-		logTrace("Server stopping");
+		logTrace(MODID + ": Server stopping");
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerStoppedEvent event) {
-		logTrace("Server stopped");
+		logTrace(MODID + ": Server stopped");
 	}
 }
