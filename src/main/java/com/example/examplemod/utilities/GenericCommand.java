@@ -176,7 +176,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	public void doHelp(ICommandSender sender, String subcommand) {
 		String subCommandMethodName = COMMAND_METHOD_PREFIX + subcommand.toLowerCase();
 		boolean helpShown = false;
-		for (int i = 0; i < maxArgumentCount; i++) {
+		for (int i = 0; i <= maxArgumentCount; i++) {
 			CommandDispatcher dispatcher = commands.get(new CommandDispatcherKey(subCommandMethodName, i));
 			if (dispatcher != null) {
 				sendMsg(sender, dispatcher.help);
