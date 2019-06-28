@@ -1,12 +1,20 @@
 package com.example.examplemodtests;
 
+import com.example.examplemod.Reference;
+import com.example.examplemodtests.testUtilities.TestSuiteResults;
+import com.example.examplemodtests.utilities.GenericCommandTest;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = ExampleModTests.MODID, name = ExampleModTests.MODNAME, version = ExampleModTests.VERSION, acceptedMinecraftVersions = ExampleModTests.ACCEPTED_MINECRAFT_VERSIONS)
+@Mod(modid = ExampleModTests.MODID,
+		name = ExampleModTests.MODNAME,
+		version = ExampleModTests.VERSION,
+		acceptedMinecraftVersions = ExampleModTests.ACCEPTED_MINECRAFT_VERSIONS,
+		dependencies = "required-after:" + Reference.MODID
+)
 public class ExampleModTests {
 	public static final String MODID = "evansmodtests";
 	public static final String MODNAME = "Evan's Mod Tests";
@@ -66,7 +74,9 @@ public class ExampleModTests {
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerStartedEvent event) {
-		logTrace(MODID + ": Server started");
+		logTrace(MODID + ": Server started.");
+		logTrace(MODID + ": Running tests.");
+		TestSuiteResults.run(new GenericCommandTest(), logger);
 	}
 
 	@EventHandler

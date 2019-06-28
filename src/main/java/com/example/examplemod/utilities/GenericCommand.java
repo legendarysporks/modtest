@@ -14,10 +14,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GenericCommand implements ICommand, HackFMLEventListener {
 	private static final String COMMAND_METHOD_PREFIX = "do";
@@ -27,7 +24,8 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	private final String usage;
 	private final String name;
 	private final Map<CommandDispatcherKey, CommandDispatcher> commands = new HashMap<>();
-	private final Map<String, String> help = new HashMap<>();
+	private final List<String> tabCompletions = new ArrayList<>();
+	private int maxArgumentCount = 0;
 
 	public GenericCommand(String name, String usage, String... aliases) {
 		this.name = name;
@@ -42,20 +40,23 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	/* Search through the methods of this class and super classes to find command handler methods */
 	private void buildCommandMapping() {
+		Set<String> cmdSet = new HashSet<>();
 		Class clazz = getClass();
 		while (clazz != Object.class) {
 			for (Method method : clazz.getDeclaredMethods()) {
 				if (isCommandMethodSigniture(method)) {
 					CommandDispatcher dispatcher = new CommandDispatcher(method);
 					commands.put(dispatcher.key, dispatcher);
-					Meta annotation = method.getAnnotation(Meta.class);
-					if (annotation != null) {
-						help.put(method.getName().toLowerCase(), annotation.help());
+					maxArgumentCount = Math.max(maxArgumentCount, dispatcher.key.methodArgCount);
+					if (!ROOT_COMMAND.equals(dispatcher.key.name)) {
+						cmdSet.add(dispatcher.key.name.substring(COMMAND_METHOD_PREFIX.length()));
 					}
 				}
 			}
 			clazz = clazz.getSuperclass();
 		}
+		tabCompletions.addAll(cmdSet);
+		Collections.sort(tabCompletions);
 	}
 
 	/* Check to see if a given method is of the form "void do<bla>(ICommandSender...)" */
@@ -93,9 +94,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
 		World world = sender.getEntityWorld();
 
-		if (world.isRemote) {
-			ExampleMod.logInfo("Not processing on Client side");
-		} else {
+		if (world.isRemote == false) {
 			CommandDispatcher method;
 			if (args.length == 0) {
 				// root command with no arguments
@@ -111,9 +110,19 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			}
 
 			if (method != null) {
-				method.invoke(this, sender, args);
+				// we found a matching method for the command and agruments
+				if (method.hasPermission(sender)) {
+					method.invoke(this, sender, args);
+				} else {
+					sender.sendMessage(new TextComponentString("You don't have permission to do that."));
+				}
+			} else if (args.length > 0) {
+				// try to display help for subcommand
+				sender.sendMessage(new TextComponentString("Command not understood."));
+				doHelp(sender, args[0]);
 			} else {
-				sender.sendMessage(new TextComponentString("Command not understood.  Try " + name + " help"));
+				sender.sendMessage(new TextComponentString("Command not understood."));
+				doHelp(sender);
 			}
 		}
 	}
@@ -125,7 +134,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
-		return null;
+		return (args.length == 0) ? tabCompletions : null;
 	}
 
 	@Override
@@ -135,29 +144,63 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	@Override
 	public int compareTo(ICommand o) {
-		return 0;
+		return getName().compareTo(o.getName());
 	}
 
-	@Meta(help = "doIt(ICommandSender sender, String text) help")
-	public void doIt(ICommandSender sender, String text) {
-		sender.sendMessage(new TextComponentString("Yup. " + text));
-	}
+/*	public void doIt(ICommandSender sender) {
+		// a command without a subcommand.  Subclasses can override this if they want
+		// some real behavior.  For now, just dump help
+		doHelp(sender);
+	} */
 
-	public void doIt(ICommandSender sender) {
-		sender.sendMessage(new TextComponentString("Yes? Can I help you?"));
-	}
-
+	/* Help for the root command.   Ex. /<name> help */
+	@Meta(help = "A command to get help on commands")
 	public void doHelp(ICommandSender sender) {
-		sender.sendMessage(new TextComponentString(usage));
+		String usage = getUsage(sender);
+
+		if (usage != null) {
+			sender.sendMessage(new TextComponentString(getUsage(sender)));
+		} else {
+			StringBuilder msg = new StringBuilder();
+			msg.append("Try /");
+			msg.append(getName());
+			msg.append(" help ");
+			doCommands(sender);
+		}
 	}
 
+	/* Help for a subcommand.  Ex. /<name> help <subcommand> */
+	@Meta(help = "help <subcommand> - get help on how to use <subcommand>")
 	public void doHelp(ICommandSender sender, String subcommand) {
-		String specialHelp = help.get(COMMAND_METHOD_PREFIX + subcommand.toLowerCase());
-		if (specialHelp != null) {
-			sender.sendMessage(new TextComponentString(specialHelp));
-		} else {
+		String subCommandMethodName = COMMAND_METHOD_PREFIX + subcommand.toLowerCase();
+		boolean helpShown = false;
+		for (int i = 0; i < maxArgumentCount; i++) {
+			CommandDispatcher dispatcher = commands.get(new CommandDispatcherKey(subCommandMethodName, i));
+			if (dispatcher != null) {
+				sender.sendMessage(new TextComponentString(dispatcher.help));
+				helpShown = true;
+			}
+		}
+		if (!helpShown) {
+			// we didn't have ANY matching methods, so default to general help
 			doHelp(sender);
 		}
+	}
+
+	public void doCommands(ICommandSender sender) {
+		sender.sendMessage(new TextComponentString(buildCommandsList(new StringBuilder())));
+	}
+
+	private String buildCommandsList(StringBuilder builder) {
+		builder.append("[ ");
+		String seperator = "";
+		for (String subCmd : tabCompletions) {
+			builder.append(seperator);
+			builder.append(subCmd);
+			seperator = " | ";
+		}
+		builder.append(" ]");
+		return builder.toString();
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
@@ -229,13 +272,28 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	private static class CommandDispatcher {
 		public final CommandDispatcherKey key;
 		public final Method method;
+		public final String help;
 
 		CommandDispatcher(Method method) {
+			//TODO hey jf - add permissions at some point
+			//PermissionAPI.registerNode(String node, DefaultPermissionLevel level, String description)
 			this.key = new CommandDispatcherKey(method.getName().toLowerCase(), method.getParameterCount());
 			this.method = method;
+			Meta annotation = method.getAnnotation(Meta.class);
+			if (annotation != null) {
+				help = annotation.help();
+			} else {
+				help = method.getName().substring(COMMAND_METHOD_PREFIX.length());
+			}
 		}
 
-		private void invoke(Object commandObject, ICommandSender sender, Object[] args) {
+		public boolean hasPermission(ICommandSender sender) {
+			//TODO hey jf - add permissions at some point
+			//PermissionAPI.hasPermission( player, node);
+			return true;
+		}
+
+		public void invoke(Object commandObject, ICommandSender sender, Object[] args) {
 			try {
 				method.invoke(commandObject, calculateArguments(sender, args));
 			} catch (IllegalAccessException | InvocationTargetException e) {

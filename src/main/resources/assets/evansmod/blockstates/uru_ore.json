@@ -1,7 +1,9 @@
 {
   "variants": {
     "normal": [
-      { "model": "evansmod:uru_ore" }
+      {
+        "model": "evansmod:uru_ore"
+      }
     ]
   }
 }
