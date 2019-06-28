@@ -21,6 +21,8 @@ public class ExampleModTests {
 	public static final String VERSION = "1.0";
 	public static final String ACCEPTED_MINECRAFT_VERSIONS = "[1.12]";
 
+	public static final boolean RUN_TESTS = false;  //set to true to run test
+
 	@Mod.Instance
 	public static ExampleModTests instance;
 
@@ -76,7 +78,9 @@ public class ExampleModTests {
 	public void fmlLifeCycle(FMLServerStartedEvent event) {
 		logTrace(MODID + ": Server started.");
 		logTrace(MODID + ": Running tests.");
-		TestSuiteResults.run(new GenericCommandTest(), logger);
+		if (RUN_TESTS) {
+			TestSuiteResults.run(new GenericCommandTest(), logger);
+		}
 	}
 
 	@EventHandler

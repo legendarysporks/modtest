@@ -114,14 +114,14 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 				if (method.hasPermission(sender)) {
 					method.invoke(this, sender, args);
 				} else {
-					sender.sendMessage(new TextComponentString("You don't have permission to do that."));
+					sendMsg(sender, "You don't have permission to do that.");
 				}
 			} else if (args.length > 0) {
 				// try to display help for subcommand
-				sender.sendMessage(new TextComponentString("Command not understood."));
+				sendMsg(sender, "Command not understood.");
 				doHelp(sender, args[0]);
 			} else {
-				sender.sendMessage(new TextComponentString("Command not understood."));
+				sendMsg(sender, "Command not understood.");
 				doHelp(sender);
 			}
 		}
@@ -159,13 +159,15 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		String usage = getUsage(sender);
 
 		if (usage != null) {
-			sender.sendMessage(new TextComponentString(getUsage(sender)));
+			sendMsg(sender, getUsage(sender));
 		} else {
 			StringBuilder msg = new StringBuilder();
 			msg.append("Try /");
 			msg.append(getName());
-			msg.append(" help ");
-			doCommands(sender);
+			msg.append(" help [ ");
+			msg.append(buildCommandsList());
+			msg.append(" ]");
+			sendMsg(sender, msg.toString());
 		}
 	}
 
@@ -177,7 +179,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		for (int i = 0; i < maxArgumentCount; i++) {
 			CommandDispatcher dispatcher = commands.get(new CommandDispatcherKey(subCommandMethodName, i));
 			if (dispatcher != null) {
-				sender.sendMessage(new TextComponentString(dispatcher.help));
+				sendMsg(sender, dispatcher.help);
 				helpShown = true;
 			}
 		}
@@ -188,19 +190,26 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	}
 
 	public void doCommands(ICommandSender sender) {
-		sender.sendMessage(new TextComponentString(buildCommandsList(new StringBuilder())));
+		StringBuilder builder = new StringBuilder();
+		builder.append("[ ");
+		builder.append(buildCommandsList());
+		builder.append(" ]");
+		sendMsg(sender, builder.toString());
 	}
 
-	private String buildCommandsList(StringBuilder builder) {
-		builder.append("[ ");
+	private String buildCommandsList() {
+		StringBuilder builder = new StringBuilder();
 		String seperator = "";
 		for (String subCmd : tabCompletions) {
 			builder.append(seperator);
 			builder.append(subCmd);
 			seperator = " | ";
 		}
-		builder.append(" ]");
 		return builder.toString();
+	}
+
+	protected void sendMsg(ICommandSender sender, String msg) {
+		sender.sendMessage(new TextComponentString(msg));
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
@@ -269,7 +278,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 	}
 
-	private static class CommandDispatcher {
+	private class CommandDispatcher {
 		public final CommandDispatcherKey key;
 		public final Method method;
 		public final String help;
@@ -283,7 +292,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			if (annotation != null) {
 				help = annotation.help();
 			} else {
-				help = method.getName().substring(COMMAND_METHOD_PREFIX.length());
+				help = usage;
 			}
 		}
 
