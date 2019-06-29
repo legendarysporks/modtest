@@ -2,7 +2,6 @@ package com.example.examplemod.batfight.common;
 
 import com.example.examplemod.utilities.GenericCommand;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.text.TextComponentString;
 
 public class BatFightCommand extends GenericCommand {
 	private static final String name = "batfight";

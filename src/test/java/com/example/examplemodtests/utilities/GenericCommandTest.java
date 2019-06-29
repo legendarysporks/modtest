@@ -1,7 +1,7 @@
 package com.example.examplemodtests.utilities;
 
 import com.example.examplemod.utilities.GenericCommand;
-import com.example.examplemodtests.testUtilities.TestSuiteResults;
+import com.example.examplemodtests.testUtilities.HackTestHarness;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
@@ -14,62 +14,152 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GenericCommandTest extends TestSuiteResults.Suite {
-	private static final String dummyName = "DummyName";
-	private static final String dummyUsage = "DummyUsage";
-	private static final String dummyAlias1 = "DummyAlias1";
-	private static final String dummyAlias2 = "DummyAlias2";
-	private static final String[] helpSubcommandArgs = {"help"};
-
+public class GenericCommandTest extends HackTestHarness.Suite {
 	private DummyCommandSender remoteSender;
 	private DummyCommandSender localSender;
 	private GenericCommand cmd;
 
-	public void setup(Logger logger) {
+	@Override
+	public void setup() {
 		remoteSender = new DummyCommandSender(true);
 		localSender = new DummyCommandSender(false);
-		cmd = new GenericCommand(dummyName, dummyUsage, dummyAlias1, dummyAlias2);
+		cmd = new TestCommand();
 	}
 
-	public void teardown(Logger logger) {
+	@Override
+	public void teardown() {
 		remoteSender = null;
 		localSender = null;
 		cmd = null;
 	}
 
-	public void testGetName(Logger logger) {
-		assertTrue(cmd.getName().equals(dummyName), "name not returned correctly");
+	public void testGetName() {
+		assertTrue(cmd.getName().equals(TestCommand.NAME), "name not returned correctly");
 	}
 
-	public void testGetUsage(Logger logger) {
-		assertTrue(cmd.getUsage(localSender).equals(dummyUsage), "usage not returned correctly");
-		assertTrue(cmd.getUsage(remoteSender).equals(dummyUsage), "usage not returned correctly");
+	public void testGetUsage() {
+		assertTrue(cmd.getUsage(localSender).equals(TestCommand.USAGE), "usage not returned correctly");
+		assertTrue(cmd.getUsage(remoteSender).equals(TestCommand.USAGE), "usage not returned correctly");
 	}
 
-	public void testGetAliases(Logger logger) {
+	public void testGetAliases() {
 		List<String> aliases = cmd.getAliases();
-		assertTrue((aliases.size() == 2) && aliases.contains(dummyAlias1) && aliases.contains(dummyAlias2));
+		assertTrue((aliases.size() == TestCommand.ALIASES.length), "incorrect number of aliases");
+		for (int i = 0; i < TestCommand.ALIASES.length; i++) {
+			assertTrue((aliases.get(i).equals(TestCommand.ALIASES[i])), "aliases are incorrect");
+		}
 	}
 
-	public void testOnlyRespondsToRemoteCommands(Logger logger) {
+	public void testOnlyRespondsToRemoteCommands() {
+		String[] args = { "help" };
+
 		remoteSender.reset();
-		cmd.execute(null, remoteSender, helpSubcommandArgs);
-		assertTrue(remoteSender.messagesSent.size() == 0, "Command executed on remote world when it shouldn't have");
+		cmd.execute(null, remoteSender, args);
+		assertTrue(remoteSender.commandOutput.size() == 0, "Command executed on remote world when it shouldn't have");
 
 		localSender.reset();
-		cmd.execute(null, localSender, helpSubcommandArgs);
-		assertTrue(localSender.messagesSent.size() > 0, "Command did not execute");
+		cmd.execute(null, localSender, args);
+		assertTrue(localSender.commandOutput.size() > 0, "Command did not execute");
 	}
 
-	public void testGlobalHelp(Logger logger) {
+	@HackTestHarness.TestMetaInfo(terminateOnFailure = false)
+	public void testMethodDispatching() {
+		class TestCase {
+			public final String[] args;
+			public final String[] results;
 
+			public TestCase(String[] args, String[] results) {
+				this.args = args;
+				this.results = results;
+			}
+
+			public String toString() {
+				StringBuilder builder = new StringBuilder();
+				for (String arg : args) {
+					builder.append(arg);
+					builder.append(" ");
+				}
+				return builder.toString();
+			}
+		}
+
+		final TestCase[] cases = {
+				new TestCase(new String[] {"help"}, new String[] {TestCommand.USAGE}),
+				new TestCase(new String[] {"commands"}, new String[] {"[ commands | help | test ]"}),
+				new TestCase(new String[] {"help", "commands"}, new String[] {"commands - list available subcommands"}),
+				new TestCase(new String[] {"test"}, new String[] {"doTest(i)"}),
+				new TestCase(new String[] {"test", "1"}, new String[] {"doTest(i,1)"}),
+				new TestCase(new String[] {"test", "1", "2"}, new String[] {"doTest(i,1,2)"}),
+				new TestCase(new String[] {}, new String[] {"doIt(i)"}),
+				new TestCase(new String[] {"notAMethod"}, new String[] {"doIt(i,notAMethod)"}),
+				new TestCase(new String[] {"odle"}, new String[] {"doIt(i,odle)"}),
+		};
+
+		for (TestCase testCase : cases) {
+			localSender.reset();
+			cmd.execute(null, localSender, testCase.args);
+
+			if (localSender.commandOutput.size() != testCase.results.length) {
+				fail(String.format("wrong number of lines output for test case: %s. Expected %d but received %d.",
+						testCase.toString(), testCase.results.length, localSender.commandOutput.size()));
+
+			} else {
+				for (int i = 0; i < testCase.results.length; i++) {
+					assertTrue(testCase.results[i].equals(localSender.commandOutput.get(i)),
+							String.format("'%s' did not get expected output. \nexpected: '%s'\nreceived: '%s'",
+									testCase.toString(), testCase.results[i], localSender.commandOutput.get(i)));
+				}
+			}
+
+		}
+	}
+
+	//------------ Command used for testing
+
+	public static final class TestCommand extends GenericCommand {
+		public static final String NAME = "TestCommand";
+		public static final String USAGE = "Usage";
+		public static final String[] ALIASES = { "Alias1", "Alias2" };
+
+
+		public TestCommand() {
+			super(NAME, USAGE, ALIASES);
+		}
+
+		public void doTest(ICommandSender sender) {
+			sendMsg(sender, "doTest(i)");
+		}
+
+		public void doTest(ICommandSender sender, String arg1) {
+			sendMsg(sender, "doTest(i,"+arg1+")");
+		}
+
+		public void doTest(ICommandSender sender, String arg1, String arg2) {
+			sendMsg(sender, "doTest(i,"+arg1+","+arg2+")");
+		}
+
+		public void doTest(ICommandSender sender, String arg1, String arg2, String arg3) {
+			sendMsg(sender, "doTest(i,"+arg1+","+arg2+","+arg3+")");
+		}
+
+		public void doIt(ICommandSender sender) {
+			sendMsg(sender, "doIt(i)");
+		}
+
+		public void doIt(ICommandSender sender, String arg1) {
+			sendMsg(sender, "doIt(i,"+arg1+")");
+		}
+
+		public void doodle(ICommandSender sender) {
+			sendMsg(sender, "Why did you call doodle?");
+		}
 	}
 
 	//------------ classes to stub out the minecraft interface
 
 	// used for testOnlyRespondsToRemoteCommands
-	private static class DummyCommandSender implements ICommandSender {
-		public List<ITextComponent> messagesSent;
+	private static final class DummyCommandSender implements ICommandSender {
+		public List<String> commandOutput;
 		public boolean isRemote;
 
 		public DummyCommandSender(boolean remote) {
@@ -78,7 +168,7 @@ public class GenericCommandTest extends TestSuiteResults.Suite {
 		}
 
 		public void reset() {
-			messagesSent = new ArrayList<>();
+			commandOutput = new ArrayList<>();
 		}
 
 		@Override
@@ -88,7 +178,7 @@ public class GenericCommandTest extends TestSuiteResults.Suite {
 
 		@Override
 		public void sendMessage(ITextComponent component) {
-			messagesSent.add(component);
+			commandOutput.add(component.getUnformattedText());
 		}
 
 		@Override

@@ -59,11 +59,24 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		Collections.sort(tabCompletions);
 	}
 
-	/* Check to see if a given method is of the form "void do<bla>(ICommandSender...)" */
+	/* Check to see if a given method is of the form "void do<Bla>(ICommandSender [, String...])" */
 	private boolean isCommandMethodSigniture(Method method) {
+		//TODO hey jf - check for void return type
 		if (method.getName().startsWith(COMMAND_METHOD_PREFIX)) {
+			if (!Character.isUpperCase(method.getName().charAt(COMMAND_METHOD_PREFIX.length()))) {
+				// first character after "do" needs to be upper case
+				return false;
+			}
 			Class<?>[] paramTypes = method.getParameterTypes();
-			return ((paramTypes.length >= 1) && (paramTypes[0] == ICommandSender.class));
+			if ((paramTypes.length < 1) || (paramTypes[0] != ICommandSender.class)) {
+				// the first parameter must be of type ICommandSender
+				return false;
+			}
+			for (int i = 1; i < paramTypes.length; i++) {
+				// each param after the first must be of type String
+				if (paramTypes[i] != String.class) return false;
+			}
+			return true;
 		} else {
 			return false;
 		}
@@ -189,6 +202,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 	}
 
+	@Meta(help = "commands - list available subcommands")
 	public void doCommands(ICommandSender sender) {
 		StringBuilder builder = new StringBuilder();
 		builder.append("[ ");

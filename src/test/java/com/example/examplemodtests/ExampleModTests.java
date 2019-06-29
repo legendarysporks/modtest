@@ -1,7 +1,7 @@
 package com.example.examplemodtests;
 
 import com.example.examplemod.Reference;
-import com.example.examplemodtests.testUtilities.TestSuiteResults;
+import com.example.examplemodtests.testUtilities.HackTestHarness;
 import com.example.examplemodtests.utilities.GenericCommandTest;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -79,7 +79,7 @@ public class ExampleModTests {
 		logTrace(MODID + ": Server started.");
 		logTrace(MODID + ": Running tests.");
 		if (RUN_TESTS) {
-			TestSuiteResults.run(new GenericCommandTest(), logger);
+			HackTestHarness.run(GenericCommandTest.class, logger);
 		}
 	}
 
