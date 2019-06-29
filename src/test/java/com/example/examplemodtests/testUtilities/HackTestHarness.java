@@ -193,7 +193,7 @@ public class HackTestHarness {
 	private boolean hasTestMethodSigniture(Method method) {
 		Boolean result = method.getName().startsWith("test");
 //		result = result && (method.getReturnType() == Void.class);
-		result = result && (method.getParameterTypes().length == 0);
+		result = result && (method.getParameterCount() == 0);
 		return result;
 	}
 
