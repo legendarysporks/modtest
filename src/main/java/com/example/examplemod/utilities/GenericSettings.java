@@ -18,14 +18,6 @@ public class GenericSettings {
 	private final Map<String, Method> getters = new HashMap<>();
 	private final Map<String, Method> setters = new HashMap<>();
 
-	public static class SettingNotFoundException extends Exception {
-		public final String settingName;
-
-		public SettingNotFoundException(String name) {
-			settingName = name;
-		}
-	}
-
 	public GenericSettings(Object target) {
 		this.target = target;
 		findSettings();
@@ -86,6 +78,7 @@ public class GenericSettings {
 	}
 
 	public String get(String settingName) throws SettingNotFoundException {
+		settingName = settingName.toLowerCase();
 		Field field = fields.get(settingName);
 		if (field != null) {
 			try {
@@ -107,6 +100,7 @@ public class GenericSettings {
 	}
 
 	public boolean set(String settingName, String value) throws SettingNotFoundException, IllegalArgumentException {
+		settingName = settingName.toLowerCase();
 		Field field = fields.get(settingName);
 		if (field != null) {
 			try {
@@ -161,6 +155,14 @@ public class GenericSettings {
 	@Retention(RetentionPolicy.RUNTIME)
 	public @interface Setting {
 		String defaultValue() default "";
+	}
+
+	public static class SettingNotFoundException extends Exception {
+		public final String settingName;
+
+		public SettingNotFoundException(String name) {
+			settingName = name;
+		}
 	}
 }
 

@@ -9,7 +9,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.chunk.IChunkProvider;
-import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +50,7 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 	}
 
 	public void testOnlyRespondsToRemoteCommands() {
-		String[] args = { "help" };
+		String[] args = {"help"};
 
 		remoteSender.reset();
 		cmd.execute(null, remoteSender, args);
@@ -84,15 +83,15 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 		}
 
 		final TestCase[] cases = {
-				new TestCase(new String[] {"help"}, new String[] {TestCommand.USAGE}),
-				new TestCase(new String[] {"commands"}, new String[] {"[ commands | help | test ]"}),
-				new TestCase(new String[] {"help", "commands"}, new String[] {"commands - list available subcommands"}),
-				new TestCase(new String[] {"test"}, new String[] {"doTest(i)"}),
-				new TestCase(new String[] {"test", "1"}, new String[] {"doTest(i,1)"}),
-				new TestCase(new String[] {"test", "1", "2"}, new String[] {"doTest(i,1,2)"}),
-				new TestCase(new String[] {}, new String[] {"doIt(i)"}),
-				new TestCase(new String[] {"notAMethod"}, new String[] {"doIt(i,notAMethod)"}),
-				new TestCase(new String[] {"odle"}, new String[] {"doIt(i,odle)"}),
+				new TestCase(new String[]{"help"}, new String[]{TestCommand.USAGE}),
+				new TestCase(new String[]{"commands"}, new String[]{"[ commands | help | test ]"}),
+				new TestCase(new String[]{"help", "commands"}, new String[]{"commands - list available subcommands"}),
+				new TestCase(new String[]{"test"}, new String[]{"doTest(i)"}),
+				new TestCase(new String[]{"test", "1"}, new String[]{"doTest(i,1)"}),
+				new TestCase(new String[]{"test", "1", "2"}, new String[]{"doTest(i,1,2)"}),
+				new TestCase(new String[]{}, new String[]{"doIt(i)"}),
+				new TestCase(new String[]{"notAMethod"}, new String[]{"doIt(i,notAMethod)"}),
+				new TestCase(new String[]{"odle"}, new String[]{"doIt(i,odle)"}),
 		};
 
 		for (TestCase testCase : cases) {
@@ -119,7 +118,7 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 	public static final class TestCommand extends GenericCommand {
 		public static final String NAME = "TestCommand";
 		public static final String USAGE = "Usage";
-		public static final String[] ALIASES = { "Alias1", "Alias2" };
+		public static final String[] ALIASES = {"Alias1", "Alias2"};
 
 
 		public TestCommand() {
@@ -131,15 +130,15 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 		}
 
 		public void doTest(ICommandSender sender, String arg1) {
-			sendMsg(sender, "doTest(i,"+arg1+")");
+			sendMsg(sender, "doTest(i," + arg1 + ")");
 		}
 
 		public void doTest(ICommandSender sender, String arg1, String arg2) {
-			sendMsg(sender, "doTest(i,"+arg1+","+arg2+")");
+			sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + ")");
 		}
 
 		public void doTest(ICommandSender sender, String arg1, String arg2, String arg3) {
-			sendMsg(sender, "doTest(i,"+arg1+","+arg2+","+arg3+")");
+			sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + "," + arg3 + ")");
 		}
 
 		public void doIt(ICommandSender sender) {
@@ -147,7 +146,7 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 		}
 
 		public void doIt(ICommandSender sender, String arg1) {
-			sendMsg(sender, "doIt(i,"+arg1+")");
+			sendMsg(sender, "doIt(i," + arg1 + ")");
 		}
 
 		public void doodle(ICommandSender sender) {

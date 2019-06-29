@@ -5,6 +5,7 @@ import com.example.examplemod.init.ModBlocks;
 import com.example.examplemod.init.ModItems;
 import com.example.examplemod.init.ModRecipes;
 import com.example.examplemod.utilities.HackFMLEventBus;
+import com.example.examplemodtests.testUtilities.RunTestsCommand;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.*;
@@ -22,11 +23,12 @@ public class ExampleMod {
 	public static final HackFMLEventBus FMLEventBus = new HackFMLEventBus();
 	@Mod.Instance
 	public static ExampleMod instance;
-	private static Logger logger;
+	public static Logger logger;
 	/**
 	 * Instance of ExplodingAnimals
 	 */
 	private ExplodingAnimals explodingAnimals;
+	private RunTestsCommand runTestCommand;
 
 	/**
 	 * Logging method that is safe to call even before the logger has been properly initialized.  Kind
@@ -58,6 +60,7 @@ public class ExampleMod {
 		ModRecipes.init();
 
 		explodingAnimals = new ExplodingAnimals();
+		runTestCommand = new RunTestsCommand();
 
 		// notify listeners last so the rest of initialization/construction is done before they are called.
 		FMLEventBus.publish(event);
