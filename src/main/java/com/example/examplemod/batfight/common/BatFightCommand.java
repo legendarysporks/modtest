@@ -7,6 +7,7 @@ public class BatFightCommand extends GenericCommand {
 	private static final String name = "batfight";
 	private static final String usage = "batfight ([add word] | [remove word] | [removeall])";
 	private static final String[] aliases = {"bf"};
+	private static final int MAX_WORD_DUMP_LINE_LENGTH = 100;
 
 	public BatFightCommand() {
 		super(name, usage, aliases);
@@ -31,10 +32,15 @@ public class BatFightCommand extends GenericCommand {
 	}
 
 	@Meta(help = "batfight something 1 2 3")
-	public void doSomething(ICommandSender sender, String word1, String word2, String word3) {
-		BatFightWords.removeAll();
-		sendMsg(sender, "Words " + word1 + word2 + word3);
+	public void doWords(ICommandSender sender) {
+		StringBuilder line = new StringBuilder();
+		for (String word : BatFightWords.getAllWords()) {
+			line.append(word);
+			line.append(" ");
+			if (line.length() > MAX_WORD_DUMP_LINE_LENGTH) {
+				sendMsg(sender, line.toString());
+				line = new StringBuilder();
+			}
+		}
 	}
-
-
 }

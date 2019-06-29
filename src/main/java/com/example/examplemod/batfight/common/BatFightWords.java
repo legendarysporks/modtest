@@ -2,6 +2,7 @@ package com.example.examplemod.batfight.common;
 
 import com.google.common.collect.Lists;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -106,11 +107,16 @@ public class BatFightWords {
 		words.clear();
 	}
 
-	public static String getWord() {
+	public static String getRandomWord() {
 		if (words.size() > 0) {
 			return words.get(rand.nextInt(words.size()));
 		} else {
 			return "";
 		}
+	}
+
+	public static List<String> getAllWords() {
+		return Collections.unmodifiableList(words);
+
 	}
 }
