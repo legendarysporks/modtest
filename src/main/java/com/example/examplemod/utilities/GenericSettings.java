@@ -7,8 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class GenericSettings {
 	private static final String GET = "get";
@@ -121,6 +120,17 @@ public class GenericSettings {
 			}
 		}
 		throw new SettingNotFoundException(settingName);
+	}
+
+	public List<String> list() {
+		Set<String> set = new HashSet<>();
+		set.addAll(fields.keySet());
+		set.addAll(getters.keySet());
+		set.addAll(setters.keySet());
+		List<String> result = new ArrayList<>(set.size());
+		result.addAll(set);
+		Collections.sort(result);
+		return result;
 	}
 
 	private Object convertValueToType(String value, Class<?> type) {

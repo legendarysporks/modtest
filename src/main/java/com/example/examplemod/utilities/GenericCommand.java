@@ -19,6 +19,7 @@ import java.util.*;
 public class GenericCommand implements ICommand, HackFMLEventListener {
 	private static final String COMMAND_METHOD_PREFIX = "do";
 	private static final String ROOT_COMMAND = COMMAND_METHOD_PREFIX + "it";
+	private static final int MAX_WORD_DUMP_LINE_LENGTH = 100;
 
 	private final List<String> aliasList = new ArrayList<>();
 	private final String usage;
@@ -224,6 +225,19 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	protected void sendMsg(ICommandSender sender, String msg) {
 		sender.sendMessage(new TextComponentString(msg));
+	}
+
+	protected void sendMsg(ICommandSender sender, Collection<String> words) {
+		StringBuilder line = new StringBuilder();
+		for (String word : words) {
+			line.append(word);
+			line.append(" ");
+			if (line.length() > MAX_WORD_DUMP_LINE_LENGTH) {
+				sendMsg(sender, line.toString());
+				line = new StringBuilder();
+			}
+		}
+		sendMsg(sender, line.toString());
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)

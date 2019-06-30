@@ -33,14 +33,6 @@ public class BatFightCommand extends GenericCommand {
 
 	@Meta(help = "batfight something 1 2 3")
 	public void doWords(ICommandSender sender) {
-		StringBuilder line = new StringBuilder();
-		for (String word : BatFightWords.getAllWords()) {
-			line.append(word);
-			line.append(" ");
-			if (line.length() > MAX_WORD_DUMP_LINE_LENGTH) {
-				sendMsg(sender, line.toString());
-				line = new StringBuilder();
-			}
-		}
+		sendMsg(sender, BatFightWords.getAllWords());
 	}
 }
