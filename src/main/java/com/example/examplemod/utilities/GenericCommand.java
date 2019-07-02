@@ -3,10 +3,12 @@ package com.example.examplemod.utilities;
 import com.example.examplemod.ExampleMod;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
 import javax.annotation.Nullable;
@@ -18,7 +20,7 @@ import java.util.*;
 
 public class GenericCommand implements ICommand, HackFMLEventListener {
 	private static final String COMMAND_METHOD_PREFIX = "do";
-	private static final String ROOT_COMMAND = COMMAND_METHOD_PREFIX + "it";
+	private static final String ROOT_COMMAND = COMMAND_METHOD_PREFIX + "it";    //doIt
 	private static final int MAX_WORD_DUMP_LINE_LENGTH = 100;
 
 	private final List<String> aliasList = new ArrayList<>();
@@ -62,8 +64,9 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	/* Check to see if a given method is of the form "void do<Bla>(ICommandSender [, String...])" */
 	private boolean isCommandMethodSigniture(Method method) {
-		//TODO hey jf - check for void return type
-		if (method.getName().startsWith(COMMAND_METHOD_PREFIX)) {
+		if ((method.getAnnotation(CommandMethod.class) != null)
+				&& method.getName().startsWith(COMMAND_METHOD_PREFIX)
+				&& (method.getReturnType() == Void.TYPE)) {
 			if (!Character.isUpperCase(method.getName().charAt(COMMAND_METHOD_PREFIX.length()))) {
 				// first character after "do" needs to be upper case
 				return false;
@@ -249,19 +252,20 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		boolean requiresOp() default false;
 	}
 
+	/** CommandDispatcherKey is used as a hash key for looking up CommandDispatchers */
 	private static class CommandDispatcherKey implements Comparable<CommandDispatcherKey> {
 		public final String name;
 		public final int methodArgCount;
 
-		// root command
+		// root command - doIt()
 		public CommandDispatcherKey(int methodArgCount) {
 			this.name = ROOT_COMMAND;
 			this.methodArgCount = methodArgCount;
 		}
 
-		// sub command
+		// sub command - do<Something>()
 		public CommandDispatcherKey(String name, int methodArgCount) {
-			this.name = name;
+			this.name = name.toLowerCase();
 			this.methodArgCount = methodArgCount;
 		}
 
@@ -308,28 +312,38 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 	}
 
+	/** This class holds details about a command method and is used to invoke with proper arguments. */
 	private class CommandDispatcher {
 		public final CommandDispatcherKey key;
 		public final Method method;
 		public final String help;
+		public final boolean requiresOp;
 
 		CommandDispatcher(Method method) {
-			//TODO hey jf - add permissions at some point
-			//PermissionAPI.registerNode(String node, DefaultPermissionLevel level, String description)
 			this.key = new CommandDispatcherKey(method.getName().toLowerCase(), method.getParameterCount());
 			this.method = method;
 			CommandMethod annotation = method.getAnnotation(CommandMethod.class);
-			if (annotation != null) {
-				help = annotation.help();
-			} else {
-				help = usage;
-			}
+			help = annotation.help();
+			requiresOp = annotation.requiresOp();
 		}
 
+		/** return true is sender can use this command */
 		public boolean hasPermission(ICommandSender sender) {
-			//TODO hey jf - add permissions at some point
-			//PermissionAPI.hasPermission( player, node);
-			return true;
+			if (requiresOp) {
+				if (sender instanceof EntityPlayerMP) {
+					EntityPlayerMP player = (EntityPlayerMP) sender;
+					// player is op so let them do it.
+					// non-op player when op is required.  NO!
+					return FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getOppedPlayers().getEntry(
+							player.getGameProfile()) != null;
+				} else {
+					// a non-player (console?) issued the command.  Go for it.
+					return true;
+				}
+			} else {
+				// op not required
+				return true;
+			}
 		}
 
 		public void invoke(Object commandObject, ICommandSender sender, Object[] args) {
@@ -340,6 +354,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			}
 		}
 
+		/** Take the command line arguments and munge them into method arguments */
 		private Object[] calculateArguments(ICommandSender sender, Object[] argsIn) {
 			Object[] argsOut;
 			if (key.isRootCommand()) {

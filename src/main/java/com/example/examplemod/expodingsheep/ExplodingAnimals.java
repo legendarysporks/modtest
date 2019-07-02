@@ -24,11 +24,18 @@ import java.util.*;
 @SideOnly(Side.CLIENT)
 public class ExplodingAnimals implements HackFMLEventListener {
 	private static final TriggerInfo[] triggers = {
-			new TriggerInfo("cow", EntityCow.class),
 			new TriggerInfo("chicken", EntityChicken.class),
-			new TriggerInfo("pig", EntityPig.class),
-			new TriggerInfo("sheep", EntitySheep.class),
+			new TriggerInfo("cow", EntityCow.class),
+			new TriggerInfo("donkey", EntityDonkey.class),
+			new TriggerInfo("horse", EntityHorse.class),
 			new TriggerInfo("llama", EntityLlama.class),
+			new TriggerInfo("mule", EntityMule.class),
+			new TriggerInfo("ocelot", EntityOcelot.class),
+			new TriggerInfo("pig", EntityPig.class),
+			new TriggerInfo("parrot", EntityParrot.class),
+			new TriggerInfo("rabbit", EntityRabbit.class),
+			new TriggerInfo("sheep", EntitySheep.class),
+			new TriggerInfo("wolf", EntityWolf.class),
 	};
 	private static final HashMap<Class<? extends EntityAnimal>, TriggerInfo> typeToInfoMap = new HashMap<>();
 	private static final HashMap<String, TriggerInfo> nameToInfoMap = new HashMap<>();
