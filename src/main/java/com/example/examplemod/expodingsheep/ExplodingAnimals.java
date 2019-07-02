@@ -144,13 +144,13 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			this.animals = animals;
 		}
 
-		@CommandMeta(help = "List available settings")
+		@CommandMethod(help = "List available settings")
 		public void doSettings(ICommandSender sender) {
 			sendMsg(sender, settings.list());
 			sendMsg(sender, nameToInfoMap.keySet());
 		}
 
-		@CommandMeta(help = "List settings for an animal: 'settings <animal>'")
+		@CommandMethod(help = "List settings for an animal: 'settings <animal>'")
 		public void doSettings(ICommandSender sender, String animal) {
 			TriggerInfo info = nameToInfoMap.get(animal);
 			if (info == null) {
@@ -160,7 +160,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			}
 		}
 
-		@CommandMeta(help = "Get the value of a setting: 'get <settingName'")
+		@CommandMethod(help = "Get the value of a setting: 'get <settingName'")
 		public void doGet(ICommandSender sender, String setting) {
 			try {
 				sendMsg(sender, settings.get(setting));
@@ -169,7 +169,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			}
 		}
 
-		@CommandMeta(help = "Get the value of a setting: 'set <settingName> <value>'")
+		@CommandMethod(help = "Get the value of a setting: 'set <settingName> <value>'")
 		public void doSet(ICommandSender sender, String setting, String value) {
 			try {
 				settings.set(setting, value);
@@ -179,7 +179,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			}
 		}
 
-		@CommandMeta(help = "Change the value of a setting: 'get <animal> <settingName>'")
+		@CommandMethod(help = "Change the value of a setting: 'get <animal> <settingName>'")
 		public void doGet(ICommandSender sender, String animal, String setting) {
 			TriggerInfo info = nameToInfoMap.get(animal);
 			if (info == null) {
@@ -193,7 +193,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			}
 		}
 
-		@CommandMeta(help = "Change the value of a setting on a particular animal: 'set <animal> <settingName> <value>'")
+		@CommandMethod(help = "Change the value of a setting on a particular animal: 'set <animal> <settingName> <value>'")
 		public void doSet(ICommandSender sender, String animal, String setting, String value) {
 			TriggerInfo info = nameToInfoMap.get(animal);
 			if (info == null) {

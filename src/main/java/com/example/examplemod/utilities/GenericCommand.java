@@ -170,7 +170,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 */
 
 	/* Help for the root command.   Ex. /<name> help */
-	@CommandMeta(help = "A command to get help on commands")
+	@CommandMethod(help = "A command to get help on commands")
 	public void doHelp(ICommandSender sender) {
 		String usage = getUsage(sender);
 
@@ -188,7 +188,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	}
 
 	/* Help for a subcommand.  Ex. /<name> help <subcommand> */
-	@CommandMeta(help = "help <subcommand> - get help on how to use <subcommand>")
+	@CommandMethod(help = "help <subcommand> - get help on how to use <subcommand>")
 	public void doHelp(ICommandSender sender, String subcommand) {
 		String subCommandMethodName = COMMAND_METHOD_PREFIX + subcommand.toLowerCase();
 		boolean helpShown = false;
@@ -205,7 +205,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 	}
 
-	@CommandMeta(help = "commands - list available subcommands")
+	@CommandMethod(help = "commands - list available subcommands")
 	public void doCommands(ICommandSender sender) {
 		StringBuilder builder = new StringBuilder();
 		builder.append("[ ");
@@ -243,7 +243,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
-	public @interface CommandMeta {
+	public @interface CommandMethod {
 		String help() default "";
 
 		boolean requiresOp() default false;
@@ -318,7 +318,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			//PermissionAPI.registerNode(String node, DefaultPermissionLevel level, String description)
 			this.key = new CommandDispatcherKey(method.getName().toLowerCase(), method.getParameterCount());
 			this.method = method;
-			CommandMeta annotation = method.getAnnotation(CommandMeta.class);
+			CommandMethod annotation = method.getAnnotation(CommandMethod.class);
 			if (annotation != null) {
 				help = annotation.help();
 			} else {

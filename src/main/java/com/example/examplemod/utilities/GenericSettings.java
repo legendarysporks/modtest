@@ -214,12 +214,12 @@ public class GenericSettings {
 			settings = new GenericSettings(target);
 		}
 
-		@CommandMeta(help = "List avialable settings")
+		@CommandMethod(help = "List avialable settings")
 		public void doSettings(ICommandSender sender) {
 			sendMsg(sender, getName() + " settings: " + settings.list());
 		}
 
-		@CommandMeta(help = "Get the value of a setting:  'get <settingName>'")
+		@CommandMethod(help = "Get the value of a setting:  'get <settingName>'")
 		public void doGet(ICommandSender sender, String setting) {
 			try {
 				sendMsg(sender, getName() + "." + setting + " = " + settings.get(setting));
@@ -228,7 +228,7 @@ public class GenericSettings {
 			}
 		}
 
-		@CommandMeta(help = "Set the value of a setting: 'set <settingName> <value>'")
+		@CommandMethod(help = "Set the value of a setting: 'set <settingName> <value>'")
 		public void doSet(ICommandSender sender, String setting, String value) {
 			try {
 				settings.set(setting, value);
