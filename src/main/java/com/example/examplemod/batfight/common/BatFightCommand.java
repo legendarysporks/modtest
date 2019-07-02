@@ -13,25 +13,25 @@ public class BatFightCommand extends GenericCommand {
 		super(name, usage, aliases);
 	}
 
-	@Meta(help = "batfight add <word> - adds a word to the list of words")
+	@CommandMeta(help = "batfight add <word> - adds a word to the list of words")
 	public void doAdd(ICommandSender sender, String word) {
 		BatFightWords.addWord(word);
 		sendMsg(sender, "'" + word + "' added.");
 	}
 
-	@Meta(help = "batfight remove <word> - removes a word to the list of words")
+	@CommandMeta(help = "batfight remove <word> - removes a word to the list of words")
 	public void doRemove(ICommandSender sender, String word) {
 		BatFightWords.removeWord(word);
 		sendMsg(sender, "'" + word + "' removed.");
 	}
 
-	@Meta(help = "batfight removeAll - removes all words from the list of words")
+	@CommandMeta(help = "batfight removeAll - removes all words from the list of words")
 	public void doRemoveAll(ICommandSender sender) {
 		BatFightWords.removeAll();
 		sendMsg(sender, "All words removed.");
 	}
 
-	@Meta(help = "batfight something 1 2 3")
+	@CommandMeta(help = "batfight something 1 2 3")
 	public void doWords(ICommandSender sender) {
 		sendMsg(sender, BatFightWords.getAllWords());
 	}

@@ -2,6 +2,7 @@ package com.example.examplemod.emp.common;
 
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.items.GenericItem;
+import com.example.examplemod.utilities.GenericSettings.Setting;
 import com.example.examplemod.utilities.HackFMLEventListener;
 import com.example.examplemod.utilities.InventoryUtils;
 import net.minecraft.creativetab.CreativeTabs;
@@ -27,15 +28,20 @@ public class EMPGun extends GenericItem implements HackFMLEventListener {
 	@SidedProxy(clientSide = "com.example.examplemod.emp.client.EMPGunClient",
 			serverSide = "com.example.examplemod.emp.server.EMPGunServer")
 	public static EMPGun proxy;
-	private static boolean ALLOWED_IN_CREATIVE = true;
-	private static float VELOCITY = 1.6f;
-	private static float INACCURACY = 0.0f;
 	private static SoundEvent[] EMPSounds = new SoundEvent[EMPSoundNames.length];
+	@Setting
+	public boolean ALLOWED_IN_CREATIVE = true;
+	@Setting
+	public float VELOCITY = 1.6f;
+	@Setting
+	public float INACCURACY = 0.0f;
+	private EMPCommand command;
 
 	public EMPGun() {
 		super(name, CreativeTabs.COMBAT, 1);
 		setMaxDamage(0);
 		subscribeToFMLEvents();
+		command = new EMPCommand(this);
 	}
 
 	@Override

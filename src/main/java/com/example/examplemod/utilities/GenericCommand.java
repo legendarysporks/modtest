@@ -161,32 +161,34 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		return getName().compareTo(o.getName());
 	}
 
-/*	public void doIt(ICommandSender sender) {
+/*
+	public void doIt(ICommandSender sender) {
 		// a command without a subcommand.  Subclasses can override this if they want
 		// some real behavior.  For now, just dump help
 		doHelp(sender);
-	} */
+	}
+*/
 
 	/* Help for the root command.   Ex. /<name> help */
-	@Meta(help = "A command to get help on commands")
+	@CommandMeta(help = "A command to get help on commands")
 	public void doHelp(ICommandSender sender) {
 		String usage = getUsage(sender);
 
 		if (usage != null) {
 			sendMsg(sender, getUsage(sender));
-		} else {
-			StringBuilder msg = new StringBuilder();
-			msg.append("Try /");
-			msg.append(getName());
-			msg.append(" help [ ");
-			msg.append(buildCommandsList());
-			msg.append(" ]");
-			sendMsg(sender, msg.toString());
+
 		}
+		StringBuilder msg = new StringBuilder();
+		msg.append("or Try /");
+		msg.append(getName());
+		msg.append(" help [ ");
+		msg.append(buildCommandsList());
+		msg.append(" ]");
+		sendMsg(sender, msg.toString());
 	}
 
 	/* Help for a subcommand.  Ex. /<name> help <subcommand> */
-	@Meta(help = "help <subcommand> - get help on how to use <subcommand>")
+	@CommandMeta(help = "help <subcommand> - get help on how to use <subcommand>")
 	public void doHelp(ICommandSender sender, String subcommand) {
 		String subCommandMethodName = COMMAND_METHOD_PREFIX + subcommand.toLowerCase();
 		boolean helpShown = false;
@@ -203,7 +205,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 	}
 
-	@Meta(help = "commands - list available subcommands")
+	@CommandMeta(help = "commands - list available subcommands")
 	public void doCommands(ICommandSender sender) {
 		StringBuilder builder = new StringBuilder();
 		builder.append("[ ");
@@ -241,7 +243,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
-	public @interface Meta {
+	public @interface CommandMeta {
 		String help() default "";
 
 		boolean requiresOp() default false;
@@ -316,7 +318,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			//PermissionAPI.registerNode(String node, DefaultPermissionLevel level, String description)
 			this.key = new CommandDispatcherKey(method.getName().toLowerCase(), method.getParameterCount());
 			this.method = method;
-			Meta annotation = method.getAnnotation(Meta.class);
+			CommandMeta annotation = method.getAnnotation(CommandMeta.class);
 			if (annotation != null) {
 				help = annotation.help();
 			} else {

@@ -14,13 +14,6 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(modid = Reference.MODID, name = Reference.MODNAME, version = Reference.VERSION, acceptedMinecraftVersions = Reference.ACCEPTED_MINECRAFT_VERSIONS)
 public class ExampleMod {
-	/**
-	 * Since FML events are only dispatched to the main mod class, we want to be able to pass
-	 * them on to interested code ourselves.  These queues essentially allow us to do that.
-	 * Code interested in an event adds itself to the notifier and when then even fires the
-	 * event will be passed on to its handle method
-	 */
-	public static final HackFMLEventBus FMLEventBus = new HackFMLEventBus();
 	@Mod.Instance
 	public static ExampleMod instance;
 	public static Logger logger;
@@ -63,48 +56,48 @@ public class ExampleMod {
 		runTestCommand = new RunTestsCommand();
 
 		// notify listeners last so the rest of initialization/construction is done before they are called.
-		FMLEventBus.publish(event);
+		HackFMLEventBus.FMLEventBus.publish(event);
 	}
 
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		logTrace(Reference.MODID + ": init");
-		FMLEventBus.publish(event);
+		HackFMLEventBus.FMLEventBus.publish(event);
 	}
 
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent event) {
 		logTrace(Reference.MODID + ": postInit");
-		FMLEventBus.publish(event);
+		HackFMLEventBus.FMLEventBus.publish(event);
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerAboutToStartEvent event) {
 		logTrace("Server about to start");
-		FMLEventBus.publish(event);
+		HackFMLEventBus.FMLEventBus.publish(event);
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerStartingEvent event) {
 		logTrace("Server starting");
-		FMLEventBus.publish(event);
+		HackFMLEventBus.FMLEventBus.publish(event);
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerStartedEvent event) {
 		logTrace("Server started");
-		FMLEventBus.publish(event);
+		HackFMLEventBus.FMLEventBus.publish(event);
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerStoppingEvent event) {
 		logTrace("Server stopping");
-		FMLEventBus.publish(event);
+		HackFMLEventBus.FMLEventBus.publish(event);
 	}
 
 	@EventHandler
 	public void fmlLifeCycle(FMLServerStoppedEvent event) {
 		logTrace("Server stopped");
-		FMLEventBus.publish(event);
+		HackFMLEventBus.FMLEventBus.publish(event);
 	}
 }

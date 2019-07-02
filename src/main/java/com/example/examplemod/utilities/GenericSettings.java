@@ -1,5 +1,7 @@
 package com.example.examplemod.utilities;
 
+import net.minecraft.command.ICommandSender;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -22,45 +24,46 @@ public class GenericSettings {
 		findSettings();
 	}
 
+	/*
+	go through the class of the target object and pull all the public fields and methods marked with the
+	@Setting annotation and put them in the appropriate maps
+	 */
 	private void findSettings() {
 		// find fields with one of the supported types
 		Class clazz = target.getClass();
-		for (Field field : clazz.getDeclaredFields()) {
-			Annotation settingAnnotation = field.getAnnotation(Setting.class);
-			if (settingAnnotation != null && Modifier.isPublic(field.getModifiers())) {
-				Class<?> fieldType = field.getType();
-				if (isSupportedType(fieldType)) {
-					String name = field.getName();
-					fields.put(name.toLowerCase(), field);
+		while (clazz != Object.class) {
+			for (Field field : clazz.getDeclaredFields()) {
+				Annotation settingAnnotation = field.getAnnotation(Setting.class);
+				if (settingAnnotation != null && Modifier.isPublic(field.getModifiers())) {
+					Class<?> fieldType = field.getType();
+					if (isSupportedType(fieldType)) {
+						String name = field.getName();
+						fields.put(name.toLowerCase(), field);
+					}
 				}
 			}
-		}
 
-		// find methods of the form <supportedType> get<bla>()
-		for (Method method : clazz.getDeclaredMethods()) {
-			Annotation settingAnnotation = method.getAnnotation(Setting.class);
-			if (settingAnnotation != null && Modifier.isPublic(method.getModifiers())) {
-				String methodName = method.getName();
-				if (methodName.startsWith(GET)
-						&& isSupportedType(method.getReturnType())
-						&& (method.getParameterCount() == 0)) {
-					getters.put(methodName.substring(GET.length()).toLowerCase(), method);
+			// find methods of the form <supportedType> get<bla>() and
+			// methods of the form void set<bla>(<supportedType> param)
+			for (Method method : clazz.getDeclaredMethods()) {
+				Annotation settingAnnotation = method.getAnnotation(Setting.class);
+				if (settingAnnotation != null && Modifier.isPublic(method.getModifiers())) {
+					String methodName = method.getName();
+					if (methodName.startsWith(GET)
+							&& isSupportedType(method.getReturnType())
+							&& (method.getParameterCount() == 0)) {
+						getters.put(methodName.substring(GET.length()).toLowerCase(), method);
+					} else if (methodName.startsWith(SET)
+							&& (Void.TYPE == method.getReturnType())
+							&& (method.getParameterCount() == 1)
+							&& (isSupportedType(method.getParameterTypes()[0]))) {
+						setters.put(methodName.substring(SET.length()).toLowerCase(), method);
+					}
 				}
 			}
-		}
 
-		// find methods of the form void set<bla>(<supportedType> param)
-		for (Method method : clazz.getDeclaredMethods()) {
-			Annotation settingAnnotation = method.getAnnotation(Setting.class);
-			if (settingAnnotation != null && Modifier.isPublic(method.getModifiers())) {
-				String methodName = method.getName();
-				if (methodName.startsWith(SET)
-						&& (Void.TYPE == method.getReturnType())
-						&& (method.getParameterCount() == 1)
-						&& (isSupportedType(method.getParameterTypes()[0]))) {
-					setters.put(methodName.substring(SET.length()).toLowerCase(), method);
-				}
-			}
+			// now loop back and check its superclass
+			clazz = clazz.getSuperclass();
 		}
 	}
 
@@ -81,41 +84,57 @@ public class GenericSettings {
 		Field field = fields.get(settingName);
 		if (field != null) {
 			try {
+				field.setAccessible(true);
 				return field.get(target).toString();
 			} catch (IllegalAccessException e) {
+				// should not happen since we setAccessible(true) above
 				e.printStackTrace();
+			} finally {
+				field.setAccessible(false);
 			}
 		} else {
 			Method getter = getters.get(settingName);
 			if (getter != null) {
 				try {
+					field.setAccessible(true);
 					return getter.invoke(target).toString();
 				} catch (IllegalAccessException | InvocationTargetException e) {
+					// should not happen since we setAccessible(true) above
 					e.printStackTrace();
+				} finally {
+					field.setAccessible(false);
 				}
 			}
 		}
 		throw new SettingNotFoundException(settingName);
 	}
 
-	public boolean set(String settingName, String value) throws SettingNotFoundException, IllegalArgumentException {
+	public boolean set(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
 		settingName = settingName.toLowerCase();
 		Field field = fields.get(settingName);
 		if (field != null) {
 			try {
-				field.set(target, convertValueToType(value, field.getType()));
+				field.setAccessible(true);
+				field.set(target, convertValueToType(settingName, value, field.getType()));
 				return true;
 			} catch (IllegalAccessException e) {
+				// should not happen since we setAccessible(true) above
 				e.printStackTrace();
+			} finally {
+				field.setAccessible(false);
 			}
 		} else {
 			Method method = setters.get(settingName);
 			if (method != null) {
 				try {
-					method.invoke(target, convertValueToType(value, method.getParameterTypes()[0]));
+					method.setAccessible(true);
+					method.invoke(target, convertValueToType(settingName, value, method.getParameterTypes()[0]));
 					return true;
 				} catch (IllegalAccessException | InvocationTargetException e) {
+					// should not happen since we setAccessible(true) above
 					e.printStackTrace();
+				} finally {
+					field.setAccessible(false);
 				}
 			}
 		}
@@ -133,7 +152,7 @@ public class GenericSettings {
 		return result;
 	}
 
-	private Object convertValueToType(String value, Class<?> type) {
+	private Object convertValueToType(String settingName, String value, Class<?> type) throws InvalidValueException {
 		try {
 			if (type == String.class) {
 				return value;
@@ -155,10 +174,10 @@ public class GenericSettings {
 				return Double.parseDouble(value);
 			} else {
 				// this should never happen if the locateSettings method works correctly
-				throw new IllegalArgumentException("Can't handle settings of type: " + type.getName());
+				throw new InvalidValueException(settingName, value, "Value '" + value + "' is not a " + type.getName());
 			}
 		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("Argument is not a number");
+			throw new InvalidValueException(settingName, value, "Value '" + value + "' is not a number");
 		}
 	}
 
@@ -171,7 +190,52 @@ public class GenericSettings {
 		public final String settingName;
 
 		public SettingNotFoundException(String name) {
+			super("Setting '" + name + "' not found");
 			settingName = name;
+		}
+	}
+
+	public static class InvalidValueException extends Exception {
+		public final String settingName;
+		public final String value;
+
+		public InvalidValueException(String name, String value, String message) {
+			super(message);
+			this.settingName = name;
+			this.value = value;
+		}
+	}
+
+	public static class GenericCommandWithSettings extends GenericCommand {
+		private final GenericSettings settings;
+
+		public GenericCommandWithSettings(String name, String usage, String[] aliases, Object target) {
+			super(name, usage, aliases);
+			settings = new GenericSettings(target);
+		}
+
+		@CommandMeta(help = "List avialable settings")
+		public void doSettings(ICommandSender sender) {
+			sendMsg(sender, getName() + " settings: " + settings.list());
+		}
+
+		@CommandMeta(help = "Get the value of a setting:  'get <settingName>'")
+		public void doGet(ICommandSender sender, String setting) {
+			try {
+				sendMsg(sender, getName() + "." + setting + " = " + settings.get(setting));
+			} catch (SettingNotFoundException e) {
+				sendMsg(sender, e.getMessage());
+			}
+		}
+
+		@CommandMeta(help = "Set the value of a setting: 'set <settingName> <value>'")
+		public void doSet(ICommandSender sender, String setting, String value) {
+			try {
+				settings.set(setting, value);
+				sendMsg(sender, getName() + "." + setting + " set to " + value);
+			} catch (InvalidValueException | SettingNotFoundException e) {
+				sendMsg(sender, e.getMessage());
+			}
 		}
 	}
 }

@@ -32,6 +32,15 @@ public class ExplodingAnimals implements HackFMLEventListener {
 	};
 	private static final HashMap<Class<? extends EntityAnimal>, TriggerInfo> typeToInfoMap = new HashMap<>();
 	private static final HashMap<String, TriggerInfo> nameToInfoMap = new HashMap<>();
+	private static final String cmdNamd = "ExplodingAnimals";
+	private static final String cmdUsage = "ExplodingAnimals [ settings | settings <animal> | get <animal> <setting> | "
+			+ "set <animal> <setting> <value> ]";
+	private static final String[] cmdAliases = {"explodingAnimals", "explodinganimals", "ea", "EA", "boom", "BOOM"};
+	public final GenericSettings settings;
+	private final ExplodingAnimalsCommand command;
+	@Setting
+	public boolean enabled = true;
+
 	{
 		for (TriggerInfo info : triggers) {
 			typeToInfoMap.put(info.targerAnimal, info);
@@ -39,11 +48,11 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		}
 	}
 
-	private static final String cmdNamd = "ExplodingAnimals";
-	private static final String cmdUsage = "ExplodingAnimals [ list | list <animal> | get <animal> <setting> | "
-			+ "set <animal> <setting> <value> ]";
-	private static final String[] cmdAliases = {"explodingAnimals", "explodinganimals", "ea", "EA", "boom", "BOOM"};
-	public final GenericSettings settings;
+	public ExplodingAnimals() {
+		subscribeToFMLEvents();
+		command = new ExplodingAnimalsCommand(this);
+		settings = new GenericSettings(this);
+	}
 
 	@Override
 	public void handleFMLEvent(FMLPreInitializationEvent event) {
@@ -60,16 +69,6 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		if (trigger != null) {
 			trigger.handleAttach(world, event.getEntityPlayer(), (EntityAnimal) target);
 		}
-	}
-
-	private final ExplodingAnimalsCommand command;
-	@Setting
-	public boolean enabled = true;
-
-	public ExplodingAnimals() {
-		subscribeToFMLEvents();
-		command = new ExplodingAnimalsCommand(this);
-		settings = new GenericSettings(this);
 	}
 
 	public List<String> getAnimals() {
@@ -90,6 +89,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		private static final boolean defaultSmoking = true; //smoke after explosion
 		public final String name;
 		public final Class<? extends EntityAnimal> targerAnimal;
+		private final Random rand = new Random();
 		@Setting
 		public int chanceToExplode;
 		@Setting
@@ -98,7 +98,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		public float explosionDamage;
 		@Setting
 		public boolean smoking;
-		private final Random rand = new Random();
+		@Setting
 		public boolean enabled;
 		public GenericSettings settings;
 
@@ -144,12 +144,14 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			this.animals = animals;
 		}
 
-		public void doList(ICommandSender sender) {
+		@CommandMeta(help = "List available settings")
+		public void doSettings(ICommandSender sender) {
 			sendMsg(sender, settings.list());
 			sendMsg(sender, nameToInfoMap.keySet());
 		}
 
-		public void doList(ICommandSender sender, String animal) {
+		@CommandMeta(help = "List settings for an animal: 'settings <animal>'")
+		public void doSettings(ICommandSender sender, String animal) {
 			TriggerInfo info = nameToInfoMap.get(animal);
 			if (info == null) {
 				sendMsg(sender, "Unknown animal: " + animal);
@@ -158,23 +160,26 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			}
 		}
 
+		@CommandMeta(help = "Get the value of a setting: 'get <settingName'")
 		public void doGet(ICommandSender sender, String setting) {
 			try {
 				sendMsg(sender, settings.get(setting));
 			} catch (GenericSettings.SettingNotFoundException e) {
-				sendMsg(sender, setting + " not found");
+				sendMsg(sender, e.getMessage());
 			}
 		}
 
+		@CommandMeta(help = "Get the value of a setting: 'set <settingName> <value>'")
 		public void doSet(ICommandSender sender, String setting, String value) {
 			try {
 				settings.set(setting, value);
 				sendMsg(sender, setting + " set to " + value);
-			} catch (GenericSettings.SettingNotFoundException e) {
-				sendMsg(sender, setting + " not found");
+			} catch (GenericSettings.InvalidValueException | GenericSettings.SettingNotFoundException e) {
+				sendMsg(sender, e.getMessage());
 			}
 		}
 
+		@CommandMeta(help = "Change the value of a setting: 'get <animal> <settingName>'")
 		public void doGet(ICommandSender sender, String animal, String setting) {
 			TriggerInfo info = nameToInfoMap.get(animal);
 			if (info == null) {
@@ -183,11 +188,12 @@ public class ExplodingAnimals implements HackFMLEventListener {
 				try {
 					sendMsg(sender, info.settings.get(setting));
 				} catch (GenericSettings.SettingNotFoundException e) {
-					sendMsg(sender, setting + " not found");
+					sendMsg(sender, e.getMessage());
 				}
 			}
 		}
 
+		@CommandMeta(help = "Change the value of a setting on a particular animal: 'set <animal> <settingName> <value>'")
 		public void doSet(ICommandSender sender, String animal, String setting, String value) {
 			TriggerInfo info = nameToInfoMap.get(animal);
 			if (info == null) {
@@ -196,8 +202,8 @@ public class ExplodingAnimals implements HackFMLEventListener {
 				try {
 					info.settings.set(setting, value);
 					sendMsg(sender, setting + " set to " + value);
-				} catch (GenericSettings.SettingNotFoundException e) {
-					sendMsg(sender, setting + " not found");
+				} catch (GenericSettings.InvalidValueException | GenericSettings.SettingNotFoundException e) {
+					sendMsg(sender, e.getMessage());
 				}
 			}
 		}
