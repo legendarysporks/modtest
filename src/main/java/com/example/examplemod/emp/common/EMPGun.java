@@ -8,7 +8,6 @@ import com.example.examplemod.utilities.InventoryUtils;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemArrow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
@@ -17,7 +16,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 public class EMPGun extends GenericItem implements HackFMLEventListener {
 	private static final String name = "emp_gun";
-	private static final Class<? extends Item> AMMO_CLASS = ItemArrow.class;
+	private static final Class<? extends Item> AMMO_CLASS = EMPAmmo.class;
 	private static final String[] EMPSoundNames = new String[]{
 			"alien_blaster_fired",
 //			"emp_fired",
