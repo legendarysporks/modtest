@@ -4,13 +4,12 @@ import com.example.examplemod.utilities.GenericCommand;
 import net.minecraft.command.ICommandSender;
 
 public class BatFightCommand extends GenericCommand {
-	private static final String name = "batfight";
-	private static final String usage = "batfight ([add word] | [remove word] | [removeall])";
-	private static final String[] aliases = {"bf"};
-	private static final int MAX_WORD_DUMP_LINE_LENGTH = 100;
+	private static final String NAME = "batfight";
+	private static final String USAGE = "batfight ([add word] | [remove word] | [removeall])";
+	private static final String[] ALIASES = {"bf"};
 
 	public BatFightCommand() {
-		super(name, usage, aliases);
+		super(NAME, USAGE, ALIASES);
 	}
 
 	@CommandMethod(help = "batfight add <word> - adds a word to the list of words")

@@ -48,7 +48,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 	@Setting
 	public boolean enabled = true;
 
-	{
+	static {
 		for (TriggerInfo info : triggers) {
 			typeToInfoMap.put(info.targerAnimal, info);
 			nameToInfoMap.put(info.name, info);
@@ -58,7 +58,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 	public ExplodingAnimals() {
 		subscribeToFMLEvents();
 		command = new ExplodingAnimalsCommand(this);
-		settings = new GenericSettings(this);
+		settings = new GenericSettings(this, cmdNamd, "1.0");
 	}
 
 	@Override
@@ -153,7 +153,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 
 		@CommandMethod(help = "List available settings")
 		public void doSettings(ICommandSender sender) {
-			sendMsg(sender, settings.list());
+			sendMsg(sender, settings.getSettingNames());
 			sendMsg(sender, nameToInfoMap.keySet());
 		}
 
@@ -163,7 +163,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			if (info == null) {
 				sendMsg(sender, "Unknown animal: " + animal);
 			} else {
-				sendMsg(sender, info.settings.list());
+				sendMsg(sender, info.settings.getSettingNames());
 			}
 		}
 

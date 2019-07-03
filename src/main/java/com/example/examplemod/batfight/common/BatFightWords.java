@@ -117,6 +117,5 @@ public class BatFightWords {
 
 	public static List<String> getAllWords() {
 		return Collections.unmodifiableList(words);
-
 	}
 }

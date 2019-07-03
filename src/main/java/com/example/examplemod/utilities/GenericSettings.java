@@ -1,7 +1,13 @@
 package com.example.examplemod.utilities;
 
+import com.example.examplemod.ExampleMod;
+import com.example.examplemod.Reference;
 import net.minecraft.command.ICommandSender;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
+import net.minecraftforge.fml.common.Loader;
 
+import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -14,7 +20,9 @@ import java.util.*;
 public class GenericSettings {
 	private static final String GET = "get";
 	private static final String SET = "set";
+	private static final String CONFIG_FILE_SUFFIX = ".cfg";
 	private final Object target;
+	private final Configuration configion;
 	private final Map<String, Field> fields = new HashMap<>();
 	private final Map<String, Method> getters = new HashMap<>();
 	private final Map<String, Method> setters = new HashMap<>();
@@ -22,6 +30,19 @@ public class GenericSettings {
 	public GenericSettings(Object target) {
 		this.target = target;
 		findSettings();
+		configion = null;
+	}
+
+	public GenericSettings(Object target, String configFileName, String configVersion) {
+		this.target = target;
+		findSettings();
+		File cfgFile = new File(Loader.instance().getConfigDir(), Reference.MODID + "-" + configFileName + CONFIG_FILE_SUFFIX);
+		boolean isNewConfigFile = !cfgFile.exists();
+		configion = new Configuration(cfgFile, configVersion);
+		load();
+		if (isNewConfigFile) {
+			configion.save();
+		}
 	}
 
 	/*
@@ -71,6 +92,30 @@ public class GenericSettings {
 		return type.isPrimitive() || (type == String.class);
 	}
 
+	public void load() {
+		if (configion != null) {
+			configion.load();
+			for (String setting : getSettingNames()) {
+				String propertyValue = "";
+				try {
+					Property property = configion.get(Configuration.CATEGORY_GENERAL, setting, get(setting));
+					propertyValue = property.getString();
+					set(setting, propertyValue);
+				} catch (SettingNotFoundException e) {
+					// this shouldn't happen since we only iterate over settings we know
+				} catch (InvalidValueException e) {
+					ExampleMod.logInfo(String.format("Invalid configion key: '%s' value: '%s' ignored", setting, propertyValue));
+				}
+			}
+		}
+	}
+
+	public void save() {
+		if (configion != null) {
+			configion.save();
+		}
+	}
+
 	public boolean hasGettableSetting(String settingName) {
 		return fields.containsKey(settingName) || getters.containsKey(settingName);
 	}
@@ -96,13 +141,13 @@ public class GenericSettings {
 			Method getter = getters.get(settingName);
 			if (getter != null) {
 				try {
-					field.setAccessible(true);
+					getter.setAccessible(true);
 					return getter.invoke(target).toString();
 				} catch (IllegalAccessException | InvocationTargetException e) {
 					// should not happen since we setAccessible(true) above
 					e.printStackTrace();
 				} finally {
-					field.setAccessible(false);
+					getter.setAccessible(false);
 				}
 			}
 		}
@@ -116,6 +161,7 @@ public class GenericSettings {
 			try {
 				field.setAccessible(true);
 				field.set(target, convertValueToType(settingName, value, field.getType()));
+				updateConfigFile(settingName, value);
 				return true;
 			} catch (IllegalAccessException e) {
 				// should not happen since we setAccessible(true) above
@@ -129,19 +175,36 @@ public class GenericSettings {
 				try {
 					method.setAccessible(true);
 					method.invoke(target, convertValueToType(settingName, value, method.getParameterTypes()[0]));
+					updateConfigFile(settingName, value);
 					return true;
 				} catch (IllegalAccessException | InvocationTargetException e) {
 					// should not happen since we setAccessible(true) above
 					e.printStackTrace();
 				} finally {
-					field.setAccessible(false);
+					method.setAccessible(false);
 				}
 			}
 		}
 		throw new SettingNotFoundException(settingName);
 	}
 
-	public List<String> list() {
+	public void markDirty(String settingName) {
+		try {
+			updateConfigFile(settingName, get(settingName));
+		} catch (SettingNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void updateConfigFile(String settingName, String value) {
+		if (configion != null) {
+			Property property = configion.get(Configuration.CATEGORY_GENERAL, settingName, value);
+			property.set(value);
+			configion.save();
+		}
+	}
+
+	public List<String> getSettingNames() {
 		Set<String> set = new HashSet<>();
 		set.addAll(fields.keySet());
 		set.addAll(getters.keySet());
@@ -211,12 +274,12 @@ public class GenericSettings {
 
 		public GenericCommandWithSettings(String name, String usage, String[] aliases, Object target) {
 			super(name, usage, aliases);
-			settings = new GenericSettings(target);
+			settings = new GenericSettings(target, name, "1.0");
 		}
 
 		@CommandMethod(help = "List avialable settings")
 		public void doSettings(ICommandSender sender) {
-			sendMsg(sender, getName() + " settings: " + settings.list());
+			sendMsg(sender, getName() + " settings: " + settings.getSettingNames());
 		}
 
 		@CommandMethod(help = "Get the value of a setting:  'get <settingName>'")
@@ -236,6 +299,10 @@ public class GenericSettings {
 			} catch (InvalidValueException | SettingNotFoundException e) {
 				sendMsg(sender, e.getMessage());
 			}
+		}
+
+		public void markDirty(String settingName) {
+			settings.markDirty(settingName);
 		}
 	}
 }
