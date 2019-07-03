@@ -10,6 +10,8 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 
+import static net.minecraft.util.math.RayTraceResult.Type.MISS;
+
 public class EMPProjectile extends EntityThrowable {
 	private static final String NAME = "emp_projectile";
 	private static final int ID = 120;
@@ -65,7 +67,7 @@ public class EMPProjectile extends EntityThrowable {
 
 	@Override
 	protected void onImpact(RayTraceResult result) {
-		if (!world.isRemote) {
+		if (!world.isRemote || (result.typeOfHit == MISS)) {
 			if (result.entityHit == launcher) {
 				return;
 			}
