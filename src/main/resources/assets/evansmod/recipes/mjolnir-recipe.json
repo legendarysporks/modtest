@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "ABA",
+    " B "  ],
+  "key": {
+    "A": [
+      {
+        "item": "evansmod:tutorial_block",
+        "data": 0
+      }
+    ],
+    "B": [
+      {
+        "item": "minecraft:stick",
+        "data": 0
+      }
+    ]
+  },
+  "result": {
+    "item": "evansmod:thor_hammer",
+    "data": 0
+  }
+}
