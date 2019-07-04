@@ -3,10 +3,12 @@ package com.example.examplemod.utilities;
 import com.example.examplemod.ExampleMod;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
 import javax.annotation.Nullable;
@@ -14,27 +16,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GenericCommand implements ICommand, HackFMLEventListener {
 	private static final String COMMAND_METHOD_PREFIX = "do";
-	private static final String ROOT_COMMAND = COMMAND_METHOD_PREFIX + "it";
+	private static final String ROOT_COMMAND = COMMAND_METHOD_PREFIX + "it";    //doIt
+	private static final int MAX_WORD_DUMP_LINE_LENGTH = 100;
 
 	private final List<String> aliasList = new ArrayList<>();
 	private final String usage;
 	private final String name;
 	private final Map<CommandDispatcherKey, CommandDispatcher> commands = new HashMap<>();
-	private final Map<String, String> help = new HashMap<>();
-
-	@Retention(RetentionPolicy.RUNTIME)
-	public @interface Meta {
-		String help() default "";
-
-		boolean requiresOp() default false;
-	}
+	private final List<String> tabCompletions = new ArrayList<>();
+	private int maxArgumentCount = 0;
 
 	public GenericCommand(String name, String usage, String... aliases) {
 		this.name = name;
@@ -49,27 +43,44 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	/* Search through the methods of this class and super classes to find command handler methods */
 	private void buildCommandMapping() {
+		Set<String> cmdSet = new HashSet<>();
 		Class clazz = getClass();
 		while (clazz != Object.class) {
 			for (Method method : clazz.getDeclaredMethods()) {
 				if (isCommandMethodSigniture(method)) {
 					CommandDispatcher dispatcher = new CommandDispatcher(method);
 					commands.put(dispatcher.key, dispatcher);
-					Meta annotation = method.getAnnotation(Meta.class);
-					if (annotation != null) {
-						help.put(method.getName().toLowerCase(), annotation.help());
+					maxArgumentCount = Math.max(maxArgumentCount, dispatcher.key.methodArgCount);
+					if (!ROOT_COMMAND.equals(dispatcher.key.name)) {
+						cmdSet.add(dispatcher.key.name.substring(COMMAND_METHOD_PREFIX.length()));
 					}
 				}
 			}
 			clazz = clazz.getSuperclass();
 		}
+		tabCompletions.addAll(cmdSet);
+		Collections.sort(tabCompletions);
 	}
 
-	/* Check to see if a given method is of the form "void do<bla>(ICommandSender...)" */
+	/* Check to see if a given method is of the form "void do<Bla>(ICommandSender [, String...])" */
 	private boolean isCommandMethodSigniture(Method method) {
-		if (method.getName().startsWith(COMMAND_METHOD_PREFIX)) {
-			Class<?> paramTypes[] = method.getParameterTypes();
-			return ((paramTypes.length >= 1) && (paramTypes[0] == ICommandSender.class));
+		if ((method.getAnnotation(CommandMethod.class) != null)
+				&& method.getName().startsWith(COMMAND_METHOD_PREFIX)
+				&& (method.getReturnType() == Void.TYPE)) {
+			if (!Character.isUpperCase(method.getName().charAt(COMMAND_METHOD_PREFIX.length()))) {
+				// first character after "do" needs to be upper case
+				return false;
+			}
+			Class<?>[] paramTypes = method.getParameterTypes();
+			if ((paramTypes.length < 1) || (paramTypes[0] != ICommandSender.class)) {
+				// the first parameter must be of type ICommandSender
+				return false;
+			}
+			for (int i = 1; i < paramTypes.length; i++) {
+				// each param after the first must be of type String
+				if (paramTypes[i] != String.class) return false;
+			}
+			return true;
 		} else {
 			return false;
 		}
@@ -100,9 +111,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
 		World world = sender.getEntityWorld();
 
-		if (world.isRemote) {
-			ExampleMod.logInfo("Not processing on Client side");
-		} else {
+		if (world.isRemote == false) {
 			CommandDispatcher method;
 			if (args.length == 0) {
 				// root command with no arguments
@@ -118,9 +127,19 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			}
 
 			if (method != null) {
-				method.invoke(this, sender, args);
+				// we found a matching method for the command and agruments
+				if (method.hasPermission(sender)) {
+					method.invoke(this, sender, args);
+				} else {
+					sendMsg(sender, "You don't have permission to do that.");
+				}
+			} else if (args.length > 0) {
+				// try to display help for subcommand
+				sendMsg(sender, "Command not understood.");
+				doHelp(sender, args[0]);
 			} else {
-				sender.sendMessage(new TextComponentString("Command not understood.  Try " + name + " help"));
+				sendMsg(sender, "Command not understood.");
+				doHelp(sender);
 			}
 		}
 	}
@@ -132,7 +151,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
-		return null;
+		return (args.length == 0) ? tabCompletions : null;
 	}
 
 	@Override
@@ -142,44 +161,111 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	@Override
 	public int compareTo(ICommand o) {
-		return 0;
+		return getName().compareTo(o.getName());
 	}
 
-	@Meta(help = "doIt(ICommandSender sender, String text) help")
-	public void doIt(ICommandSender sender, String text) {
-		sender.sendMessage(new TextComponentString("Yup. " + text));
-	}
-
+/*
 	public void doIt(ICommandSender sender) {
-		sender.sendMessage(new TextComponentString("Yes? Can I help you?"));
+		// a command without a subcommand.  Subclasses can override this if they want
+		// some real behavior.  For now, just dump help
+		doHelp(sender);
 	}
+*/
 
+	/* Help for the root command.   Ex. /<name> help */
+	@CommandMethod(help = "A command to get help on commands")
 	public void doHelp(ICommandSender sender) {
-		sender.sendMessage(new TextComponentString(usage));
+		String usage = getUsage(sender);
+
+		if (usage != null) {
+			sendMsg(sender, getUsage(sender));
+
+		}
+		StringBuilder msg = new StringBuilder();
+		msg.append("or Try /");
+		msg.append(getName());
+		msg.append(" help [ ");
+		msg.append(buildCommandsList());
+		msg.append(" ]");
+		sendMsg(sender, msg.toString());
 	}
 
+	/* Help for a subcommand.  Ex. /<name> help <subcommand> */
+	@CommandMethod(help = "help <subcommand> - get help on how to use <subcommand>")
 	public void doHelp(ICommandSender sender, String subcommand) {
-		String specialHelp = help.get(COMMAND_METHOD_PREFIX + subcommand.toLowerCase());
-		if (specialHelp != null) {
-			sender.sendMessage(new TextComponentString(specialHelp));
-		} else {
+		String subCommandMethodName = COMMAND_METHOD_PREFIX + subcommand.toLowerCase();
+		boolean helpShown = false;
+		for (int i = 0; i <= maxArgumentCount; i++) {
+			CommandDispatcher dispatcher = commands.get(new CommandDispatcherKey(subCommandMethodName, i));
+			if (dispatcher != null) {
+				sendMsg(sender, dispatcher.help);
+				helpShown = true;
+			}
+		}
+		if (!helpShown) {
+			// we didn't have ANY matching methods, so default to general help
 			doHelp(sender);
 		}
 	}
 
+	@CommandMethod(help = "commands - list available subcommands")
+	public void doCommands(ICommandSender sender) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("[ ");
+		builder.append(buildCommandsList());
+		builder.append(" ]");
+		sendMsg(sender, builder.toString());
+	}
+
+	private String buildCommandsList() {
+		StringBuilder builder = new StringBuilder();
+		String seperator = "";
+		for (String subCmd : tabCompletions) {
+			builder.append(seperator);
+			builder.append(subCmd);
+			seperator = " | ";
+		}
+		return builder.toString();
+	}
+
+	protected void sendMsg(ICommandSender sender, String msg) {
+		sender.sendMessage(new TextComponentString(msg));
+	}
+
+	protected void sendMsg(ICommandSender sender, Collection<String> words) {
+		StringBuilder line = new StringBuilder();
+		for (String word : words) {
+			line.append(word);
+			line.append(" ");
+			if (line.length() > MAX_WORD_DUMP_LINE_LENGTH) {
+				sendMsg(sender, line.toString());
+				line = new StringBuilder();
+			}
+		}
+		sendMsg(sender, line.toString());
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface CommandMethod {
+		String help() default "";
+
+		boolean requiresOp() default false;
+	}
+
+	/** CommandDispatcherKey is used as a hash key for looking up CommandDispatchers */
 	private static class CommandDispatcherKey implements Comparable<CommandDispatcherKey> {
 		public final String name;
 		public final int methodArgCount;
 
-		// root command
+		// root command - doIt()
 		public CommandDispatcherKey(int methodArgCount) {
 			this.name = ROOT_COMMAND;
 			this.methodArgCount = methodArgCount;
 		}
 
-		// sub command
+		// sub command - do<Something>()
 		public CommandDispatcherKey(String name, int methodArgCount) {
-			this.name = name;
+			this.name = name.toLowerCase();
 			this.methodArgCount = methodArgCount;
 		}
 
@@ -226,16 +312,41 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 	}
 
-	private static class CommandDispatcher {
+	/** This class holds details about a command method and is used to invoke with proper arguments. */
+	private class CommandDispatcher {
 		public final CommandDispatcherKey key;
 		public final Method method;
+		public final String help;
+		public final boolean requiresOp;
 
 		CommandDispatcher(Method method) {
 			this.key = new CommandDispatcherKey(method.getName().toLowerCase(), method.getParameterCount());
 			this.method = method;
+			CommandMethod annotation = method.getAnnotation(CommandMethod.class);
+			help = annotation.help();
+			requiresOp = annotation.requiresOp();
 		}
 
-		private void invoke(Object commandObject, ICommandSender sender, Object[] args) {
+		/** return true is sender can use this command */
+		public boolean hasPermission(ICommandSender sender) {
+			if (requiresOp) {
+				if (sender instanceof EntityPlayerMP) {
+					EntityPlayerMP player = (EntityPlayerMP) sender;
+					// player is op so let them do it.
+					// non-op player when op is required.  NO!
+					return FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getOppedPlayers().getEntry(
+							player.getGameProfile()) != null;
+				} else {
+					// a non-player (console?) issued the command.  Go for it.
+					return true;
+				}
+			} else {
+				// op not required
+				return true;
+			}
+		}
+
+		public void invoke(Object commandObject, ICommandSender sender, Object[] args) {
 			try {
 				method.invoke(commandObject, calculateArguments(sender, args));
 			} catch (IllegalAccessException | InvocationTargetException e) {
@@ -243,8 +354,9 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			}
 		}
 
+		/** Take the command line arguments and munge them into method arguments */
 		private Object[] calculateArguments(ICommandSender sender, Object[] argsIn) {
-			Object argsOut[];
+			Object[] argsOut;
 			if (key.isRootCommand()) {
 				// we need to insert the sender in the arguments list
 				// argsIn looks like { "param1", "param2",  ... }

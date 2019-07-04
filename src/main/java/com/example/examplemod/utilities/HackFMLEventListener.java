@@ -1,11 +1,14 @@
 package com.example.examplemod.utilities;
 
-import com.example.examplemod.ExampleMod;
 import net.minecraftforge.fml.common.event.*;
 
 public interface HackFMLEventListener {
 	default void subscribeToFMLEvents() {
-		ExampleMod.instance.FMLEventBus.subscribe(this);
+		HackFMLEventBus.FMLEventBus.subscribe(this);
+	}
+
+	default void unsubscribeToFMLEvents() {
+		HackFMLEventBus.FMLEventBus.unsubscribe(this);
 	}
 
 	default void handleFMLEvent(FMLPreInitializationEvent event) {

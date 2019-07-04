@@ -1,20 +1,19 @@
 package com.example.examplemod.batfight.client;
 
+import com.example.examplemod.batfight.common.BatFightWords;
+import com.example.examplemod.batfight.common.PeriodicBatAnimation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import com.example.examplemod.batfight.common.BatFightWords;
-import com.example.examplemod.batfight.common.PeriodicBatAnimation;
 
 import java.util.Random;
 
 @SideOnly(Side.CLIENT)
 public class BatMessageAnimation extends PeriodicBatAnimation {
 	// Alpha channel values from 100% to 0
-	private static int alphaValue[] = {
+	private static int[] alphaValue = {
 			0x00000000,
 			0xF0000000,
 			0xE0000000,
@@ -43,7 +42,7 @@ public class BatMessageAnimation extends PeriodicBatAnimation {
 
 		// get the word and BOLD it with a formatting code
 		// https://minecraft.gamepedia.com/Formatting_codes
-		text = BatFightWords.getWord();
+		text = BatFightWords.getRandomWord();
 
 		// get the display size in Minecraft pixels
 		Minecraft mc = Minecraft.getMinecraft();

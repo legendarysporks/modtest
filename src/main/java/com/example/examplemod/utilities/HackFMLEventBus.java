@@ -7,8 +7,17 @@ import java.util.List;
 
 /*
 Simple class used to send FLMEvents to multiple subscribers.
+A REAL @Mod needs to publish the FML events it receives.
  */
 public class HackFMLEventBus {
+	/**
+	 * Since FML events are only dispatched to the main mod class, we want to be able to pass
+	 * them on to interested code ourselves.  These queues essentially allow us to do that.
+	 * Code interested in an event adds itself to the notifier and when then even fires the
+	 * event will be passed on to its handle method
+	 */
+	public static final HackFMLEventBus FMLEventBus = new HackFMLEventBus();
+
 	private List<HackFMLEventListener> listeners = new ArrayList<>();
 
 	public void subscribe(HackFMLEventListener listener) {
@@ -65,6 +74,10 @@ public class HackFMLEventBus {
 		for (HackFMLEventListener listerner : listeners) {
 			listerner.handleFMLEvent(event);
 		}
+	}
+
+	public void reset() {
+		listeners = new ArrayList<>();
 	}
 
 	public void close() {

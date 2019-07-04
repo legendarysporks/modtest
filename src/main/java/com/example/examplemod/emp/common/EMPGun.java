@@ -2,12 +2,12 @@ package com.example.examplemod.emp.common;
 
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.items.GenericItem;
+import com.example.examplemod.utilities.GenericSettings.Setting;
 import com.example.examplemod.utilities.HackFMLEventListener;
 import com.example.examplemod.utilities.InventoryUtils;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemArrow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
@@ -16,28 +16,31 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 public class EMPGun extends GenericItem implements HackFMLEventListener {
 	private static final String name = "emp_gun";
-	private static final Class<? extends Item> AMMO_CLASS = ItemArrow.class;
-	private static boolean ALLOWED_IN_CREATIVE = true;
-	private static float VELOCITY = 1.6f;
-	private static float INACCURACY = 0.0f;
-
-	@SidedProxy(clientSide = "com.example.examplemod.emp.client.EMPGunClient",
-			serverSide = "com.example.examplemod.emp.server.EMPGunServer")
-	public static EMPGun proxy;
-
-	private static final String EMPSoundNames[] = new String[]{
+	private static final Class<? extends Item> AMMO_CLASS = EMPAmmo.class;
+	private static final String[] EMPSoundNames = new String[]{
 			"alien_blaster_fired",
 //			"emp_fired",
 			"pistol_alien_blaster_fired",
 //			"pulsegun_fired",
 			"varmnitrifle_fired",
 	};
-	private static SoundEvent EMPSounds[] = new SoundEvent[EMPSoundNames.length];
+	@SidedProxy(clientSide = "com.example.examplemod.emp.client.EMPGunClient",
+			serverSide = "com.example.examplemod.emp.server.EMPGunServer")
+	public static EMPGun proxy;
+	private static SoundEvent[] EMPSounds = new SoundEvent[EMPSoundNames.length];
+	@Setting
+	public boolean ALLOWED_IN_CREATIVE = true;
+	@Setting
+	public float VELOCITY = 1.6f;
+	@Setting
+	public float INACCURACY = 0.0f;
+	private EMPCommand command;
 
 	public EMPGun() {
 		super(name, CreativeTabs.COMBAT, 1);
 		setMaxDamage(0);
 		subscribeToFMLEvents();
+		command = new EMPCommand(this);
 	}
 
 	@Override
