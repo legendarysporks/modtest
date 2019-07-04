@@ -1,6 +1,7 @@
 package com.example.examplemod.thorhammer;
 
 import com.example.examplemod.items.GenericItem;
+import com.example.examplemod.utilities.GenericSettings.GenericCommandWithSettings;
 import com.example.examplemod.utilities.GenericSettings.Setting;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -31,11 +32,15 @@ public class ThorHammer extends GenericItem {
 			Material.WATER,
 			Material.LAVA
 	));
+	private static final String COMMAND_NAME = "ThorHammer";
+	private static final String COMMAND_USAGE = "Try /ThorHammer settings";
+	private static final String[] COMMAND_ALIASES = {"thorhammer", "thorHammer"};
 	private double range = 30;
 	private int affectDurationInTicks = 3 * 20; // 10 seconds
 	private int trailLength = 15;
 	private long stepDurationInTicks = Math.round(affectDurationInTicks / range);
 	private List<ThorHammerAffect> activeAffects = new ArrayList<>();
+	private GenericCommandWithSettings command = new GenericCommandWithSettings(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES, this);
 
 	public ThorHammer(String name) {
 		super(name);
@@ -132,23 +137,20 @@ public class ThorHammer extends GenericItem {
 	}
 
 	protected boolean handleAddPosition(World world, BlockPos pos) {
-//		world.setBlockToAir(pos);
 		world.setBlockState(pos, Blocks.MAGMA.getDefaultState());
-
-//		BlockPos above = pos.up();
-//		if (world.getBlockState(above).getMaterial() == Material.AIR.AIR) {
-//			world.setBlockState(above, Blocks.FIRE.getDefaultState());
-//		}
+		BlockPos above = pos.up();
+		if (world.getBlockState(above).getMaterial() == Material.AIR) {
+			world.setBlockState(above, Blocks.FIRE.getDefaultState());
+		}
 		return true;
 	}
 
 	protected void handleRemovePosition(World world, BlockPos pos) {
 		world.setBlockState(pos, Blocks.AIR.getDefaultState());
-//		BlockPos above = pos.up();
-//		if (world.getBlockState(above).getMaterial() == Material.AIR) {
-//			world.setBlockToAir(above);
-//		}
-//		world.destroyBlock(pos, false);
+		BlockPos above = pos.up();
+		if (world.getBlockState(above).getMaterial() == Material.AIR) {
+			world.setBlockToAir(above);
+		}
 	}
 
 
