@@ -4,6 +4,7 @@ import com.example.examplemod.Reference;
 import com.example.examplemod.emp.common.EMPAmmo;
 import com.example.examplemod.emp.common.EMPGun;
 import com.example.examplemod.items.GenericItem;
+import com.example.examplemod.thorhammer.ThorHammer;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.Mod;
 
@@ -19,7 +20,7 @@ public class ModItems {
 	public static void init() {
 		basicIngot = new GenericItem("basic_ingot");
 		raw_uru = new GenericItem("raw_uru");
-		thor_hammer = new GenericItem("thor_hammer");
+		thor_hammer = new ThorHammer("thor_hammer");
 		empRound = new EMPAmmo("emp_round");
 		empGun = EMPGun.proxy;
 	}
