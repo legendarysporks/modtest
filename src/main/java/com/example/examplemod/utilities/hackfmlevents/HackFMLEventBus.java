@@ -1,4 +1,4 @@
-package com.example.examplemod.utilities;
+package com.example.examplemod.utilities.hackfmlevents;
 
 import net.minecraftforge.fml.common.event.*;
 

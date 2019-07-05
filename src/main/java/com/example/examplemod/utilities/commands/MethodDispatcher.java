@@ -1,54 +1,37 @@
-package com.example.examplemod.utilities;
+package com.example.examplemod.utilities.commands;
 
-import com.example.examplemod.ExampleMod;
-import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
-import javax.annotation.Nullable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class GenericCommand implements ICommand, HackFMLEventListener {
+class MethodDispatcher {
+	/** CommandDispatcher deals with command methods for a single instance object */
 	private static final String COMMAND_METHOD_PREFIX = "do";
 	private static final String ROOT_COMMAND = COMMAND_METHOD_PREFIX + "it";    //doIt
-	private static final int MAX_WORD_DUMP_LINE_LENGTH = 100;
-
-	private final List<String> aliasList = new ArrayList<>();
-	private final String usage;
-	private final String name;
-	private final Map<CommandDispatcherKey, CommandDispatcher> commands = new HashMap<>();
+	private final Object target;
+	private final Map<MethodInvokerKey, MethodInvoker> commands = new HashMap<>();
 	private final List<String> tabCompletions = new ArrayList<>();
 	private int maxArgumentCount = 0;
 
-	public GenericCommand(String name, String usage, String... aliases) {
-		this.name = name;
-		this.usage = usage;
-		for (String alias : aliases) {
-			aliasList.add(alias);
-		}
+	public MethodDispatcher(Object target) {
+		this.target = target;
 		buildCommandMapping();
-		subscribeToFMLEvents();
-		ExampleMod.logTrace(name + " command constructed");
 	}
 
 	/* Search through the methods of this class and super classes to find command handler methods */
 	private void buildCommandMapping() {
 		Set<String> cmdSet = new HashSet<>();
-		Class clazz = getClass();
+		Class<?> clazz = target.getClass();
 		while (clazz != Object.class) {
 			for (Method method : clazz.getDeclaredMethods()) {
 				if (isCommandMethodSigniture(method)) {
-					CommandDispatcher dispatcher = new CommandDispatcher(method);
+					MethodInvoker dispatcher = new MethodInvoker(method);
 					commands.put(dispatcher.key, dispatcher);
 					maxArgumentCount = Math.max(maxArgumentCount, dispatcher.key.methodArgCount);
 					if (!ROOT_COMMAND.equals(dispatcher.key.name)) {
@@ -86,185 +69,73 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 	}
 
-	@Override
-	public void handleFMLEvent(FMLServerStartingEvent event) {
-		event.registerServerCommand(this);
-		ExampleMod.logTrace(this.getName() + " command registered");
-	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
-	public String getUsage(ICommandSender sender) {
-		return usage;
-	}
-
-	@Override
-	public List<String> getAliases() {
-		return aliasList;
-	}
-
-	@Override
-	public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
+	public boolean execute(MinecraftServer server, ICommandSender sender, String[] args) {
+		//TODO hey jf - should this throw exceptions rather than return a sentinel value
 		World world = sender.getEntityWorld();
 
-		if (world.isRemote == false) {
-			CommandDispatcher method;
+		if (!world.isRemote) {
+			MethodInvoker method;
 			if (args.length == 0) {
 				// root command with no arguments
-				method = commands.get(new CommandDispatcherKey(1));
+				method = commands.get(new MethodInvokerKey(1));
 			} else {
 				// check sub commands
 				String possibleCommandMethodName = COMMAND_METHOD_PREFIX + args[0].toLowerCase();
-				method = commands.get(new CommandDispatcherKey(possibleCommandMethodName, args.length));
+				method = commands.get(new MethodInvokerKey(possibleCommandMethodName, args.length));
 				if (method == null) {
 					// root command with arguments
-					method = commands.get(new CommandDispatcherKey(args.length + 1));
+					method = commands.get(new MethodInvokerKey(args.length + 1));
 				}
 			}
 
 			if (method != null) {
 				// we found a matching method for the command and agruments
 				if (method.hasPermission(sender)) {
-					method.invoke(this, sender, args);
-				} else {
-					sendMsg(sender, "You don't have permission to do that.");
+					method.invoke(target, sender, args);
+					return true;
 				}
-			} else if (args.length > 0) {
-				// try to display help for subcommand
-				sendMsg(sender, "Command not understood.");
-				doHelp(sender, args[0]);
-			} else {
-				sendMsg(sender, "Command not understood.");
-				doHelp(sender);
 			}
 		}
-	}
-
-	@Override
-	public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
-		return true;
-	}
-
-	@Override
-	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
-		return (args.length == 0) ? tabCompletions : null;
-	}
-
-	@Override
-	public boolean isUsernameIndex(String[] args, int index) {
 		return false;
 	}
 
-	@Override
-	public int compareTo(ICommand o) {
-		return getName().compareTo(o.getName());
+	public List<String> getSubcommands() {
+		return tabCompletions;
 	}
 
-/*
-	public void doIt(ICommandSender sender) {
-		// a command without a subcommand.  Subclasses can override this if they want
-		// some real behavior.  For now, just dump help
-		doHelp(sender);
-	}
-*/
-
-	/* Help for the root command.   Ex. /<name> help */
-	@CommandMethod(help = "A command to get help on commands")
-	public void doHelp(ICommandSender sender) {
-		String usage = getUsage(sender);
-
-		if (usage != null) {
-			sendMsg(sender, getUsage(sender));
-
-		}
-		StringBuilder msg = new StringBuilder();
-		msg.append("or Try /");
-		msg.append(getName());
-		msg.append(" help [ ");
-		msg.append(buildCommandsList());
-		msg.append(" ]");
-		sendMsg(sender, msg.toString());
-	}
-
-	/* Help for a subcommand.  Ex. /<name> help <subcommand> */
-	@CommandMethod(help = "help <subcommand> - get help on how to use <subcommand>")
-	public void doHelp(ICommandSender sender, String subcommand) {
+	public String getHelpString(String subcommand) {
 		String subCommandMethodName = COMMAND_METHOD_PREFIX + subcommand.toLowerCase();
-		boolean helpShown = false;
 		for (int i = 0; i <= maxArgumentCount; i++) {
-			CommandDispatcher dispatcher = commands.get(new CommandDispatcherKey(subCommandMethodName, i));
-			if (dispatcher != null) {
-				sendMsg(sender, dispatcher.help);
-				helpShown = true;
+			String help = getHelpString(subCommandMethodName, i);
+			if (help != null) {
+				return help;
 			}
 		}
-		if (!helpShown) {
-			// we didn't have ANY matching methods, so default to general help
-			doHelp(sender);
+		return null;
+	}
+
+	public String getHelpString(String subCommandMethodName, int argCount) {
+		MethodInvoker methodInvoker = commands.get(new MethodInvokerKey(subCommandMethodName, argCount));
+		if (methodInvoker != null) {
+			return methodInvoker.help;
+		} else {
+			return null;
 		}
 	}
 
-	@CommandMethod(help = "commands - list available subcommands")
-	public void doCommands(ICommandSender sender) {
-		StringBuilder builder = new StringBuilder();
-		builder.append("[ ");
-		builder.append(buildCommandsList());
-		builder.append(" ]");
-		sendMsg(sender, builder.toString());
-	}
-
-	private String buildCommandsList() {
-		StringBuilder builder = new StringBuilder();
-		String seperator = "";
-		for (String subCmd : tabCompletions) {
-			builder.append(seperator);
-			builder.append(subCmd);
-			seperator = " | ";
-		}
-		return builder.toString();
-	}
-
-	protected void sendMsg(ICommandSender sender, String msg) {
-		sender.sendMessage(new TextComponentString(msg));
-	}
-
-	protected void sendMsg(ICommandSender sender, Collection<String> words) {
-		StringBuilder line = new StringBuilder();
-		for (String word : words) {
-			line.append(word);
-			line.append(" ");
-			if (line.length() > MAX_WORD_DUMP_LINE_LENGTH) {
-				sendMsg(sender, line.toString());
-				line = new StringBuilder();
-			}
-		}
-		sendMsg(sender, line.toString());
-	}
-
-	@Retention(RetentionPolicy.RUNTIME)
-	public @interface CommandMethod {
-		String help() default "";
-
-		boolean requiresOp() default false;
-	}
-
-	/** CommandDispatcherKey is used as a hash key for looking up CommandDispatchers */
-	private static class CommandDispatcherKey implements Comparable<CommandDispatcherKey> {
+	/** MethodInvokerKey is used as a hash key for looking up CommandDispatchers */
+	private static class MethodInvokerKey implements Comparable<MethodInvokerKey> {
 		public final String name;
 		public final int methodArgCount;
 
 		// root command - doIt()
-		public CommandDispatcherKey(int methodArgCount) {
+		public MethodInvokerKey(int methodArgCount) {
 			this.name = ROOT_COMMAND;
 			this.methodArgCount = methodArgCount;
 		}
 
 		// sub command - do<Something>()
-		public CommandDispatcherKey(String name, int methodArgCount) {
+		public MethodInvokerKey(String name, int methodArgCount) {
 			this.name = name.toLowerCase();
 			this.methodArgCount = methodArgCount;
 		}
@@ -273,7 +144,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
-			CommandDispatcherKey other = (CommandDispatcherKey) o;
+			MethodInvokerKey other = (MethodInvokerKey) o;
 			return name.equals(other.name) && (methodArgCount == other.methodArgCount);
 		}
 
@@ -283,7 +154,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		}
 
 		@Override
-		public int compareTo(CommandDispatcherKey o) {
+		public int compareTo(MethodInvokerKey o) {
 			// Sort ROOT_COMMAND first and other alphabetically
 			if (name == ROOT_COMMAND) {
 				return -1;
@@ -313,14 +184,14 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	}
 
 	/** This class holds details about a command method and is used to invoke with proper arguments. */
-	private class CommandDispatcher {
-		public final CommandDispatcherKey key;
+	private class MethodInvoker {
+		public final MethodInvokerKey key;
 		public final Method method;
 		public final String help;
 		public final boolean requiresOp;
 
-		CommandDispatcher(Method method) {
-			this.key = new CommandDispatcherKey(method.getName().toLowerCase(), method.getParameterCount());
+		MethodInvoker(Method method) {
+			this.key = new MethodInvokerKey(method.getName().toLowerCase(), method.getParameterCount());
 			this.method = method;
 			CommandMethod annotation = method.getAnnotation(CommandMethod.class);
 			help = annotation.help();

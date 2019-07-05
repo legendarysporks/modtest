@@ -2,7 +2,7 @@ package com.example.examplemod.batfight.client;
 
 import com.example.examplemod.batfight.common.BatAnimation;
 import com.example.examplemod.batfight.common.BatFight;
-import com.example.examplemod.utilities.HackFMLEventListener;
+import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityAnimal;

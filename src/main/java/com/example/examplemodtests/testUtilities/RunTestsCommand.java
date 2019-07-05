@@ -1,7 +1,7 @@
 package com.example.examplemodtests.testUtilities;
 
 import com.example.examplemod.ExampleMod;
-import com.example.examplemod.utilities.GenericCommand;
+import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemodtests.utilities.GenericCommandTest;
 import com.example.examplemodtests.utilities.GenericSettingsTest;
 import net.minecraft.command.ICommandSender;

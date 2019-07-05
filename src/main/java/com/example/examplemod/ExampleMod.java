@@ -4,7 +4,7 @@ import com.example.examplemod.expodingsheep.ExplodingAnimals;
 import com.example.examplemod.init.ModBlocks;
 import com.example.examplemod.init.ModItems;
 import com.example.examplemod.init.ModRecipes;
-import com.example.examplemod.utilities.HackFMLEventBus;
+import com.example.examplemod.utilities.hackfmlevents.HackFMLEventBus;
 import com.example.examplemodtests.testUtilities.RunTestsCommand;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;

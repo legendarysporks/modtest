@@ -1,6 +1,7 @@
 package com.example.examplemodtests.utilities;
 
-import com.example.examplemod.utilities.GenericSettings;
+import com.example.examplemod.utilities.settings.GenericSettings;
+import com.example.examplemod.utilities.settings.Setting;
 import com.example.examplemodtests.testUtilities.HackTestHarness;
 
 public class GenericSettingsTest extends HackTestHarness.Suite {
@@ -30,35 +31,35 @@ public class GenericSettingsTest extends HackTestHarness.Suite {
 	public static class SettingsTestClass {
 		// nothing.  Nada
 		public String notASetting = "notASetting-value";
-		@GenericSettings.Setting
+		@Setting
 		public String firstName = "firstName-value";
-		@GenericSettings.Setting
+		@Setting
 		public int age = 42;
 		// has getters/setters
 		private String ssn = "ssn-value";
 		// only has a getter
 		private String readOnlySetting = "readOnlySetting-value";
 		// shoudn't be available because it is not public
-		@GenericSettings.Setting
+		@Setting
 		private String privateSetting;
 
 		// shoudn't be available because it is not public
-		@GenericSettings.Setting
+		@Setting
 		private String getPrivateStuff() {
 			return "Uh oh";
 		}
 
-		@GenericSettings.Setting
+		@Setting
 		public String getSsn() {
 			return ssn;
 		}
 
-		@GenericSettings.Setting
+		@Setting
 		public void setSsn(String ssn) {
 			this.ssn = ssn;
 		}
 
-		@GenericSettings.Setting
+		@Setting
 		public String getReadOnlySetting() {
 			return readOnlySetting;
 		}

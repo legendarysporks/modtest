@@ -1,6 +1,5 @@
-package com.example.examplemod.thorhammer;
+package com.example.examplemod.items;
 
-import com.example.examplemod.utilities.GenericTrailGun;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
@@ -11,7 +10,7 @@ import net.minecraft.world.World;
 public class ThorHammer extends GenericTrailGun {
 	private static final String COMMAND_NAME = "ThorHammer";
 	private static final String COMMAND_USAGE = "Try /ThorHammer settings";
-	private static final String[] COMMAND_ALIASES = {"thorhammer", "thorHammer"};
+	private static final String[] COMMAND_ALIASES = {"thorhammer", "thorHammer", "th"};
 
 	public ThorHammer(String name) {
 		super(name, COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES);

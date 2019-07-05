@@ -4,7 +4,7 @@ import com.example.examplemod.Reference;
 import com.example.examplemod.emp.common.EMPAmmo;
 import com.example.examplemod.emp.common.EMPGun;
 import com.example.examplemod.items.GenericItem;
-import com.example.examplemod.thorhammer.ThorHammer;
+import com.example.examplemod.items.ThorHammer;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.Mod;
 

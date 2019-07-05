@@ -1,7 +1,9 @@
-package com.example.examplemod.utilities;
+package com.example.examplemod.utilities.settings;
 
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.Reference;
+import com.example.examplemod.utilities.commands.CommandMethod;
+import com.example.examplemod.utilities.commands.GenericCommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -9,8 +11,6 @@ import net.minecraftforge.fml.common.Loader;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -244,11 +244,6 @@ public class GenericSettings {
 		}
 	}
 
-	@Retention(RetentionPolicy.RUNTIME)
-	public @interface Setting {
-		String defaultValue() default "";
-	}
-
 	public static class SettingNotFoundException extends Exception {
 		public final String settingName;
 
@@ -266,6 +261,30 @@ public class GenericSettings {
 			super(message);
 			this.settingName = name;
 			this.value = value;
+		}
+	}
+
+	@CommandMethod(help = "List avialable settings")
+	public void doSettings(ICommandSender sender) {
+		GenericCommand.sendMsg(sender, "settings: " + getSettingNames());
+	}
+
+	@CommandMethod(help = "Get the value of a setting:  'get <settingName>'")
+	public void doGet(ICommandSender sender, String setting) {
+		try {
+			GenericCommand.sendMsg(sender, setting + " = " + get(setting));
+		} catch (SettingNotFoundException e) {
+			GenericCommand.sendMsg(sender, e.getMessage());
+		}
+	}
+
+	@CommandMethod(help = "Set the value of a setting: 'set <settingName> <value>'")
+	public void doSet(ICommandSender sender, String setting, String value) {
+		try {
+			set(setting, value);
+			GenericCommand.sendMsg(sender, setting + " set to " + value);
+		} catch (InvalidValueException | SettingNotFoundException e) {
+			GenericCommand.sendMsg(sender, e.getMessage());
 		}
 	}
 

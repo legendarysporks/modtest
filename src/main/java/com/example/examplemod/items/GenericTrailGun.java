@@ -1,8 +1,8 @@
-package com.example.examplemod.utilities;
+package com.example.examplemod.items;
 
-import com.example.examplemod.items.GenericItem;
-import com.example.examplemod.utilities.GenericSettings.GenericCommandWithSettings;
-import com.example.examplemod.utilities.GenericSettings.Setting;
+import com.example.examplemod.utilities.commands.GenericCommand;
+import com.example.examplemod.utilities.settings.GenericSettings;
+import com.example.examplemod.utilities.settings.Setting;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
@@ -21,7 +21,7 @@ import java.util.Queue;
 
 public class GenericTrailGun extends GenericItem {
 	private final List<ThorHammerAffect> activeAffects = new ArrayList<>();
-	private final GenericCommandWithSettings command;
+	private final GenericCommand command;
 	private double range = 30;
 	private int affectDurationInTicks = 3 * 20; // 10 seconds
 	private int trailLength = 15;
@@ -29,12 +29,14 @@ public class GenericTrailGun extends GenericItem {
 
 	public GenericTrailGun(String name, String commandName, String usage, String[] aliases) {
 		super(name);
-		command = new GenericCommandWithSettings(commandName, usage, aliases, this);
+		command = new GenericCommand(commandName, usage, aliases);
+		command.addTarget(new GenericSettings(this));
 	}
 
 	public GenericTrailGun(String name, String commandName, String usage, String[] aliases, CreativeTabs tab) {
 		super(name, tab);
-		command = new GenericCommandWithSettings(commandName, usage, aliases, this);
+		command = new GenericCommand(commandName, usage, aliases);
+		command.addTarget(new GenericSettings(this));
 	}
 
 	@Setting

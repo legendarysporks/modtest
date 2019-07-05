@@ -1,6 +1,6 @@
 package com.example.examplemod.emp.common;
 
-import com.example.examplemod.utilities.GenericSettings.GenericCommandWithSettings;
+import com.example.examplemod.utilities.settings.GenericSettings.GenericCommandWithSettings;
 
 public class EMPCommand extends GenericCommandWithSettings {
 	public static final String NAME = "EMP";

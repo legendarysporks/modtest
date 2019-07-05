@@ -2,9 +2,9 @@ package com.example.examplemod.emp.common;
 
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.items.GenericItem;
-import com.example.examplemod.utilities.GenericSettings.Setting;
-import com.example.examplemod.utilities.HackFMLEventListener;
 import com.example.examplemod.utilities.InventoryUtils;
+import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
+import com.example.examplemod.utilities.settings.Setting;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;

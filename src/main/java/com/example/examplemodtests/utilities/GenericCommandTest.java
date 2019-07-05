@@ -1,6 +1,6 @@
 package com.example.examplemodtests.utilities;
 
-import com.example.examplemod.utilities.GenericCommand;
+import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemodtests.testUtilities.HackTestHarness;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.profiler.Profiler;

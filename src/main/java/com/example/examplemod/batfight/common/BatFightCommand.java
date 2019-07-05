@@ -1,6 +1,7 @@
 package com.example.examplemod.batfight.common;
 
-import com.example.examplemod.utilities.GenericCommand;
+import com.example.examplemod.utilities.commands.CommandMethod;
+import com.example.examplemod.utilities.commands.GenericCommand;
 import net.minecraft.command.ICommandSender;
 
 public class BatFightCommand extends GenericCommand {

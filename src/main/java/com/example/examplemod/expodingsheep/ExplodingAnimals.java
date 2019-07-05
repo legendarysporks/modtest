@@ -1,9 +1,10 @@
 package com.example.examplemod.expodingsheep;
 
-import com.example.examplemod.utilities.GenericCommand;
-import com.example.examplemod.utilities.GenericSettings;
-import com.example.examplemod.utilities.GenericSettings.Setting;
-import com.example.examplemod.utilities.HackFMLEventListener;
+import com.example.examplemod.utilities.commands.CommandMethod;
+import com.example.examplemod.utilities.commands.GenericCommand;
+import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
+import com.example.examplemod.utilities.settings.GenericSettings;
+import com.example.examplemod.utilities.settings.Setting;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.*;
