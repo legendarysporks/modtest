@@ -24,6 +24,7 @@ import java.util.*;
 @Mod.EventBusSubscriber
 @SideOnly(Side.CLIENT)
 public class ExplodingAnimals implements HackFMLEventListener {
+	private static final String CONFIG_VERSION = "0.1";
 	private static final TriggerInfo[] triggers = {
 			new TriggerInfo("chicken", EntityChicken.class),
 			new TriggerInfo("cow", EntityCow.class),
@@ -45,7 +46,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			+ "set <animal> <setting> <value> ]";
 	private static final String[] cmdAliases = {"explodingAnimals", "explodinganimals", "ea", "EA", "boom", "BOOM"};
 	public final GenericSettings settings;
-	private final ExplodingAnimalsCommand command;
+	private final GenericCommand command;
 	@Setting
 	public boolean enabled = true;
 
@@ -58,8 +59,9 @@ public class ExplodingAnimals implements HackFMLEventListener {
 
 	public ExplodingAnimals() {
 		subscribeToFMLEvents();
-		command = new ExplodingAnimalsCommand(this);
-		settings = new GenericSettings(this, cmdNamd, "1.0");
+		command = new GenericCommand(cmdNamd, cmdUsage, cmdAliases);
+		settings = new GenericSettings(this, cmdNamd, CONFIG_VERSION);
+		command.addTarget(this);
 	}
 
 	@Override
@@ -88,6 +90,70 @@ public class ExplodingAnimals implements HackFMLEventListener {
 
 	public TriggerInfo getTriggerInfo(String animal) {
 		return nameToInfoMap.get(animal);
+	}
+
+	@CommandMethod(help = "List available settings")
+	public void doSettings(ICommandSender sender) {
+		GenericCommand.sendMsg(sender, settings.getSettingNames());
+		GenericCommand.sendMsg(sender, nameToInfoMap.keySet());
+	}
+
+	@CommandMethod(help = "List settings for an animal: 'settings <animal>'")
+	public void doSettings(ICommandSender sender, String animal) {
+		TriggerInfo info = nameToInfoMap.get(animal);
+		if (info == null) {
+			GenericCommand.sendMsg(sender, "Unknown animal: " + animal);
+		} else {
+			GenericCommand.sendMsg(sender, info.settings.getSettingNames());
+		}
+	}
+
+	@CommandMethod(help = "Get the value of a setting: 'get <settingName'")
+	public void doGet(ICommandSender sender, String setting) {
+		try {
+			GenericCommand.sendMsg(sender, settings.get(setting));
+		} catch (GenericSettings.SettingNotFoundException e) {
+			GenericCommand.sendMsg(sender, e.getMessage());
+		}
+	}
+
+	@CommandMethod(help = "Get the value of a setting: 'set <settingName> <value>'")
+	public void doSet(ICommandSender sender, String setting, String value) {
+		try {
+			settings.set(setting, value);
+			GenericCommand.sendMsg(sender, setting + " set to " + value);
+		} catch (GenericSettings.InvalidValueException | GenericSettings.SettingNotFoundException e) {
+			GenericCommand.sendMsg(sender, e.getMessage());
+		}
+	}
+
+	@CommandMethod(help = "Change the value of a setting: 'get <animal> <settingName>'")
+	public void doGet(ICommandSender sender, String animal, String setting) {
+		TriggerInfo info = nameToInfoMap.get(animal);
+		if (info == null) {
+			GenericCommand.sendMsg(sender, "Unknown animal: " + animal);
+		} else {
+			try {
+				GenericCommand.sendMsg(sender, info.settings.get(setting));
+			} catch (GenericSettings.SettingNotFoundException e) {
+				GenericCommand.sendMsg(sender, e.getMessage());
+			}
+		}
+	}
+
+	@CommandMethod(help = "Change the value of a setting on a particular animal: 'set <animal> <settingName> <value>'")
+	public void doSet(ICommandSender sender, String animal, String setting, String value) {
+		TriggerInfo info = nameToInfoMap.get(animal);
+		if (info == null) {
+			GenericCommand.sendMsg(sender, "Unknown animal: " + animal);
+		} else {
+			try {
+				info.settings.set(setting, value);
+				GenericCommand.sendMsg(sender, setting + " set to " + value);
+			} catch (GenericSettings.InvalidValueException | GenericSettings.SettingNotFoundException e) {
+				GenericCommand.sendMsg(sender, e.getMessage());
+			}
+		}
 	}
 
 	private static class TriggerInfo {
@@ -141,79 +207,6 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		private void explode(World world, EntityAnimal animal) {
 			animal.setDead();
 			world.createExplosion(null, animal.posX, animal.posY, animal.posZ, explosionDamage, smoking);
-		}
-	}
-
-	public class ExplodingAnimalsCommand extends GenericCommand {
-		private ExplodingAnimals animals;
-
-		public ExplodingAnimalsCommand(ExplodingAnimals animals) {
-			super(cmdNamd, cmdUsage, cmdAliases);
-			this.animals = animals;
-		}
-
-		@CommandMethod(help = "List available settings")
-		public void doSettings(ICommandSender sender) {
-			sendMsg(sender, settings.getSettingNames());
-			sendMsg(sender, nameToInfoMap.keySet());
-		}
-
-		@CommandMethod(help = "List settings for an animal: 'settings <animal>'")
-		public void doSettings(ICommandSender sender, String animal) {
-			TriggerInfo info = nameToInfoMap.get(animal);
-			if (info == null) {
-				sendMsg(sender, "Unknown animal: " + animal);
-			} else {
-				sendMsg(sender, info.settings.getSettingNames());
-			}
-		}
-
-		@CommandMethod(help = "Get the value of a setting: 'get <settingName'")
-		public void doGet(ICommandSender sender, String setting) {
-			try {
-				sendMsg(sender, settings.get(setting));
-			} catch (GenericSettings.SettingNotFoundException e) {
-				sendMsg(sender, e.getMessage());
-			}
-		}
-
-		@CommandMethod(help = "Get the value of a setting: 'set <settingName> <value>'")
-		public void doSet(ICommandSender sender, String setting, String value) {
-			try {
-				settings.set(setting, value);
-				sendMsg(sender, setting + " set to " + value);
-			} catch (GenericSettings.InvalidValueException | GenericSettings.SettingNotFoundException e) {
-				sendMsg(sender, e.getMessage());
-			}
-		}
-
-		@CommandMethod(help = "Change the value of a setting: 'get <animal> <settingName>'")
-		public void doGet(ICommandSender sender, String animal, String setting) {
-			TriggerInfo info = nameToInfoMap.get(animal);
-			if (info == null) {
-				sendMsg(sender, "Unknown animal: " + animal);
-			} else {
-				try {
-					sendMsg(sender, info.settings.get(setting));
-				} catch (GenericSettings.SettingNotFoundException e) {
-					sendMsg(sender, e.getMessage());
-				}
-			}
-		}
-
-		@CommandMethod(help = "Change the value of a setting on a particular animal: 'set <animal> <settingName> <value>'")
-		public void doSet(ICommandSender sender, String animal, String setting, String value) {
-			TriggerInfo info = nameToInfoMap.get(animal);
-			if (info == null) {
-				sendMsg(sender, "Unknown animal: " + animal);
-			} else {
-				try {
-					info.settings.set(setting, value);
-					sendMsg(sender, setting + " set to " + value);
-				} catch (GenericSettings.InvalidValueException | GenericSettings.SettingNotFoundException e) {
-					sendMsg(sender, e.getMessage());
-				}
-			}
 		}
 	}
 }

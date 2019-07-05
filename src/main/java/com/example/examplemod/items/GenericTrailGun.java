@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Queue;
 
 public class GenericTrailGun extends GenericItem {
+	private static final String CONFIG_VERSION = "0.1";
 	private final List<ThorHammerAffect> activeAffects = new ArrayList<>();
 	private final GenericCommand command;
 	private double range = 30;
@@ -30,13 +31,15 @@ public class GenericTrailGun extends GenericItem {
 	public GenericTrailGun(String name, String commandName, String usage, String[] aliases) {
 		super(name);
 		command = new GenericCommand(commandName, usage, aliases);
-		command.addTarget(new GenericSettings(this));
+		//command.addTarget(this) - if this class ever has command methods
+		command.addTarget(new GenericSettings(this, commandName, CONFIG_VERSION));
 	}
 
 	public GenericTrailGun(String name, String commandName, String usage, String[] aliases, CreativeTabs tab) {
 		super(name, tab);
 		command = new GenericCommand(commandName, usage, aliases);
-		command.addTarget(new GenericSettings(this));
+		//command.addTarget(this) - if this class ever has command methods
+		command.addTarget(new GenericSettings(this, commandName, CONFIG_VERSION));
 	}
 
 	@Setting
