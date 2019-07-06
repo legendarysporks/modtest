@@ -20,6 +20,10 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	private final String name;
 	private final List<MethodDispatcher> dispatchers = new ArrayList<>();
 
+	public static GenericCommand create(String name, String usage, String... aliases) {
+		return new GenericCommand(name, usage, aliases);
+	}
+
 	public GenericCommand(String name, String usage, String... aliases) {
 		this.dispatchers.add(new MethodDispatcher(this));
 		this.name = name;
@@ -49,9 +53,10 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	 * Add another class to grab command methods from.  Targets that are explicitly added always
 	 * take precidence over the this class and are searched in the order they are added.
 	 */
-	public void addTarget(Object newTarget) {
+	public GenericCommand addTarget(Object newTarget) {
 		// add before the last element, which is always "this"
 		dispatchers.add(dispatchers.size() - 1, new MethodDispatcher(newTarget));
+		return this;
 	}
 
 	@Override

@@ -21,8 +21,7 @@ import java.util.Queue;
 
 public class GenericTrailGun extends GenericItem {
 	private static final String CONFIG_VERSION = "0.1";
-	private final List<ThorHammerAffect> activeAffects = new ArrayList<>();
-	private final GenericCommand command;
+	private final List<TrailGunAffect> activeAffects = new ArrayList<>();
 	private double range = 30;
 	private int affectDurationInTicks = 3 * 20; // 10 seconds
 	private int trailLength = 15;
@@ -30,16 +29,12 @@ public class GenericTrailGun extends GenericItem {
 
 	public GenericTrailGun(String name, String commandName, String usage, String[] aliases) {
 		super(name);
-		command = new GenericCommand(commandName, usage, aliases);
-		//command.addTarget(this) - if this class ever has command methods
-		command.addTarget(new GenericSettings(this, commandName, CONFIG_VERSION));
+		GenericCommand.create(commandName, usage, aliases).addTarget(new GenericSettings(this, commandName, CONFIG_VERSION));
 	}
 
 	public GenericTrailGun(String name, String commandName, String usage, String[] aliases, CreativeTabs tab) {
 		super(name, tab);
-		command = new GenericCommand(commandName, usage, aliases);
-		//command.addTarget(this) - if this class ever has command methods
-		command.addTarget(new GenericSettings(this, commandName, CONFIG_VERSION));
+		GenericCommand.create(commandName, usage, aliases).addTarget(new GenericSettings(this, commandName, CONFIG_VERSION));
 	}
 
 	@Setting
@@ -92,14 +87,14 @@ public class GenericTrailGun extends GenericItem {
 		if (activeAffects.isEmpty()) {
 			MinecraftForge.EVENT_BUS.register(this);
 		}
-		activeAffects.add(new ThorHammerAffect(world, start, finish));
+		activeAffects.add(new TrailGunAffect(world, start, finish));
 	}
 
 	/** tick.  Deal with affect */
 	@SubscribeEvent
 	public void handleTickEvents(TickEvent.ServerTickEvent event) {
-		List<ThorHammerAffect> finishedAffects = new ArrayList<>();
-		for (ThorHammerAffect affect : activeAffects) {
+		List<TrailGunAffect> finishedAffects = new ArrayList<>();
+		for (TrailGunAffect affect : activeAffects) {
 			if (!affect.doStep()) {
 				finishedAffects.add(affect);
 			}
@@ -166,10 +161,10 @@ public class GenericTrailGun extends GenericItem {
 	//----------------------------------------------------------------------------------------
 
 	/**
-	 * A ThorHammerAffect is created whenever a ThorHammer is used to break a block.  Each tracks
+	 * A TrailGunAffect is created whenever a ThorHammer is used to break a block.  Each tracks
 	 * a dynamic affect over time that takes place between a point of origin and a destination point.
 	 */
-	private class ThorHammerAffect {
+	private class TrailGunAffect {
 		private World world;
 		private int totalSteps;
 		private int currentStep;
@@ -179,7 +174,7 @@ public class GenericTrailGun extends GenericItem {
 		private Queue<BlockPos> positionsVisited = new ArrayDeque<>(trailLength);
 		private long ticksToNextStep = 0;
 
-		public ThorHammerAffect(World world, BlockPos start, BlockPos finish) {
+		public TrailGunAffect(World world, BlockPos start, BlockPos finish) {
 			this.world = world;
 			startPos = start;
 			finishPos = finish;

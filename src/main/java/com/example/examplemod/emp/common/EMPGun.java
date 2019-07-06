@@ -3,7 +3,9 @@ package com.example.examplemod.emp.common;
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.utilities.InventoryUtils;
+import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
+import com.example.examplemod.utilities.settings.GenericSettings;
 import com.example.examplemod.utilities.settings.Setting;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,38 +17,45 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 public class EMPGun extends GenericItem implements HackFMLEventListener {
-	private static final String name = "emp_gun";
+	public static final String COMMAND_NAME = "EMP";
 	private static final Class<? extends Item> AMMO_CLASS = EMPAmmo.class;
-	private static final String[] EMPSoundNames = new String[]{
+	public static final String COMMAND_USAGE = "EMP whatever";
+	public static final String[] COMMAND_ALIASES = {"emp"};
+	public static final String COMMAND_CONFIG_FILE_NAME = "empgun.cfg";
+	public static final String COMMAND_CONFIG_FILE_VERSION = "0.1";
+	private static final String NAME = "emp_gun";
+	private static final String[] EMP_SOUND_NAMES = new String[]{
 			"alien_blaster_fired",
 //			"emp_fired",
 			"pistol_alien_blaster_fired",
 //			"pulsegun_fired",
 			"varmnitrifle_fired",
 	};
+
 	@SidedProxy(clientSide = "com.example.examplemod.emp.client.EMPGunClient",
 			serverSide = "com.example.examplemod.emp.server.EMPGunServer")
 	public static EMPGun proxy;
-	private static SoundEvent[] EMPSounds = new SoundEvent[EMPSoundNames.length];
+	private static SoundEvent[] EMPSounds = new SoundEvent[EMP_SOUND_NAMES.length];
 	@Setting
 	public boolean ALLOWED_IN_CREATIVE = true;
 	@Setting
 	public float VELOCITY = 1.6f;
 	@Setting
 	public float INACCURACY = 0.0f;
-	private EMPCommand command;
+	private GenericCommand command;
 
 	public EMPGun() {
-		super(name, CreativeTabs.COMBAT, 1);
+		super(NAME, CreativeTabs.COMBAT, 1);
 		setMaxDamage(0);
+		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES).addTarget(
+				new GenericSettings(this, COMMAND_CONFIG_FILE_NAME, COMMAND_CONFIG_FILE_VERSION));
 		subscribeToFMLEvents();
-		command = new EMPCommand(this);
 	}
 
 	@Override
 	public void handleFMLEvent(FMLPreInitializationEvent event) {
-		for (int i = 0; i < EMPSoundNames.length; i++) {
-			EMPSounds[i] = createSoundEvent(EMPSoundNames[i]);
+		for (int i = 0; i < EMP_SOUND_NAMES.length; i++) {
+			EMPSounds[i] = createSoundEvent(EMP_SOUND_NAMES[i]);
 		}
 		EMPProjectile.registerModEntity();
 	}
@@ -69,7 +78,7 @@ public class EMPGun extends GenericItem implements HackFMLEventListener {
 			int soundNumber = player.world.rand.nextInt(EMPSounds.length);
 			SoundEvent sound = EMPSounds[soundNumber];
 			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
-			ExampleMod.logInfo("Playing sound: " + EMPSoundNames[soundNumber]);
+			ExampleMod.logInfo("Playing sound: " + EMP_SOUND_NAMES[soundNumber]);
 			if (!world.isRemote) {
 				EMPProjectile projectile = new EMPProjectile(world, player);
 				projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f, VELOCITY, INACCURACY);

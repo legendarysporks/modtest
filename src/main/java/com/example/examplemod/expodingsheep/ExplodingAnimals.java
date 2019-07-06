@@ -46,7 +46,6 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			+ "set <animal> <setting> <value> ]";
 	private static final String[] cmdAliases = {"explodingAnimals", "explodinganimals", "ea", "EA", "boom", "BOOM"};
 	public final GenericSettings settings;
-	private final GenericCommand command;
 	@Setting
 	public boolean enabled = true;
 
@@ -59,9 +58,8 @@ public class ExplodingAnimals implements HackFMLEventListener {
 
 	public ExplodingAnimals() {
 		subscribeToFMLEvents();
-		command = new GenericCommand(cmdNamd, cmdUsage, cmdAliases);
+		GenericCommand.create(cmdNamd, cmdUsage, cmdAliases).addTarget(this);
 		settings = new GenericSettings(this, cmdNamd, CONFIG_VERSION);
-		command.addTarget(this);
 	}
 
 	@Override

@@ -70,7 +70,6 @@ class MethodDispatcher {
 	}
 
 	public boolean execute(MinecraftServer server, ICommandSender sender, String[] args) {
-		//TODO hey jf - should this throw exceptions rather than return a sentinel value
 		World world = sender.getEntityWorld();
 
 		if (!world.isRemote) {

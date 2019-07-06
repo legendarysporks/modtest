@@ -264,6 +264,9 @@ public class GenericSettings {
 		}
 	}
 
+	//--------------------------------------------------------------------------------
+	// Command handler methods
+
 	@CommandMethod(help = "List avialable settings")
 	public void doSettings(ICommandSender sender) {
 		GenericCommand.sendMsg(sender, "settings: " + getSettingNames());
@@ -285,43 +288,6 @@ public class GenericSettings {
 			GenericCommand.sendMsg(sender, setting + " set to " + value);
 		} catch (InvalidValueException | SettingNotFoundException e) {
 			GenericCommand.sendMsg(sender, e.getMessage());
-		}
-	}
-
-	public static class GenericCommandWithSettings extends GenericCommand {
-		private final GenericSettings settings;
-
-		public GenericCommandWithSettings(String name, String usage, String[] aliases, Object target) {
-			super(name, usage, aliases);
-			settings = new GenericSettings(target, name, "1.0");
-		}
-
-		@CommandMethod(help = "List avialable settings")
-		public void doSettings(ICommandSender sender) {
-			sendMsg(sender, getName() + " settings: " + settings.getSettingNames());
-		}
-
-		@CommandMethod(help = "Get the value of a setting:  'get <settingName>'")
-		public void doGet(ICommandSender sender, String setting) {
-			try {
-				sendMsg(sender, getName() + "." + setting + " = " + settings.get(setting));
-			} catch (SettingNotFoundException e) {
-				sendMsg(sender, e.getMessage());
-			}
-		}
-
-		@CommandMethod(help = "Set the value of a setting: 'set <settingName> <value>'")
-		public void doSet(ICommandSender sender, String setting, String value) {
-			try {
-				settings.set(setting, value);
-				sendMsg(sender, getName() + "." + setting + " set to " + value);
-			} catch (InvalidValueException | SettingNotFoundException e) {
-				sendMsg(sender, e.getMessage());
-			}
-		}
-
-		public void markDirty(String settingName) {
-			settings.markDirty(settingName);
 		}
 	}
 }
