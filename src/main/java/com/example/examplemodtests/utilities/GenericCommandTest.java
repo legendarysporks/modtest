@@ -84,8 +84,8 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 		}
 
 		final TestCase[] cases = {
-				new TestCase(new String[]{"help"}, new String[]{TestCommand.USAGE, "or Try /TestCommand help [ commands | help | test ]"}),
-				new TestCase(new String[]{"commands"}, new String[]{"commands | help | test"}),
+				new TestCase(new String[]{"help"}, new String[]{TestCommand.USAGE, "or Try /TestCommand help [ commands | get | help | set | settings | test ]"}),
+				new TestCase(new String[]{"commands"}, new String[]{"commands | get | help | set | settings | test"}),
 				new TestCase(new String[]{"help", "commands"}, new String[]{"commands - list available subcommands"}),
 				new TestCase(new String[]{"test"}, new String[]{"doTest(i)"}),
 				new TestCase(new String[]{"test", "1"}, new String[]{"doTest(i,1)"}),
