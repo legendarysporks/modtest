@@ -1,8 +1,7 @@
 package com.example.examplemod.items;
 
 import com.example.examplemod.utilities.commands.GenericCommand;
-import com.example.examplemod.utilities.settings.GenericSettings;
-import com.example.examplemod.utilities.settings.Setting;
+import com.example.examplemod.utilities.commands.Setting;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
@@ -29,12 +28,12 @@ public class GenericTrailGun extends GenericItem {
 
 	public GenericTrailGun(String name, String commandName, String usage, String[] aliases) {
 		super(name);
-		GenericCommand.create(commandName, usage, aliases).addTarget(new GenericSettings(this, commandName, CONFIG_VERSION));
+		GenericCommand.create(commandName, usage, aliases).addTargetWithPersitentSettings(this, commandName, CONFIG_VERSION);
 	}
 
 	public GenericTrailGun(String name, String commandName, String usage, String[] aliases, CreativeTabs tab) {
 		super(name, tab);
-		GenericCommand.create(commandName, usage, aliases).addTarget(new GenericSettings(this, commandName, CONFIG_VERSION));
+		GenericCommand.create(commandName, usage, aliases).addTargetWithPersitentSettings(this, commandName, CONFIG_VERSION);
 	}
 
 	@Setting

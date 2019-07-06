@@ -1,6 +1,6 @@
 package com.example.examplemodtests.utilities;
 
-import com.example.examplemod.utilities.commands.CommandMethod;
+import com.example.examplemod.utilities.commands.Command;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemodtests.testUtilities.HackTestHarness;
 import net.minecraft.command.ICommandSender;
@@ -125,37 +125,37 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 			super(NAME, USAGE, ALIASES);
 		}
 
-		@CommandMethod
+		@Command
 		public void doTest(ICommandSender sender) {
 			sendMsg(sender, "doTest(i)");
 		}
 
-		@CommandMethod
+		@Command
 		public void doTest(ICommandSender sender, String arg1) {
 			sendMsg(sender, "doTest(i," + arg1 + ")");
 		}
 
-		@CommandMethod
+		@Command
 		public void doTest(ICommandSender sender, String arg1, String arg2) {
 			sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + ")");
 		}
 
-		@CommandMethod
+		@Command
 		public void doTest(ICommandSender sender, String arg1, String arg2, String arg3) {
 			sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + "," + arg3 + ")");
 		}
 
-		@CommandMethod
+		@Command
 		public void doIt(ICommandSender sender) {
 			sendMsg(sender, "doIt(i)");
 		}
 
-		@CommandMethod
+		@Command
 		public void doIt(ICommandSender sender, String arg1) {
 			sendMsg(sender, "doIt(i," + arg1 + ")");
 		}
 
-		@CommandMethod
+		@Command
 		public void doodle(ICommandSender sender) {
 			sendMsg(sender, "Why did you call doodle?");
 		}

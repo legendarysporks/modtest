@@ -4,9 +4,8 @@ import com.example.examplemod.ExampleMod;
 import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.utilities.InventoryUtils;
 import com.example.examplemod.utilities.commands.GenericCommand;
+import com.example.examplemod.utilities.commands.Setting;
 import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
-import com.example.examplemod.utilities.settings.GenericSettings;
-import com.example.examplemod.utilities.settings.Setting;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -47,8 +46,8 @@ public class EMPGun extends GenericItem implements HackFMLEventListener {
 	public EMPGun() {
 		super(NAME, CreativeTabs.COMBAT, 1);
 		setMaxDamage(0);
-		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES).addTarget(
-				new GenericSettings(this, COMMAND_CONFIG_FILE_NAME, COMMAND_CONFIG_FILE_VERSION));
+		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES).addTargetWithPersitentSettings(
+				this, COMMAND_CONFIG_FILE_NAME, COMMAND_CONFIG_FILE_VERSION);
 		subscribeToFMLEvents();
 	}
 

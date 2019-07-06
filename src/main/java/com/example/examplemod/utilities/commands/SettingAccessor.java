@@ -1,4 +1,4 @@
-package com.example.examplemod.utilities.settings;
+package com.example.examplemod.utilities.commands;
 
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.Reference;

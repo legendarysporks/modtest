@@ -47,7 +47,7 @@ class MethodDispatcher {
 
 	/* Check to see if a given method is of the form "void do<Bla>(ICommandSender [, String...])" */
 	private boolean isCommandMethodSigniture(Method method) {
-		if ((method.getAnnotation(CommandMethod.class) != null)
+		if ((method.getAnnotation(Command.class) != null)
 				&& method.getName().startsWith(COMMAND_METHOD_PREFIX)
 				&& (method.getReturnType() == Void.TYPE)) {
 			if (!Character.isUpperCase(method.getName().charAt(COMMAND_METHOD_PREFIX.length()))) {
@@ -192,7 +192,7 @@ class MethodDispatcher {
 		MethodInvoker(Method method) {
 			this.key = new MethodInvokerKey(method.getName().toLowerCase(), method.getParameterCount());
 			this.method = method;
-			CommandMethod annotation = method.getAnnotation(CommandMethod.class);
+			Command annotation = method.getAnnotation(Command.class);
 			help = annotation.help();
 			requiresOp = annotation.requiresOp();
 		}

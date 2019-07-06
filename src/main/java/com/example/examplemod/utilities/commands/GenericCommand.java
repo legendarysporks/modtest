@@ -19,17 +19,10 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	private final String usage;
 	private final String name;
 	private final List<MethodDispatcher> dispatchers = new ArrayList<>();
+	private final List<SettingAccessor> settings = new ArrayList<>();
 
 	public static GenericCommand create(String name, String usage, String... aliases) {
 		return new GenericCommand(name, usage, aliases);
-	}
-
-	public GenericCommand(String name, String usage, String... aliases) {
-		this.dispatchers.add(new MethodDispatcher(this));
-		this.name = name;
-		this.usage = usage;
-		aliasList.addAll(Arrays.asList(aliases));
-		subscribeToFMLEvents();
 	}
 
 	public static void sendMsg(ICommandSender sender, String msg) {
@@ -49,6 +42,14 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		sendMsg(sender, line.toString());
 	}
 
+	public GenericCommand(String name, String usage, String... aliases) {
+		this.dispatchers.add(new MethodDispatcher(this));
+		this.name = name;
+		this.usage = usage;
+		aliasList.addAll(Arrays.asList(aliases));
+		subscribeToFMLEvents();
+	}
+
 	/**
 	 * Add another class to grab command methods from.  Targets that are explicitly added always
 	 * take precidence over the this class and are searched in the order they are added.
@@ -56,6 +57,18 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	public GenericCommand addTarget(Object newTarget) {
 		// add before the last element, which is always "this"
 		dispatchers.add(dispatchers.size() - 1, new MethodDispatcher(newTarget));
+		return this;
+	}
+
+	public GenericCommand addTargetWithSettings(Object newTarget) {
+		dispatchers.add(dispatchers.size() - 1, new MethodDispatcher(newTarget));
+		settings.add(new SettingAccessor(newTarget));
+		return this;
+	}
+
+	public GenericCommand addTargetWithPersitentSettings(Object newTarget, String configFileName, String configVersion) {
+		dispatchers.add(dispatchers.size() - 1, new MethodDispatcher(newTarget));
+		settings.add(new SettingAccessor(newTarget, configFileName, configVersion));
 		return this;
 	}
 
@@ -80,6 +93,67 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		return aliasList;
 	}
 
+	public void loadSettings() {
+		for (SettingAccessor accessor : settings) {
+			accessor.load();
+		}
+	}
+
+	public void saveSettings() {
+		for (SettingAccessor accessor : settings) {
+			accessor.save();
+		}
+	}
+
+	public boolean hasGettableSetting(String settingName) {
+		for (SettingAccessor accessor : settings) {
+			if (accessor.hasGettableSetting(settingName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean hasSettableSetting(String settingName) {
+		for (SettingAccessor accessor : settings) {
+			if (accessor.hasSettableSetting(settingName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public String get(String settingName) throws SettingNotFoundException {
+		for (SettingAccessor accessor : settings) {
+			try {
+				return accessor.get(settingName);
+			} catch (SettingNotFoundException e) {
+			}
+		}
+		throw new SettingNotFoundException(settingName);
+	}
+
+	public boolean set(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
+		for (SettingAccessor accessor : settings) {
+			try {
+				return accessor.set(settingName, value);
+			} catch (SettingNotFoundException | InvalidValueException e) {
+			}
+		}
+		throw new SettingNotFoundException(settingName);
+	}
+
+	public List<String> getSettingNames() {
+		Set<String> set = new HashSet<>();
+		for (SettingAccessor accessor : settings) {
+			set.addAll(accessor.getSettingNames());
+		}
+		List<String> result = new ArrayList<>(set.size());
+		result.addAll(set);
+		Collections.sort(result);
+		return result;
+	}
+
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
 		for (MethodDispatcher dispatcher : dispatchers) {
@@ -98,11 +172,14 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
-		if (args.length == 0) {
-			//TODO hey jf - you could cache this.  Check to see how ofter it's called
+		if (args.length == 1) {
 			Set<String> set = new HashSet<>();
 			for (MethodDispatcher dispatcher : dispatchers) {
-				set.addAll(dispatcher.getSubcommands());
+				for (String subCmd : dispatcher.getSubcommands()) {
+					if (subCmd.startsWith(args[0])) {
+						set.add(subCmd);
+					}
+				}
 			}
 			return Lists.newArrayList(set);
 		} else {
@@ -130,7 +207,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	}
 
 	/* Help for the root command.   Ex. /<name> help */
-	@CommandMethod(help = "A command to get help on commands")
+	@Command(help = "A command to get help on commands")
 	public void doHelp(ICommandSender sender) {
 		String usage = getUsage(sender);
 
@@ -142,7 +219,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	}
 
 	/* Help for a subcommand.  Ex. /<name> help <subcommand> */
-	@CommandMethod(help = "help <subcommand> - get help on how to use <subcommand>")
+	@Command(help = "help <subcommand> - get help on how to use <subcommand>")
 	public void doHelp(ICommandSender sender, String subcommand) {
 		for (MethodDispatcher dispatcher : dispatchers) {
 			String help = dispatcher.getHelpString(subcommand);
@@ -154,7 +231,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		doHelp(sender);
 	}
 
-	@CommandMethod(help = "commands - list available subcommands")
+	@Command(help = "commands - list available subcommands")
 	public void doCommands(ICommandSender sender) {
 		sendMsg(sender, buildCommandsList());
 	}
@@ -170,5 +247,29 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			}
 		}
 		return builder.toString();
+	}
+
+	@Command(help = "List avialable settings")
+	public void doSettings(ICommandSender sender) {
+		sendMsg(sender, "settings: " + getSettingNames());
+	}
+
+	@Command(help = "Get the value of a setting:  'get <settingName>'")
+	public void doGet(ICommandSender sender, String setting) {
+		try {
+			sendMsg(sender, setting + " = " + get(setting));
+		} catch (SettingNotFoundException e) {
+			sendMsg(sender, e.getMessage());
+		}
+	}
+
+	@Command(help = "Set the value of a setting: 'set <settingName> <value>'")
+	public void doSet(ICommandSender sender, String setting, String value) {
+		try {
+			set(setting, value);
+			sendMsg(sender, setting + " set to " + value);
+		} catch (InvalidValueException | SettingNotFoundException e) {
+			sendMsg(sender, e.getMessage());
+		}
 	}
 }

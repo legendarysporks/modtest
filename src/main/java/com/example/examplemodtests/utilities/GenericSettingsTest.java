@@ -1,16 +1,16 @@
 package com.example.examplemodtests.utilities;
 
-import com.example.examplemod.utilities.settings.GenericSettings;
-import com.example.examplemod.utilities.settings.InvalidValueException;
-import com.example.examplemod.utilities.settings.Setting;
-import com.example.examplemod.utilities.settings.SettingNotFoundException;
+import com.example.examplemod.utilities.commands.InvalidValueException;
+import com.example.examplemod.utilities.commands.Setting;
+import com.example.examplemod.utilities.commands.SettingAccessor;
+import com.example.examplemod.utilities.commands.SettingNotFoundException;
 import com.example.examplemodtests.testUtilities.HackTestHarness;
 
 public class GenericSettingsTest extends HackTestHarness.Suite {
 
 	public void testFieldSettings() throws SettingNotFoundException, InvalidValueException {
 		SettingsTestClass s = new SettingsTestClass();
-		GenericSettings settings = new GenericSettings(s);
+		SettingAccessor settings = new SettingAccessor(s);
 
 		assertTrue(settings.get("firstName").equals("firstName-value"));
 		settings.set("firstname", "firstName-value2");
@@ -19,7 +19,7 @@ public class GenericSettingsTest extends HackTestHarness.Suite {
 
 	public void testSettings() throws SettingNotFoundException, InvalidValueException {
 		SettingsTestClass s = new SettingsTestClass();
-		GenericSettings settings = new GenericSettings(s);
+		SettingAccessor settings = new SettingAccessor(s);
 
 		assertTrue(settings.get("ssn").equals("ssn-value"));
 		settings.set("ssn", "ssn-value2");

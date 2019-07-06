@@ -1,4 +1,4 @@
-package com.example.examplemod.utilities.settings;
+package com.example.examplemod.utilities.commands;
 
 public class InvalidValueException extends Exception {
 	public final String settingName;

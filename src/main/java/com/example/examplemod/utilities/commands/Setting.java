@@ -1,4 +1,4 @@
-package com.example.examplemod.utilities.settings;
+package com.example.examplemod.utilities.commands;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

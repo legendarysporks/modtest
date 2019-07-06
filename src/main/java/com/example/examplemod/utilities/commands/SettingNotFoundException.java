@@ -1,4 +1,4 @@
-package com.example.examplemod.utilities.settings;
+package com.example.examplemod.utilities.commands;
 
 public class SettingNotFoundException extends Exception {
 	public final String settingName;
