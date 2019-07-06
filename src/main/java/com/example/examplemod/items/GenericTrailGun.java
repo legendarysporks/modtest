@@ -167,6 +167,19 @@ public class GenericTrailGun extends GenericItem {
 	protected void handleFinishPosition(World world, BlockPos pos) {
 	}
 
+	private boolean isSolid(World w, Vec3d v) {
+		// water, and air are not solid
+		return w.getBlockState(toBlockPos(v)).getMaterial().isSolid();
+	}
+
+	private BlockPos toBlockPos(Vec3d v) {
+		return new BlockPos(v.x, v.y, v.z);
+	}
+
+	private Vec3d toVec3d(BlockPos p) {
+		return new Vec3d(p.getX(), p.getY(), p.getZ());
+	}
+
 	//----------------------------------------------------------------------------------------
 
 	/**
@@ -177,22 +190,20 @@ public class GenericTrailGun extends GenericItem {
 		private World world;
 		private int totalSteps;
 		private int currentStep;
+		private Vec3d currentPos;
 		private Vec3d stepSize;
-		private BlockPos startPos;
-		private BlockPos finishPos;
 		private Queue<BlockPos> positionsVisited = new ArrayDeque<>(trailLength);
 		private long ticksToNextStep = 0;
 
 		public TrailGunAffect(World world, BlockPos start, BlockPos finish) {
 			this.world = world;
-			startPos = start;
-			finishPos = finish;
 			int dx = (finish.getX() - start.getX());
 			int dy = (finish.getY() - start.getY());
 			int dz = (finish.getZ() - start.getZ());
 			// We want to step one pixel at a time along the longest axis
 			totalSteps = Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz)));
 			stepSize = new Vec3d((double) dx / totalSteps, (double) dy / totalSteps, (double) dz / totalSteps);
+			currentPos = toVec3d(start);
 			currentStep = 0;
 			handleStartPosition(world, start);
 		}
@@ -214,16 +225,32 @@ public class GenericTrailGun extends GenericItem {
 			if (currentStep < totalSteps) {
 				// We haven't reached the finish yet, add a pixel
 				// calculate the next pixel location
-				BlockPos nextPos = startPos.add(stepSize.x * currentStep, stepSize.y * currentStep, stepSize.z * currentStep);
+
+//				BlockPos nextPos = startPos.add(stepSize.x * currentStep, stepSize.y * currentStep, stepSize.z * currentStep);
+
+				Vec3d abovePos = currentPos.addVector(0.0d, 1.0d, 0.0d);
+				Vec3d forwardPos = currentPos.add(stepSize);
+				Vec3d belowPos = currentPos.subtract(0.0d, 1.0d, 0.0d);
+				if (isSolid(world, abovePos) && !positionsVisited.contains(toBlockPos(abovePos))) {
+					currentPos = abovePos;
+				} else if (isSolid(world, forwardPos)) {
+					currentPos = forwardPos;
+				} else if (isSolid(world, belowPos)) {
+					currentPos = belowPos;
+				} else {
+					currentPos = currentPos.addVector(0d, 0d, 0d);
+				}
+				BlockPos currentBlockPos = toBlockPos(currentPos);
+
 				currentStep = currentStep + 1;
 				// if this position hasn't been touched yet (which might happen due to round off errors, twiddle the block
-				if (positionsVisited.contains(nextPos)) {
+				if (positionsVisited.contains(currentBlockPos)) {
 					// pixel has already been handled so just continue
 					return true;
 				} else {
 					// add a new pixel to the list and handle it
-					positionsVisited.add(nextPos);
-					if (!handleAddPosition(world, nextPos)) {
+					positionsVisited.add(currentBlockPos);
+					if (!handleAddPosition(world, currentBlockPos)) {
 						// end() just puts us in a position to clean up our existing mess
 						end();
 						// we fall through and return true because there is probably still cleanup to do
@@ -238,7 +265,7 @@ public class GenericTrailGun extends GenericItem {
 				return true;
 			} else {
 				// We've reached the finish and we've removed all positionsVisited remaining.   Done.
-				handleFinishPosition(world, finishPos);
+				handleFinishPosition(world, toBlockPos(currentPos));
 				return false;
 			}
 		}
