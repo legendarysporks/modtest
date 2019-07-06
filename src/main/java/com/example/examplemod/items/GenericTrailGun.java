@@ -49,14 +49,24 @@ public class GenericTrailGun extends GenericItem {
 	}
 
 	@Setting
-	public int getAffectDurationInTicks() {
+	public int getDurationTicks() {
 		return affectDurationInTicks;
 	}
 
 	@Setting
-	public void setAffectDurationInTicks(int affectDurationInTicks) {
+	public void setDurationTicks(int affectDurationInTicks) {
 		this.affectDurationInTicks = affectDurationInTicks;
 		stepDurationInTicks = Math.round(affectDurationInTicks / range);
+	}
+
+	@Setting
+	public double getVelocity() {
+		return range / affectDurationInTicks;
+	}
+
+	@Setting
+	public void setVelocity(double velocity) {
+		setDurationTicks((int) Math.round(range / velocity));
 	}
 
 	@Setting
