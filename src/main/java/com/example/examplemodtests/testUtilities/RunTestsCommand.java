@@ -1,6 +1,7 @@
 package com.example.examplemodtests.testUtilities;
 
 import com.example.examplemod.ExampleMod;
+import com.example.examplemod.utilities.commands.CommandMethod;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemodtests.utilities.GenericCommandTest;
 import com.example.examplemodtests.utilities.GenericSettingsTest;
@@ -15,11 +16,13 @@ public class RunTestsCommand extends GenericCommand {
 		super(name, usage, aliases);
 	}
 
+	@CommandMethod
 	public void doIt(ICommandSender sender) {
 		HackTestHarness.run(GenericSettingsTest.class, ExampleMod.logger);
 		HackTestHarness.run(GenericCommandTest.class, ExampleMod.logger);
 	}
 
+	@CommandMethod
 	public void doIt(ICommandSender sender, String testClassName) {
 		try {
 			Class<?> clazz = Class.forName(testClassName);

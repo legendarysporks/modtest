@@ -138,7 +138,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			sendMsg(sender, getUsage(sender));
 
 		}
-		sendMsg(sender, "or Try /" + getName() + " help " + buildCommandsList());
+		sendMsg(sender, "or Try /" + getName() + " help [ " + buildCommandsList() + " ]");
 	}
 
 	/* Help for a subcommand.  Ex. /<name> help <subcommand> */

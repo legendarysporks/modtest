@@ -1,5 +1,6 @@
 package com.example.examplemodtests.utilities;
 
+import com.example.examplemod.utilities.commands.CommandMethod;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemodtests.testUtilities.HackTestHarness;
 import net.minecraft.command.ICommandSender;
@@ -54,7 +55,7 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 
 		remoteSender.reset();
 		cmd.execute(null, remoteSender, args);
-		assertTrue(remoteSender.commandOutput.size() == 0, "Command executed on remote world when it shouldn't have");
+		assertTrue(remoteSender.commandOutput.size() == 3, "Command executed on remote world when it shouldn't have");
 
 		localSender.reset();
 		cmd.execute(null, localSender, args);
@@ -83,9 +84,9 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 		}
 
 		final TestCase[] cases = {
-				new TestCase(new String[]{"help"}, new String[]{TestCommand.USAGE}),
-				new TestCase(new String[]{"commands"}, new String[]{"[ commands | help | test ]"}),
-				new TestCase(new String[]{"help", "commands"}, new String[]{"commands - getSettingNames available subcommands"}),
+				new TestCase(new String[]{"help"}, new String[]{TestCommand.USAGE, "or Try /TestCommand help [ commands | help | test ]"}),
+				new TestCase(new String[]{"commands"}, new String[]{"commands | help | test"}),
+				new TestCase(new String[]{"help", "commands"}, new String[]{"commands - list available subcommands"}),
 				new TestCase(new String[]{"test"}, new String[]{"doTest(i)"}),
 				new TestCase(new String[]{"test", "1"}, new String[]{"doTest(i,1)"}),
 				new TestCase(new String[]{"test", "1", "2"}, new String[]{"doTest(i,1,2)"}),
@@ -117,38 +118,44 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 
 	public static final class TestCommand extends GenericCommand {
 		public static final String NAME = "TestCommand";
-		public static final String USAGE = "Usage";
+		public static final String USAGE = "TestCommand Usage Text";
 		public static final String[] ALIASES = {"Alias1", "Alias2"};
-
 
 		public TestCommand() {
 			super(NAME, USAGE, ALIASES);
 		}
 
+		@CommandMethod
 		public void doTest(ICommandSender sender) {
 			sendMsg(sender, "doTest(i)");
 		}
 
+		@CommandMethod
 		public void doTest(ICommandSender sender, String arg1) {
 			sendMsg(sender, "doTest(i," + arg1 + ")");
 		}
 
+		@CommandMethod
 		public void doTest(ICommandSender sender, String arg1, String arg2) {
 			sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + ")");
 		}
 
+		@CommandMethod
 		public void doTest(ICommandSender sender, String arg1, String arg2, String arg3) {
 			sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + "," + arg3 + ")");
 		}
 
+		@CommandMethod
 		public void doIt(ICommandSender sender) {
 			sendMsg(sender, "doIt(i)");
 		}
 
+		@CommandMethod
 		public void doIt(ICommandSender sender, String arg1) {
 			sendMsg(sender, "doIt(i," + arg1 + ")");
 		}
 
+		@CommandMethod
 		public void doodle(ICommandSender sender) {
 			sendMsg(sender, "Why did you call doodle?");
 		}
