@@ -1,12 +1,14 @@
 package com.example.examplemodtests.utilities;
 
 import com.example.examplemod.utilities.settings.GenericSettings;
+import com.example.examplemod.utilities.settings.InvalidValueException;
 import com.example.examplemod.utilities.settings.Setting;
+import com.example.examplemod.utilities.settings.SettingNotFoundException;
 import com.example.examplemodtests.testUtilities.HackTestHarness;
 
 public class GenericSettingsTest extends HackTestHarness.Suite {
 
-	public void testFieldSettings() throws GenericSettings.SettingNotFoundException, GenericSettings.InvalidValueException {
+	public void testFieldSettings() throws SettingNotFoundException, InvalidValueException {
 		SettingsTestClass s = new SettingsTestClass();
 		GenericSettings settings = new GenericSettings(s);
 
@@ -15,7 +17,7 @@ public class GenericSettingsTest extends HackTestHarness.Suite {
 		assertTrue(settings.get("FirstName").equals("firstName-value2"));
 	}
 
-	public void testSettings() throws GenericSettings.SettingNotFoundException, GenericSettings.InvalidValueException {
+	public void testSettings() throws SettingNotFoundException, InvalidValueException {
 		SettingsTestClass s = new SettingsTestClass();
 		GenericSettings settings = new GenericSettings(s);
 

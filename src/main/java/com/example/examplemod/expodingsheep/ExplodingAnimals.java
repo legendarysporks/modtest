@@ -4,7 +4,9 @@ import com.example.examplemod.utilities.commands.CommandMethod;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
 import com.example.examplemod.utilities.settings.GenericSettings;
+import com.example.examplemod.utilities.settings.InvalidValueException;
 import com.example.examplemod.utilities.settings.Setting;
+import com.example.examplemod.utilities.settings.SettingNotFoundException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.*;
@@ -110,7 +112,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 	public void doGet(ICommandSender sender, String setting) {
 		try {
 			GenericCommand.sendMsg(sender, settings.get(setting));
-		} catch (GenericSettings.SettingNotFoundException e) {
+		} catch (SettingNotFoundException e) {
 			GenericCommand.sendMsg(sender, e.getMessage());
 		}
 	}
@@ -120,7 +122,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		try {
 			settings.set(setting, value);
 			GenericCommand.sendMsg(sender, setting + " set to " + value);
-		} catch (GenericSettings.InvalidValueException | GenericSettings.SettingNotFoundException e) {
+		} catch (InvalidValueException | SettingNotFoundException e) {
 			GenericCommand.sendMsg(sender, e.getMessage());
 		}
 	}
@@ -133,7 +135,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		} else {
 			try {
 				GenericCommand.sendMsg(sender, info.settings.get(setting));
-			} catch (GenericSettings.SettingNotFoundException e) {
+			} catch (SettingNotFoundException e) {
 				GenericCommand.sendMsg(sender, e.getMessage());
 			}
 		}
@@ -148,7 +150,7 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			try {
 				info.settings.set(setting, value);
 				GenericCommand.sendMsg(sender, setting + " set to " + value);
-			} catch (GenericSettings.InvalidValueException | GenericSettings.SettingNotFoundException e) {
+			} catch (InvalidValueException | SettingNotFoundException e) {
 				GenericCommand.sendMsg(sender, e.getMessage());
 			}
 		}
