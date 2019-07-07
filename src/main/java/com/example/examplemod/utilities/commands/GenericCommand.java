@@ -268,7 +268,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		try {
 			set(setting, value);
 			sendMsg(sender, setting + " set to " + value);
-		} catch (InvalidValueException | SettingNotFoundException e) {
+		} catch (Exception e) {
 			sendMsg(sender, e.getMessage());
 		}
 	}

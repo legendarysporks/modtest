@@ -1,8 +1,11 @@
 package com.example.examplemod.items;
 
+import com.example.examplemod.utilities.commands.Setting;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -11,6 +14,7 @@ public class ThorHammer extends GenericTrailGun {
 	private static final String COMMAND_NAME = "ThorHammer";
 	private static final String COMMAND_USAGE = "Try /ThorHammer settings";
 	private static final String[] COMMAND_ALIASES = {"thorhammer", "thorHammer", "th"};
+	private static Block affectBlock = Blocks.MAGMA;
 
 	public ThorHammer(String name) {
 		super(name, COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES);
@@ -37,7 +41,7 @@ public class ThorHammer extends GenericTrailGun {
 
 		if (isBreakable) {
 			// the block is breakable so turn it to magma and set it on fire.
-			world.setBlockState(pos, Blocks.MAGMA.getDefaultState());
+			world.setBlockState(pos, affectBlock.getDefaultState());
 			BlockPos above = pos.up();
 			if (world.getBlockState(above).getMaterial() == Material.AIR) {
 				world.setBlockState(above, Blocks.FIRE.getDefaultState());
@@ -58,4 +62,19 @@ public class ThorHammer extends GenericTrailGun {
 			world.setBlockToAir(above);
 		}
 	}
+
+	@Setting
+	public String getBlock() {
+		ResourceLocation loc = affectBlock.getRegistryName();
+		return loc.getResourceDomain() + ":" + loc.getResourcePath();
+	}
+
+	@Setting
+	public void setBlock(String blockName) {
+		Block b = Block.getBlockFromName(blockName);
+		if (b != null) {
+			affectBlock = b;
+		}
+	}
+
 }
