@@ -4,9 +4,9 @@ import com.example.examplemod.utilities.commands.InvalidValueException;
 import com.example.examplemod.utilities.commands.Setting;
 import com.example.examplemod.utilities.commands.SettingAccessor;
 import com.example.examplemod.utilities.commands.SettingNotFoundException;
-import com.example.examplemodtests.testUtilities.HackTestHarness;
+import com.example.examplemodtests.testUtilities.TestExecution;
 
-public class GenericSettingsTest extends HackTestHarness.Suite {
+public class SettingAccessorTest extends TestExecution.Suite {
 
 	public void testFieldSettings() throws SettingNotFoundException, InvalidValueException {
 		SettingsTestClass s = new SettingsTestClass();
@@ -28,6 +28,36 @@ public class GenericSettingsTest extends HackTestHarness.Suite {
 		assertTrue(settings.get("age").equals("42"));
 		settings.set("age", "43");
 		assertTrue(settings.get("age").equals("43"));
+	}
+
+	public void testSettingAccess() {
+		SettingsTestClass s = new SettingsTestClass();
+		SettingAccessor settings = new SettingAccessor(s);
+		try {
+			settings.get("readOnlySetting");
+		} catch (SettingNotFoundException e) {
+			fail("could not access read-only setting");
+		}
+		try {
+			settings.set("readOnlySetting", "newValue");
+			fail("Was able to set a read-only setting");
+		} catch (InvalidValueException e) {
+			fail("Incorrent exception thrown");
+		} catch (SettingNotFoundException e) {
+		}
+
+		try {
+			settings.get("privateSetting");
+			fail("Was able to get private field as a setting");
+		} catch (SettingNotFoundException e) {
+		}
+		try {
+			settings.set("privateSetting", "newValue");
+			fail("Was able to set a private field as a setting");
+		} catch (InvalidValueException e) {
+			fail("Was able to access private field as a setting");
+		} catch (SettingNotFoundException e) {
+		}
 	}
 
 	public static class SettingsTestClass {

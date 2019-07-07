@@ -8,22 +8,22 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HackTestHarness {
+public class TestExecution {
 	public final List<String> testOrder = new ArrayList<>();
 	public final List<TestFailure> testFailures = new ArrayList<>();
 	public Logger logger;
 	private Suite suite;
 	private boolean terminateOnFailure = true;
 
-	private HackTestHarness(Class<? extends Suite> testClass, Logger outputLog) throws IllegalAccessException, InstantiationException {
+	private TestExecution(Class<? extends Suite> testClass, Logger outputLog) throws IllegalAccessException, InstantiationException {
 		suite = testClass.newInstance();
 		this.logger = outputLog;
 	}
 
-	public static HackTestHarness run(Class<? extends Suite> testClass, Logger logger) {
-		HackTestHarness harness = null;
+	public static TestExecution run(Class<? extends Suite> testClass, Logger logger) {
+		TestExecution harness = null;
 		try {
-			harness = new HackTestHarness(testClass, logger);
+			harness = new TestExecution(testClass, logger);
 			harness.runTests();
 		} catch (Throwable e) {
 			// catch everything so it doesn't bubble out into the real world
@@ -87,7 +87,7 @@ public class HackTestHarness {
 	/* Check to see if a given method is of the form "void test(PrintWriter)" */
 	private boolean hasTestMethodSigniture(Method method) {
 		Boolean result = method.getName().startsWith("test");
-//		result = result && (method.getReturnType() == Void.class);
+		result = result && (method.getReturnType() == Void.TYPE);
 		result = result && (method.getParameterCount() == 0);
 		return result;
 	}
@@ -135,7 +135,7 @@ public class HackTestHarness {
 
 	public static class Suite {
 		private String testName;
-		private HackTestHarness harness;
+		private TestExecution harness;
 
 		public void setup() {
 		}
@@ -186,11 +186,11 @@ public class HackTestHarness {
 			}
 		}
 
-		protected HackTestHarness getTestHarness() {
+		protected TestExecution getTestHarness() {
 			return harness;
 		}
 
-		private void setTestContext(String testName, HackTestHarness harness) {
+		private void setTestContext(String testName, TestExecution harness) {
 			this.testName = testName;
 			this.harness = harness;
 		}
@@ -208,21 +208,21 @@ public class HackTestHarness {
 
 	public class SuiteTest extends Suite {
 		@TestMetaInfo
-		public void testStuff(HackTestHarness harness) {
+		public void testStuff(TestExecution harness) {
 			fail("-testStuff-");
 		}
 
 		@TestMetaInfo(terminateOnFailure = false)
-		public void testContinueOnFailure(HackTestHarness harness) {
+		public void testContinueOnFailure(TestExecution harness) {
 			fail("-testContinueOnFailure 1-");
 			fail("-testContinueOnFailure 2-");
 		}
 
-		public void testHomegrownException(HackTestHarness harness) {
+		public void testHomegrownException(TestExecution harness) {
 			throw new Error("-testHomegrownException error-");
 		}
 
-		public void testSomethingPasses(HackTestHarness harness) {
+		public void testSomethingPasses(TestExecution harness) {
 
 		}
 	}

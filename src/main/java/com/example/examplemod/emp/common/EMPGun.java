@@ -17,10 +17,10 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 public class EMPGun extends GenericItem implements HackFMLEventListener {
 	public static final String COMMAND_NAME = "EMP";
-	private static final Class<? extends Item> AMMO_CLASS = EMPAmmo.class;
 	public static final String COMMAND_USAGE = "EMP whatever";
 	public static final String[] COMMAND_ALIASES = {"emp"};
 	public static final String COMMAND_CONFIG_FILE_VERSION = "0.1";
+	private static final Class<? extends Item> AMMO_CLASS = EMPAmmo.class;
 	private static final String NAME = "emp_gun";
 	private static final String[] EMP_SOUND_NAMES = new String[]{
 			"alien_blaster_fired",
@@ -40,13 +40,12 @@ public class EMPGun extends GenericItem implements HackFMLEventListener {
 	public float VELOCITY = 1.6f;
 	@Setting
 	public float INACCURACY = 0.0f;
-	private GenericCommand command;
 
 	public EMPGun() {
 		super(NAME, CreativeTabs.COMBAT, 1);
 		setMaxDamage(0);
-		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES).addTargetWithPersitentSettings(
-				this, NAME, COMMAND_CONFIG_FILE_VERSION);
+		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES)
+				.addTargetWithPersitentSettings(this, NAME, COMMAND_CONFIG_FILE_VERSION);
 		subscribeToFMLEvents();
 	}
 

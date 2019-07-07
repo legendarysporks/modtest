@@ -2,7 +2,7 @@ package com.example.examplemodtests.utilities;
 
 import com.example.examplemod.utilities.commands.Command;
 import com.example.examplemod.utilities.commands.GenericCommand;
-import com.example.examplemodtests.testUtilities.HackTestHarness;
+import com.example.examplemodtests.testUtilities.TestExecution;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
@@ -14,7 +14,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GenericCommandTest extends HackTestHarness.Suite {
+public class GenericCommandTest extends TestExecution.Suite {
 	private DummyCommandSender remoteSender;
 	private DummyCommandSender localSender;
 	private GenericCommand cmd;
@@ -23,7 +23,7 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 	public void setup() {
 		remoteSender = new DummyCommandSender(true);
 		localSender = new DummyCommandSender(false);
-		cmd = new TestCommand();
+		cmd = GenericCommand.create(TestCommand.NAME, TestCommand.USAGE, TestCommand.ALIASES).addTarget(new TestCommand());
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 		assertTrue(localSender.commandOutput.size() > 0, "Command did not execute");
 	}
 
-	@HackTestHarness.TestMetaInfo(terminateOnFailure = false)
+	@TestExecution.TestMetaInfo(terminateOnFailure = false)
 	public void testMethodDispatching() {
 		class TestCase {
 			public final String[] args;
@@ -116,48 +116,47 @@ public class GenericCommandTest extends HackTestHarness.Suite {
 
 	//------------ Command used for testing
 
-	public static final class TestCommand extends GenericCommand {
+	public static final class TestCommand {
 		public static final String NAME = "TestCommand";
 		public static final String USAGE = "TestCommand Usage Text";
 		public static final String[] ALIASES = {"Alias1", "Alias2"};
 
 		public TestCommand() {
-			super(NAME, USAGE, ALIASES);
 		}
 
 		@Command
 		public void doTest(ICommandSender sender) {
-			sendMsg(sender, "doTest(i)");
+			GenericCommand.sendMsg(sender, "doTest(i)");
 		}
 
 		@Command
 		public void doTest(ICommandSender sender, String arg1) {
-			sendMsg(sender, "doTest(i," + arg1 + ")");
+			GenericCommand.sendMsg(sender, "doTest(i," + arg1 + ")");
 		}
 
 		@Command
 		public void doTest(ICommandSender sender, String arg1, String arg2) {
-			sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + ")");
+			GenericCommand.sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + ")");
 		}
 
 		@Command
 		public void doTest(ICommandSender sender, String arg1, String arg2, String arg3) {
-			sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + "," + arg3 + ")");
+			GenericCommand.sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + "," + arg3 + ")");
 		}
 
 		@Command
 		public void doIt(ICommandSender sender) {
-			sendMsg(sender, "doIt(i)");
+			GenericCommand.sendMsg(sender, "doIt(i)");
 		}
 
 		@Command
 		public void doIt(ICommandSender sender, String arg1) {
-			sendMsg(sender, "doIt(i," + arg1 + ")");
+			GenericCommand.sendMsg(sender, "doIt(i," + arg1 + ")");
 		}
 
 		@Command
 		public void doodle(ICommandSender sender) {
-			sendMsg(sender, "Why did you call doodle?");
+			GenericCommand.sendMsg(sender, "Why did you call doodle?");
 		}
 	}
 

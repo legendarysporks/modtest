@@ -2,8 +2,6 @@ package com.example.examplemod.utilities.commands;
 
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.lang.reflect.InvocationTargetException;
@@ -69,6 +67,9 @@ class MethodDispatcher {
 		}
 	}
 
+/*	// old execute method that did a complete lookup/dispatch here.  It was split into
+	// three methods so the lookup could be done breadth first across multiple dispatchers
+	// by the command.
 	public boolean execute(MinecraftServer server, ICommandSender sender, String[] args) {
 		World world = sender.getEntityWorld();
 
@@ -96,6 +97,31 @@ class MethodDispatcher {
 			}
 		}
 		return false;
+	} */
+
+	public boolean invokeRootCommand(ICommandSender sender, String[] args) {
+		assert args.length == 0;
+		// root command with no arguments
+		return invokeCommandIfFound(sender, args, commands.get(new MethodInvokerKey(1)));
+	}
+
+	public boolean invokeRootCommandWithArgs(ICommandSender sender, String[] args) {
+		return invokeCommandIfFound(sender, args, commands.get(new MethodInvokerKey(args.length + 1)));
+	}
+
+	public boolean invokeSubCommand(ICommandSender sender, String[] args) {
+		// check sub commands
+		String possibleCommandMethodName = COMMAND_METHOD_PREFIX + args[0].toLowerCase();
+		return invokeCommandIfFound(sender, args, commands.get(new MethodInvokerKey(possibleCommandMethodName, args.length)));
+	}
+
+	private boolean invokeCommandIfFound(ICommandSender sender, String[] args, MethodInvoker method) {
+		if (method != null && method.hasPermission(sender)) {
+			method.invoke(target, sender, args);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public List<String> getSubcommands() {
@@ -183,13 +209,13 @@ class MethodDispatcher {
 	}
 
 	/** This class holds details about a command method and is used to invoke with proper arguments. */
-	private class MethodInvoker {
+	private static class MethodInvoker {
 		public final MethodInvokerKey key;
 		public final Method method;
 		public final String help;
 		public final boolean requiresOp;
 
-		MethodInvoker(Method method) {
+		public MethodInvoker(Method method) {
 			this.key = new MethodInvokerKey(method.getName().toLowerCase(), method.getParameterCount());
 			this.method = method;
 			Command annotation = method.getAnnotation(Command.class);

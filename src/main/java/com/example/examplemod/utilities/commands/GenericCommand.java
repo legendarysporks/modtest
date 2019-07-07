@@ -8,9 +8,9 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public class GenericCommand implements ICommand, HackFMLEventListener {
@@ -20,6 +20,14 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	private final String name;
 	private final List<MethodDispatcher> dispatchers = new ArrayList<>();
 	private final List<SettingAccessor> settings = new ArrayList<>();
+
+	public GenericCommand(String name, String usage, String... aliases) {
+		this.dispatchers.add(new MethodDispatcher(this));
+		this.name = name;
+		this.usage = usage;
+		aliasList.addAll(Arrays.asList(aliases));
+		subscribeToFMLEvents();
+	}
 
 	public static GenericCommand create(String name, String usage, String... aliases) {
 		return new GenericCommand(name, usage, aliases);
@@ -40,14 +48,6 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			}
 		}
 		sendMsg(sender, line.toString());
-	}
-
-	public GenericCommand(String name, String usage, String... aliases) {
-		this.dispatchers.add(new MethodDispatcher(this));
-		this.name = name;
-		this.usage = usage;
-		aliasList.addAll(Arrays.asList(aliases));
-		subscribeToFMLEvents();
 	}
 
 	/**
@@ -156,12 +156,31 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-		for (MethodDispatcher dispatcher : dispatchers) {
-			if (dispatcher.execute(server, sender, args)) {
-				return;
+		World world = sender.getEntityWorld();
+		if (!world.isRemote) {
+			if (args.length == 0) {
+				// root command with no arguments
+				for (MethodDispatcher dispatcher : dispatchers) {
+					if (dispatcher.invokeRootCommand(sender, args)) {
+						return;
+					}
+				}
+			} else {
+				// sub command
+				for (MethodDispatcher dispatcher : dispatchers) {
+					if (dispatcher.invokeSubCommand(sender, args)) {
+						return;
+					}
+				}
+				// root command with arguments
+				for (MethodDispatcher dispatcher : dispatchers) {
+					if (dispatcher.invokeRootCommandWithArgs(sender, args)) {
+						return;
+					}
+				}
 			}
 		}
-		sendMsg(sender, "Command not found or missing arguments");
+		sendMsg(sender, "Command not found or improper number of arguments");
 		doHelp(sender);
 	}
 
@@ -171,7 +190,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	}
 
 	@Override
-	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
 		if (args.length == 1) {
 			Set<String> set = new HashSet<>();
 			for (MethodDispatcher dispatcher : dispatchers) {
@@ -237,14 +256,17 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	}
 
 	private String buildCommandsList() {
+		List<String> commandNames = new ArrayList<>();
+		for (MethodDispatcher dispatcher : dispatchers) {
+			commandNames.addAll(dispatcher.getSubcommands());
+		}
+		Collections.sort(commandNames);
 		StringBuilder builder = new StringBuilder();
 		String seperator = "";
-		for (MethodDispatcher dispatcher : dispatchers) {
-			for (String subCmd : dispatcher.getSubcommands()) {
-				builder.append(seperator);
-				builder.append(subCmd);
-				seperator = " | ";
-			}
+		for (String subCmd : commandNames) {
+			builder.append(seperator);
+			builder.append(subCmd);
+			seperator = " | ";
 		}
 		return builder.toString();
 	}

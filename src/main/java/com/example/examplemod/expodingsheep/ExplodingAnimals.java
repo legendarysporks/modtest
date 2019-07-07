@@ -42,9 +42,6 @@ public class ExplodingAnimals implements HackFMLEventListener {
 	private static final String cmdUsage = "ExplodingAnimals [ settings | settings <animal> | get <animal> <setting> | "
 			+ "set <animal> <setting> <value> ]";
 	private static final String[] cmdAliases = {"explodingAnimals", "explodinganimals", "ea", "EA", "boom", "BOOM"};
-	public final SettingAccessor settings;
-	@Setting
-	public boolean enabled = true;
 
 	static {
 		for (TriggerInfo info : triggers) {
@@ -52,6 +49,10 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			nameToInfoMap.put(info.name, info);
 		}
 	}
+
+	public final SettingAccessor settings;
+	@Setting
+	public boolean enabled = true;
 
 	public ExplodingAnimals() {
 		subscribeToFMLEvents();
