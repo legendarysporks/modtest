@@ -1,5 +1,6 @@
 package com.example.examplemod.utilities.commands;
 
+import com.example.examplemod.ExampleMod;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -15,23 +16,19 @@ class MethodDispatcher {
 	private final Object target;
 	private final Map<MethodInvokerKey, MethodInvoker> commands = new HashMap<>();
 	private final List<String> tabCompletions = new ArrayList<>();
-	private int maxArgumentCount = 0;
+	private final int maxArgumentCount;
 
 	public MethodDispatcher(Object target) {
 		this.target = target;
-		buildCommandMapping();
-	}
-
-	/* Search through the methods of this class and super classes to find command handler methods */
-	private void buildCommandMapping() {
 		Set<String> cmdSet = new HashSet<>();
 		Class<?> clazz = target.getClass();
+		int maxArgCount = 0;
 		while (clazz != Object.class) {
 			for (Method method : clazz.getDeclaredMethods()) {
 				if (isCommandMethodSigniture(method)) {
 					MethodInvoker dispatcher = new MethodInvoker(method);
 					commands.put(dispatcher.key, dispatcher);
-					maxArgumentCount = Math.max(maxArgumentCount, dispatcher.key.methodArgCount);
+					maxArgCount = Math.max(maxArgCount, dispatcher.key.methodArgCount);
 					if (!ROOT_COMMAND.equals(dispatcher.key.name)) {
 						cmdSet.add(dispatcher.key.name.substring(COMMAND_METHOD_PREFIX.length()));
 					}
@@ -41,20 +38,34 @@ class MethodDispatcher {
 		}
 		tabCompletions.addAll(cmdSet);
 		Collections.sort(tabCompletions);
+		maxArgumentCount = maxArgCount;
 	}
 
 	/* Check to see if a given method is of the form "void do<Bla>(ICommandSender [, String...])" */
 	private boolean isCommandMethodSigniture(Method method) {
-		if ((method.getAnnotation(Command.class) != null)
-				&& method.getName().startsWith(COMMAND_METHOD_PREFIX)
-				&& (method.getReturnType() == Void.TYPE)) {
+		if ((method.getAnnotation(Command.class) != null)) {
+
+			if (!method.getName().startsWith(COMMAND_METHOD_PREFIX)) {
+				ExampleMod.logInfo(String.format("Bad method signiture for @Command %s.%s.  Name must start with 'do'.",
+						method.getDeclaringClass().getName(), method.getName()));
+				return false;
+			}
+			if (method.getReturnType() != Void.TYPE) {
+				ExampleMod.logInfo(String.format("Bad method signiture for @Command %s.%s.  Return type must be void.",
+						method.getDeclaringClass().getName(), method.getName()));
+				return false;
+			}
 			if (!Character.isUpperCase(method.getName().charAt(COMMAND_METHOD_PREFIX.length()))) {
 				// first character after "do" needs to be upper case
+				ExampleMod.logInfo(String.format("Bad method signiture for @Command %s.%s.  Upper case character must follow 'do'.",
+						method.getDeclaringClass().getName(), method.getName()));
 				return false;
 			}
 			Class<?>[] paramTypes = method.getParameterTypes();
 			if ((paramTypes.length < 1) || (paramTypes[0] != ICommandSender.class)) {
 				// the first parameter must be of type ICommandSender
+				ExampleMod.logInfo(String.format("Bad method signiture for @Command %s.%s.  Missing ICommandSender argument.",
+						method.getDeclaringClass().getName(), method.getName()));
 				return false;
 			}
 			for (int i = 1; i < paramTypes.length; i++) {
