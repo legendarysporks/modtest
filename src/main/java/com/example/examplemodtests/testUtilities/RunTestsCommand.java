@@ -24,7 +24,7 @@ public class RunTestsCommand extends GenericCommand {
 		int testsFailures = result1.testFailures.size() + result2.testFailures.size();
 		int testsRun = result1.testOrder.size() + result2.testOrder.size();
 
-		sendMsg(sender, String.format("%d tests fun.  %d passed.  %d failed.", testsRun, testsRun - testsFailures, testsFailures));
+		sendMsg(sender, String.format("%d tests run.  %d passed.  %d failed.", testsRun, testsRun - testsFailures, testsFailures));
 	}
 
 	@Command

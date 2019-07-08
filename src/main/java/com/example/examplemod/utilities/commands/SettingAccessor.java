@@ -26,13 +26,13 @@ public class SettingAccessor {
 
 	public SettingAccessor(Object target) {
 		this.target = target;
-		findSettings();
+		buildSettingsMaps();
 		configion = null;
 	}
 
 	public SettingAccessor(Object target, String configFileName, String configVersion) {
 		this.target = target;
-		findSettings();
+		buildSettingsMaps();
 		File cfgFile = new File(Loader.instance().getConfigDir(), Reference.MODID + "-" + configFileName + CONFIG_FILE_SUFFIX);
 		boolean isNewConfigFile = !cfgFile.exists();
 		configion = new Configuration(cfgFile, configVersion);
@@ -46,7 +46,7 @@ public class SettingAccessor {
 	go through the class of the target object and pull all the public fields and methods marked with the
 	@Setting annotation and put them in the appropriate maps
 	 */
-	private void findSettings() {
+	private void buildSettingsMaps() {
 		// find fields with one of the supported types
 		Class clazz = target.getClass();
 		while (clazz != Object.class) {
@@ -54,7 +54,7 @@ public class SettingAccessor {
 				Annotation settingAnnotation = field.getAnnotation(Setting.class);
 				if (settingAnnotation != null && Modifier.isPublic(field.getModifiers())) {
 					Class<?> fieldType = field.getType();
-					if (isSupportedType(fieldType)) {
+					if (TypeConversionHelper.isSupportedType(fieldType)) {
 						String name = field.getName();
 						fields.put(name.toLowerCase(), field);
 					}
@@ -68,13 +68,13 @@ public class SettingAccessor {
 				if (settingAnnotation != null && Modifier.isPublic(method.getModifiers())) {
 					String methodName = method.getName();
 					if (methodName.startsWith(GET)
-							&& isSupportedType(method.getReturnType())
+							&& TypeConversionHelper.isSupportedType(method.getReturnType())
 							&& (method.getParameterCount() == 0)) {
 						getters.put(methodName.substring(GET.length()).toLowerCase(), method);
 					} else if (methodName.startsWith(SET)
 							&& (Void.TYPE == method.getReturnType())
 							&& (method.getParameterCount() == 1)
-							&& (isSupportedType(method.getParameterTypes()[0]))) {
+							&& (TypeConversionHelper.isSupportedType(method.getParameterTypes()[0]))) {
 						setters.put(methodName.substring(SET.length()).toLowerCase(), method);
 					}
 				}
@@ -83,10 +83,6 @@ public class SettingAccessor {
 			// now loop back and check its superclass
 			clazz = clazz.getSuperclass();
 		}
-	}
-
-	private boolean isSupportedType(Class<?> type) {
-		return type.isPrimitive() || (type == String.class);
 	}
 
 	public void load() {
@@ -157,7 +153,7 @@ public class SettingAccessor {
 		if (field != null) {
 			try {
 				field.setAccessible(true);
-				field.set(target, convertValueToType(settingName, value, field.getType()));
+				field.set(target, TypeConversionHelper.convertStringToType(settingName, value, field.getType()));
 				updateConfigFile(settingName, value);
 				return true;
 			} catch (IllegalAccessException e) {
@@ -171,7 +167,7 @@ public class SettingAccessor {
 			if (method != null) {
 				try {
 					method.setAccessible(true);
-					method.invoke(target, convertValueToType(settingName, value, method.getParameterTypes()[0]));
+					method.invoke(target, TypeConversionHelper.convertStringToType(settingName, value, method.getParameterTypes()[0]));
 					updateConfigFile(settingName, value);
 					return true;
 				} catch (IllegalAccessException | InvocationTargetException e) {
@@ -202,35 +198,6 @@ public class SettingAccessor {
 		result.addAll(set);
 		Collections.sort(result);
 		return result;
-	}
-
-	private Object convertValueToType(String settingName, String value, Class<?> type) throws InvalidValueException {
-		try {
-			if (type == String.class) {
-				return value;
-			} else if (type == boolean.class || type == Boolean.TYPE) {
-				return Boolean.parseBoolean(value);
-			} else if (type == Character.class || type == Character.TYPE) {
-				return (value.length() == 0) ? "" : value.charAt(0);
-			} else if (type == Byte.class || type == Byte.TYPE) {
-				return Byte.parseByte(value);
-			} else if (type == Short.class || type == Short.TYPE) {
-				return Short.parseShort(value);
-			} else if (type == Integer.class || type == Integer.TYPE) {
-				return Integer.parseInt(value);
-			} else if (type == Long.class || type == Long.TYPE) {
-				return Long.parseLong(value);
-			} else if (type == float.class || type == Float.TYPE) {
-				return Float.parseFloat(value);
-			} else if (type == double.class || type == Double.TYPE) {
-				return Double.parseDouble(value);
-			} else {
-				// this should never happen if the locateSettings method works correctly
-				throw new InvalidValueException(settingName, value, "Value '" + value + "' is not a " + type.getName());
-			}
-		} catch (NumberFormatException e) {
-			throw new InvalidValueException(settingName, value, "Value '" + value + "' is not a number");
-		}
 	}
 }
 

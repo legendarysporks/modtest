@@ -70,7 +70,8 @@ class MethodDispatcher {
 			}
 			for (int i = 1; i < paramTypes.length; i++) {
 				// each param after the first must be of type String
-				if (paramTypes[i] != String.class) return false;
+//				if (paramTypes[i] != String.class) return false;
+				if (!TypeConversionHelper.isSupportedType(paramTypes[i])) return false;
 			}
 			return true;
 		} else {
@@ -255,8 +256,13 @@ class MethodDispatcher {
 
 		public void invoke(Object commandObject, ICommandSender sender, Object[] args) {
 			try {
+				Object[] mungedArgs = calculateArguments(sender, args);
+				Class<?>[] paramTypes = method.getParameterTypes();
+				for (int i = 1; i < mungedArgs.length; i++) {
+					mungedArgs[i] = TypeConversionHelper.convertStringToType("argument", (String) mungedArgs[i], paramTypes[i]);
+				}
 				method.invoke(commandObject, calculateArguments(sender, args));
-			} catch (IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalAccessException | InvocationTargetException | InvalidValueException e) {
 				e.printStackTrace();
 			}
 		}
@@ -279,7 +285,6 @@ class MethodDispatcher {
 			argsOut[0] = sender;
 			// argsOut looks like { sender, "param1", "param2", ... }
 			return argsOut;
-
 		}
 	}
 }
