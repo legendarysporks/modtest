@@ -2,10 +2,7 @@ package com.example.examplemod.items;
 
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemod.utilities.commands.Setting;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -13,25 +10,22 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
-public class GenericTrailGun extends GenericItem {
+public class GenericBlockGun extends GenericItem {
 	private static final String CONFIG_VERSION = "0.1";
-	private final List<TrailGunAffect> activeAffects = new ArrayList<>();
+	private final List<BlockGunAffect> activeAffects = new ArrayList<>();
 	private double range = 30;
 	private int affectDurationInTicks = 3 * 20; // 10 seconds
 	private int trailLength = 15;
 	private long stepDurationInTicks = Math.round(affectDurationInTicks / range);
 
-	public GenericTrailGun(String name, String commandName, String usage, String[] aliases) {
+	public GenericBlockGun(String name, String commandName, String usage, String[] aliases) {
 		super(name);
 		GenericCommand.create(commandName, usage, aliases).addTargetWithPersitentSettings(this, commandName, CONFIG_VERSION);
 	}
 
-	public GenericTrailGun(String name, String commandName, String usage, String[] aliases, CreativeTabs tab) {
+	public GenericBlockGun(String name, String commandName, String usage, String[] aliases, CreativeTabs tab) {
 		super(name, tab);
 		GenericCommand.create(commandName, usage, aliases).addTargetWithPersitentSettings(this, commandName, CONFIG_VERSION);
 	}
@@ -78,32 +72,38 @@ public class GenericTrailGun extends GenericItem {
 		this.trailLength = trailLength;
 	}
 
-	@Override
-	public boolean onBlockDestroyed(ItemStack stack, World worldIn, IBlockState state, BlockPos pos, EntityLivingBase entityLiving) {
-		if (!worldIn.isRemote && shouldStartAffect(stack, worldIn, state, pos, entityLiving)) {
-			// get direction player is looking (normalized)
-			Vec3d lookVec = entityLiving.getLookVec();
-			// start the affect from start to finish
-			startAffect(worldIn, calculateStartPos(pos, lookVec), calculateEndPos(pos, lookVec));
-			return false;
-		} else {
-			return super.onBlockDestroyed(stack, worldIn, state, pos, entityLiving);
-		}
+	protected static BlockPos toBlockPos(Vec3d v) {
+		return new BlockPos(v.x, v.y, v.z);
 	}
 
-	/** start the tick callback if it isn't running and add an affect */
-	private void startAffect(World world, BlockPos start, BlockPos finish) {
-		if (activeAffects.isEmpty()) {
-			MinecraftForge.EVENT_BUS.register(this);
-		}
-		activeAffects.add(new TrailGunAffect(world, start, finish));
+	//----------------------------------------------------------------------------------------
+	// subclass interface
+
+	//   (subclass calls startAffect) - this is what starts things
+	//   handleStartPosition - you get a chance to do something at the starting block
+	//   while not at end position
+	//     handleRemovePosition - cleanup previously added positions that cause the list of
+	//             visitedLocations to grow to be greater than trailLength
+	//     calculateNextPosition - where are we moving next
+	//     handleAddPosition - add next position along path to end position and do what we
+	//             want to that location
+	//   endwhile
+	//   handleRemovePosition - cleanup any positions that haven't been cleaned up yet
+	//   handleFinishPosition
+
+	protected static Vec3d toVec3d(BlockPos p) {
+		return new Vec3d(p.getX(), p.getY(), p.getZ());
+	}
+
+	/** Called once when the affect starts */
+	protected void handleStartPosition(World world, BlockPos pos) {
 	}
 
 	/** tick.  Deal with affect */
 	@SubscribeEvent
 	public void handleTickEvents(TickEvent.ServerTickEvent event) {
-		List<TrailGunAffect> finishedAffects = new ArrayList<>();
-		for (TrailGunAffect affect : activeAffects) {
+		List<BlockGunAffect> finishedAffects = new ArrayList<>();
+		for (BlockGunAffect affect : activeAffects) {
 			if (!affect.doStep()) {
 				finishedAffects.add(affect);
 			}
@@ -114,49 +114,12 @@ public class GenericTrailGun extends GenericItem {
 		}
 	}
 
-	//----------------------------------------------------------------------------------------
-	// subclass interface
-
-	// A block is destroyed
-	// if (shouldStartAffect)
-	//   calculateStartPos
-	//   calculateEndPos
-	//   handleStartPosition - you get a chance to do something at the starting block
-	//   while not at end position
-	//     handleRemovePosition - cleanup previously added positions that cause the list of
-	//             visitedLocations to grow to be greater than trailLength
-	//     handleAddPosition - add next position along path to end position and do what we
-	//             want to that location
-	//   endwhile
-	//   handleRemovePosition - cleanup any positions that haven't been cleaned up yet
-	//   handleFinishPosition
-	// endif
-
-	/** override to start affect under different conditions */
-	protected boolean shouldStartAffect(ItemStack stack, World worldIn, IBlockState state, BlockPos pos, EntityLivingBase entityLiving) {
-		return state.getBlockHardness(worldIn, pos) >= 0;
-	}
-
-	/** By default, affects start at the block being destroyed */
-	protected BlockPos calculateStartPos(BlockPos pos, Vec3d lookVec) {
-		return pos;
-	}
-
-	/** By defaul, affects move in the direction the player is looking to the set distance set by range */
-	protected BlockPos calculateEndPos(BlockPos pos, Vec3d lookVec) {
-		// find the location at maximum range
-		Vec3d finishDistance = lookVec.scale(range);
-		// we're only moving parallel to the ground plane for now
-		return new BlockPos(pos.getX() + finishDistance.x, pos.getY() + finishDistance.y, pos.getZ() + finishDistance.z);
-	}
-
-	/** Called once when the affect starts */
-	protected void handleStartPosition(World world, BlockPos pos) {
-	}
-
-	/** add initial affect to location.  Return true if the affect should continue going */
-	protected boolean handleAddPosition(World world, BlockPos pos) {
-		return true;
+	/** Subclasses should call this to start the gun shot affects */
+	protected void startAffect(World world, BlockPos start, BlockPos finish) {
+		if (activeAffects.isEmpty()) {
+			MinecraftForge.EVENT_BUS.register(this);
+		}
+		activeAffects.add(new BlockGunAffect(world, start, finish));
 	}
 
 	/** cleanup affect previously at the given location */
@@ -167,26 +130,25 @@ public class GenericTrailGun extends GenericItem {
 	protected void handleFinishPosition(World world, BlockPos pos) {
 	}
 
-	private boolean isSolid(World w, Vec3d v) {
-		// water, and air are not solid
-		return w.getBlockState(toBlockPos(v)).getMaterial().isSolid();
+	//----------------------------------------------------------------------------------------
+	// utility functions
+
+	/** Return the next position or null if done affecting new locations */
+	protected Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d lastPos, Vec3d stepSize) {
+		return lastPos.add(stepSize);
 	}
 
-	private BlockPos toBlockPos(Vec3d v) {
-		return new BlockPos(v.x, v.y, v.z);
-	}
-
-	private Vec3d toVec3d(BlockPos p) {
-		return new Vec3d(p.getX(), p.getY(), p.getZ());
+	/** add initial affect to location.  Return true if the affect should continue going */
+	protected void handleAddPosition(World world, BlockPos pos) {
 	}
 
 	//----------------------------------------------------------------------------------------
 
 	/**
-	 * A TrailGunAffect is created whenever a ThorHammer is used to break a block.  Each tracks
+	 * A BlockGunAffect is created whenever a ThorHammer is used to break a block.  Each tracks
 	 * a dynamic affect over time that takes place between a point of origin and a destination point.
 	 */
-	private class TrailGunAffect {
+	private class BlockGunAffect {
 		private World world;
 		private int totalSteps;
 		private int currentStep;
@@ -195,7 +157,7 @@ public class GenericTrailGun extends GenericItem {
 		private Queue<BlockPos> positionsVisited = new ArrayDeque<>(trailLength);
 		private long ticksToNextStep = 0;
 
-		public TrailGunAffect(World world, BlockPos start, BlockPos finish) {
+		public BlockGunAffect(World world, BlockPos start, BlockPos finish) {
 			this.world = world;
 			int dx = (finish.getX() - start.getX());
 			int dy = (finish.getY() - start.getY());
@@ -222,42 +184,26 @@ public class GenericTrailGun extends GenericItem {
 				// We've reached the max trail size, remove an old pixel so we can add a new one.
 				handleRemovePosition(world, positionsVisited.remove());
 			}
+
 			if (currentStep < totalSteps) {
-				// We haven't reached the finish yet, add a pixel
-				// calculate the next pixel location
-
-//				BlockPos nextPos = startPos.add(stepSize.x * currentStep, stepSize.y * currentStep, stepSize.z * currentStep);
-
-				Vec3d abovePos = currentPos.addVector(0.0d, 1.0d, 0.0d);
-				Vec3d forwardPos = currentPos.add(stepSize);
-				Vec3d belowPos = currentPos.subtract(0.0d, 1.0d, 0.0d);
-				if (isSolid(world, abovePos) && !positionsVisited.contains(toBlockPos(abovePos))) {
-					currentPos = abovePos;
-				} else if (isSolid(world, forwardPos)) {
-					currentPos = forwardPos;
-				} else if (isSolid(world, belowPos)) {
-					currentPos = belowPos;
+				// We haven't reached the finish yet, add a location
+				Vec3d nextPos = calculateNextPosition(world, positionsVisited, currentPos, stepSize);
+				if (nextPos == null) {
+					// there is no next position, so end things gracefully.
+					end();
 				} else {
-					currentPos = currentPos.addVector(0d, 0d, 0d);
-				}
-				BlockPos currentBlockPos = toBlockPos(currentPos);
+					currentPos = nextPos;
+					BlockPos currentBlockPos = toBlockPos(currentPos);
+					currentStep = currentStep + 1;
 
-				currentStep = currentStep + 1;
-				// if this position hasn't been touched yet (which might happen due to round off errors, twiddle the block
-				if (positionsVisited.contains(currentBlockPos)) {
-					// pixel has already been handled so just continue
-					return true;
-				} else {
-					// add a new pixel to the list and handle it
-					positionsVisited.add(currentBlockPos);
-					if (!handleAddPosition(world, currentBlockPos)) {
-						// end() just puts us in a position to clean up our existing mess
-						end();
-						// we fall through and return true because there is probably still cleanup to do
-						// but because we called end(), no more new positions will be added.
+					// if this position hasn't been touched yet (which might happen due to round off errors, twiddle the block
+					if (!positionsVisited.contains(currentBlockPos)) {
+						// add a new position to the list and handle it
+						positionsVisited.add(currentBlockPos);
+						handleAddPosition(world, currentBlockPos);
 					}
-					return true;
 				}
+				return true;
 			} else if (!positionsVisited.isEmpty()) {
 				// we've reached the end so now we just remove positionsVisited along the line 1 by 1
 				// until they are all gone
