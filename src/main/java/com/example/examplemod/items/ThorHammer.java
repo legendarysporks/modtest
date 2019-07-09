@@ -29,39 +29,12 @@ public class ThorHammer extends GenericBlockGun {
 		super(name, COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES, tab);
 	}
 
-	protected static boolean isSolid(World w, Vec3d v) {
+	private static boolean isSolid(World w, Vec3d v) {
 		// water, and air are not solid
-		return w.getBlockState(toBlockPos(v)).getMaterial().isSolid();
-	}
-
-	protected static boolean isBreakable(World world, Vec3d v) {
-		BlockPos pos = toBlockPos(v);
-		return world.getBlockState(pos).getBlockHardness(world, pos) >= 0;
-	}
-
-	@Override
-	public boolean onBlockDestroyed(ItemStack stack, World worldIn, IBlockState state, BlockPos pos, EntityLivingBase entityLiving) {
-		if (!worldIn.isRemote && shouldStartAffect(stack, worldIn, state, pos, entityLiving)) {
-			// get direction player is looking (normalized)
-			Vec3d lookVec = entityLiving.getLookVec();
-			// start the affect from start to finish
-			startAffect(worldIn, pos, calculateEndPos(pos, lookVec));
-			return false;
-		} else {
-			return super.onBlockDestroyed(stack, worldIn, state, pos, entityLiving);
-		}
-	}
-
-	private boolean shouldStartAffect(ItemStack stack, World worldIn, IBlockState state, BlockPos pos, EntityLivingBase entityLiving) {
-		return state.getBlockHardness(worldIn, pos) >= 0;
-	}
-
-	private BlockPos calculateEndPos(BlockPos pos, Vec3d lookVec) {
-		// we overrode this so that things only move horizontally
-		// find the location at maximum range
-		Vec3d finishDistance = lookVec.scale(getRange());
-		// we're only moving parallel to the ground plane for now
-		return new BlockPos(pos.getX() + finishDistance.x, pos.getY(), pos.getZ() + finishDistance.z);
+		IBlockState state = w.getBlockState(toBlockPos(v));
+		return state.getMaterial().isSolid()
+				&& (state.getBlock() != effectBlock)
+				&& (state.getBlock() != aboveEffectBlock);
 	}
 
 	@Override
@@ -86,6 +59,29 @@ public class ThorHammer extends GenericBlockGun {
 			return nextPos;
 		} else {
 			return null;
+		}
+	}
+
+	private static boolean isBreakable(World world, Vec3d v) {
+		return isBreakable(world, toBlockPos(v));
+	}
+
+	private static boolean isBreakable(World world, BlockPos pos) {
+		return world.getBlockState(pos).getBlockHardness(world, pos) >= 0;
+	}
+
+	@Override
+	public boolean onBlockDestroyed(ItemStack stack, World worldIn, IBlockState state, BlockPos pos, EntityLivingBase entityLiving) {
+		if (!worldIn.isRemote) {
+			// get direction player is looking (normalized)
+			Vec3d lookVec = entityLiving.getLookVec();
+			// extend that to maximum range of gun
+			Vec3d finishDistance = lookVec.scale(getRange());
+			// start the affect from start to finish
+			startAffect(worldIn, pos, new BlockPos(pos.getX() + finishDistance.x, pos.getY(), pos.getZ() + finishDistance.z));
+			return false;
+		} else {
+			return super.onBlockDestroyed(stack, worldIn, state, pos, entityLiving);
 		}
 	}
 
@@ -129,7 +125,7 @@ public class ThorHammer extends GenericBlockGun {
 	}
 
 	@Setting
-	public void setUppertBlock(String blockName) {
+	public void setUpperBlock(String blockName) {
 		Block b = Block.getBlockFromName(blockName);
 		if (b != null) {
 			aboveEffectBlock = b;
