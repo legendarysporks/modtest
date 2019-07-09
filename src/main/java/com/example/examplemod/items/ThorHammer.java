@@ -29,14 +29,6 @@ public class ThorHammer extends GenericBlockGun {
 		super(name, COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES, tab);
 	}
 
-	private static boolean isSolid(World w, Vec3d v) {
-		// water, and air are not solid
-		IBlockState state = w.getBlockState(toBlockPos(v));
-		return state.getMaterial().isSolid()
-				&& (state.getBlock() != effectBlock)
-				&& (state.getBlock() != aboveEffectBlock);
-	}
-
 	@Override
 	protected Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d currentPos, Vec3d stepSize) {
 		Vec3d abovePos = currentPos.addVector(0.0d, 1.0d, 0.0d);
@@ -60,6 +52,14 @@ public class ThorHammer extends GenericBlockGun {
 		} else {
 			return null;
 		}
+	}
+
+	private static boolean isSolid(World w, Vec3d v) {
+		// water, and air are not solid
+		IBlockState state = w.getBlockState(toBlockPos(v));
+		return state.getMaterial().isSolid()
+				&& (state.getBlock() != effectBlock)
+				&& (state.getBlock() != aboveEffectBlock);
 	}
 
 	private static boolean isBreakable(World world, Vec3d v) {

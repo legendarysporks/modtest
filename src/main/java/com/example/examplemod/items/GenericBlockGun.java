@@ -99,21 +99,6 @@ public class GenericBlockGun extends GenericItem {
 	protected void handleStartPosition(World world, BlockPos pos) {
 	}
 
-	/** tick.  Deal with affect */
-	@SubscribeEvent
-	public void handleTickEvents(TickEvent.ServerTickEvent event) {
-		List<BlockGunAffect> finishedAffects = new ArrayList<>();
-		for (BlockGunAffect affect : activeAffects) {
-			if (!affect.doStep()) {
-				finishedAffects.add(affect);
-			}
-		}
-		activeAffects.removeAll(finishedAffects);
-		if (activeAffects.isEmpty()) {
-			MinecraftForge.EVENT_BUS.unregister(this);
-		}
-	}
-
 	/** Subclasses should call this to start the gun shot affects */
 	protected void startAffect(World world, BlockPos start, BlockPos finish) {
 		if (activeAffects.isEmpty()) {
@@ -143,6 +128,21 @@ public class GenericBlockGun extends GenericItem {
 	}
 
 	//----------------------------------------------------------------------------------------
+
+	/** tick.  Deal with affect */
+	@SubscribeEvent
+	public void handleTickEvents(TickEvent.ServerTickEvent event) {
+		List<BlockGunAffect> finishedAffects = new ArrayList<>();
+		for (BlockGunAffect affect : activeAffects) {
+			if (!affect.doStep()) {
+				finishedAffects.add(affect);
+			}
+		}
+		activeAffects.removeAll(finishedAffects);
+		if (activeAffects.isEmpty()) {
+			MinecraftForge.EVENT_BUS.unregister(this);
+		}
+	}
 
 	/**
 	 * A BlockGunAffect is created whenever a ThorHammer is used to break a block.  Each tracks
