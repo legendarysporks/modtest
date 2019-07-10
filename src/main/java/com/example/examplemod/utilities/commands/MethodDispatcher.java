@@ -261,7 +261,7 @@ class MethodDispatcher {
 				for (int i = 1; i < mungedArgs.length; i++) {
 					mungedArgs[i] = TypeConversionHelper.convertStringToType("argument", (String) mungedArgs[i], paramTypes[i]);
 				}
-				method.invoke(commandObject, calculateArguments(sender, args));
+				method.invoke(commandObject, mungedArgs);
 			} catch (IllegalAccessException | InvocationTargetException | InvalidValueException e) {
 				e.printStackTrace();
 			}

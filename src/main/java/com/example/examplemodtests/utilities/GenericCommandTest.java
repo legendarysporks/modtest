@@ -84,8 +84,9 @@ public class GenericCommandTest extends TestExecution.Suite {
 		}
 
 		final TestCase[] cases = {
-				new TestCase(new String[]{"help"}, new String[]{TestCommand.USAGE, "or Try /TestCommand help [ commands | get | help | set | settings | test ]"}),
-				new TestCase(new String[]{"commands"}, new String[]{"commands | get | help | set | settings | test"}),
+				new TestCase(new String[]{"help"}, new String[]{TestCommand.USAGE,
+						"or Try /TestCommand help [ argtest | commands | get | help | set | settings | test ]"}),
+				new TestCase(new String[]{"commands"}, new String[]{"argtest | commands | get | help | set | settings | test"}),
 				new TestCase(new String[]{"help", "commands"}, new String[]{"commands - list available subcommands"}),
 				new TestCase(new String[]{"test"}, new String[]{"doTest(i)"}),
 				new TestCase(new String[]{"test", "1"}, new String[]{"doTest(i,1)"}),
@@ -93,6 +94,7 @@ public class GenericCommandTest extends TestExecution.Suite {
 				new TestCase(new String[]{}, new String[]{"doIt(i)"}),
 				new TestCase(new String[]{"notAMethod"}, new String[]{"doIt(i,notAMethod)"}),
 				new TestCase(new String[]{"odle"}, new String[]{"doIt(i,odle)"}),
+				new TestCase(new String[]{"argtest", "12", "3.415", "string", "true"}, new String[]{"doArgTest(i,12,3.415,string,true)"}),
 		};
 
 		for (TestCase testCase : cases) {
@@ -142,6 +144,11 @@ public class GenericCommandTest extends TestExecution.Suite {
 		@Command
 		public void doTest(ICommandSender sender, String arg1, String arg2, String arg3) {
 			GenericCommand.sendMsg(sender, "doTest(i," + arg1 + "," + arg2 + "," + arg3 + ")");
+		}
+
+		@Command
+		public void doArgTest(ICommandSender sender, int i, float f, String s, boolean b) {
+			GenericCommand.sendMsg(sender, "doArgTest(i," + i + "," + f + "," + s + "," + b + ")");
 		}
 
 		@Command
