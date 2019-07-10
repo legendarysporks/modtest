@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+// NOTE: this class is only public for testing purposes
 public class SettingAccessor {
 	private static final String GET = "get";
 	private static final String SET = "set";

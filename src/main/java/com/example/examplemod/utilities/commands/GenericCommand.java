@@ -159,7 +159,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		World world = sender.getEntityWorld();
 		if (!world.isRemote) {
 			if (args.length == 0) {
-				// root command with no arguments
+				// root command with no arguments  - doIt(sender)
 				for (MethodDispatcher dispatcher : dispatchers) {
 					if (dispatcher.invokeRootCommand(sender, args)) {
 						return;
@@ -172,7 +172,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 						return;
 					}
 				}
-				// root command with arguments
+				// root command with arguments - doIt(sender, ...)
 				for (MethodDispatcher dispatcher : dispatchers) {
 					if (dispatcher.invokeRootCommandWithArgs(sender, args)) {
 						return;

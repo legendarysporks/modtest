@@ -17,20 +17,21 @@ import java.util.List;
 public class GenericCommandTest extends TestExecution.Suite {
 	private DummyCommandSender remoteSender;
 	private DummyCommandSender localSender;
-	private GenericCommand cmd;
+	private static GenericCommand cmd;
 
 	@Override
 	public void setup() {
 		remoteSender = new DummyCommandSender(true);
 		localSender = new DummyCommandSender(false);
-		cmd = GenericCommand.create(TestCommand.NAME, TestCommand.USAGE, TestCommand.ALIASES).addTarget(new TestCommand());
+		if (cmd == null) {
+			cmd = GenericCommand.create(TestCommand.NAME, TestCommand.USAGE, TestCommand.ALIASES).addTarget(new TestCommand());
+		}
 	}
 
 	@Override
 	public void teardown() {
 		remoteSender = null;
 		localSender = null;
-		cmd = null;
 	}
 
 	public void testGetName() {
@@ -133,6 +134,11 @@ public class GenericCommandTest extends TestExecution.Suite {
 
 		@Command
 		public void doTest(ICommandSender sender, String arg1) {
+			GenericCommand.sendMsg(sender, "doTest(i," + arg1 + ")");
+		}
+
+		@Command
+		public void doTest(ICommandSender sender, int arg1) {
 			GenericCommand.sendMsg(sender, "doTest(i," + arg1 + ")");
 		}
 

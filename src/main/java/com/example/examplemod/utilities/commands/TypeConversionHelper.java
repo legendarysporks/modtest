@@ -1,6 +1,6 @@
 package com.example.examplemod.utilities.commands;
 
-public class TypeConversionHelper {
+class TypeConversionHelper {
 	public static boolean isSupportedType(Class<?> type) {
 		return type.isPrimitive()
 				|| (type == Boolean.class)

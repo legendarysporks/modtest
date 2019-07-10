@@ -27,10 +27,16 @@ class MethodDispatcher {
 			for (Method method : clazz.getDeclaredMethods()) {
 				if (isCommandMethodSigniture(method)) {
 					MethodInvoker dispatcher = new MethodInvoker(method);
-					commands.put(dispatcher.key, dispatcher);
-					maxArgCount = Math.max(maxArgCount, dispatcher.key.methodArgCount);
-					if (!ROOT_COMMAND.equals(dispatcher.key.name)) {
-						cmdSet.add(dispatcher.key.name.substring(COMMAND_METHOD_PREFIX.length()));
+					if (commands.containsKey(dispatcher.key)) {
+						// duplicate or ambiguous method
+						ExampleMod.logInfo("Duplicate or ambiguous command method: " + method.getDeclaringClass().getName()
+								+ "." + method.getName() + "(" + dispatcher.key.methodArgCount + ")");
+					} else {
+						commands.put(dispatcher.key, dispatcher);
+						maxArgCount = Math.max(maxArgCount, dispatcher.key.methodArgCount);
+						if (!ROOT_COMMAND.equals(dispatcher.key.name)) {
+							cmdSet.add(dispatcher.key.name.substring(COMMAND_METHOD_PREFIX.length()));
+						}
 					}
 				}
 			}
