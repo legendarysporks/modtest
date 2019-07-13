@@ -1,6 +1,5 @@
 package com.example.examplemod.emp.common;
 
-import com.example.examplemod.ExampleMod;
 import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.utilities.InventoryUtils;
 import com.example.examplemod.utilities.commands.GenericCommand;
@@ -75,7 +74,6 @@ public class EMPGun extends GenericItem implements HackFMLEventListener {
 			int soundNumber = player.world.rand.nextInt(EMPSounds.length);
 			SoundEvent sound = EMPSounds[soundNumber];
 			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
-			ExampleMod.logInfo("Playing sound: " + EMP_SOUND_NAMES[soundNumber]);
 			if (!world.isRemote) {
 				EMPProjectile projectile = new EMPProjectile(world, player);
 				projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f, VELOCITY, INACCURACY);

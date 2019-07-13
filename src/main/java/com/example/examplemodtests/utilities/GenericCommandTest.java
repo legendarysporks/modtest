@@ -15,9 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GenericCommandTest extends TestExecution.Suite {
+	private static GenericCommand cmd;
 	private DummyCommandSender remoteSender;
 	private DummyCommandSender localSender;
-	private static GenericCommand cmd;
 
 	@Override
 	public void setup() {

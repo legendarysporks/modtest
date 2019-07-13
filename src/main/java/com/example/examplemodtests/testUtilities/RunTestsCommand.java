@@ -1,6 +1,6 @@
 package com.example.examplemodtests.testUtilities;
 
-import com.example.examplemod.ExampleMod;
+import com.example.examplemod.utilities.Logging;
 import com.example.examplemod.utilities.commands.Command;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemodtests.utilities.GenericCommandTest;
@@ -18,8 +18,8 @@ public class RunTestsCommand extends GenericCommand {
 
 	@Command
 	public void doIt(ICommandSender sender) {
-		TestExecution result1 = TestExecution.run(SettingAccessorTest.class, ExampleMod.logger);
-		TestExecution result2 = TestExecution.run(GenericCommandTest.class, ExampleMod.logger);
+		TestExecution result1 = TestExecution.run(SettingAccessorTest.class, Logging.logger);
+		TestExecution result2 = TestExecution.run(GenericCommandTest.class, Logging.logger);
 
 		int testsFailures = result1.testFailures.size() + result2.testFailures.size();
 		int testsRun = result1.testOrder.size() + result2.testOrder.size();
@@ -32,7 +32,7 @@ public class RunTestsCommand extends GenericCommand {
 		try {
 			Class<?> clazz = Class.forName(testClassName);
 			if (TestExecution.Suite.class.isAssignableFrom(clazz)) {
-				TestExecution results = TestExecution.run((Class<? extends TestExecution.Suite>) clazz, ExampleMod.logger);
+				TestExecution results = TestExecution.run((Class<? extends TestExecution.Suite>) clazz, Logging.logger);
 				int testsFailures = results.testFailures.size();
 				int testsRun = results.testOrder.size();
 				sendMsg(sender, String.format("%d tests fun.  %d passed.  %d failed.", testsRun, testsRun - testsFailures, testsFailures));

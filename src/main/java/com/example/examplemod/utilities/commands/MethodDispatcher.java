@@ -1,6 +1,6 @@
 package com.example.examplemod.utilities.commands;
 
-import com.example.examplemod.ExampleMod;
+import com.example.examplemod.utilities.Logging;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -29,7 +29,7 @@ class MethodDispatcher {
 					MethodInvoker dispatcher = new MethodInvoker(method);
 					if (commands.containsKey(dispatcher.key)) {
 						// duplicate or ambiguous method
-						ExampleMod.logInfo("Duplicate or ambiguous command method: " + method.getDeclaringClass().getName()
+						Logging.logInfo("Duplicate or ambiguous command method: " + method.getDeclaringClass().getName()
 								+ "." + method.getName() + "(" + dispatcher.key.methodArgCount + ")");
 					} else {
 						commands.put(dispatcher.key, dispatcher);
@@ -52,25 +52,25 @@ class MethodDispatcher {
 		if ((method.getAnnotation(Command.class) != null)) {
 
 			if (!method.getName().startsWith(COMMAND_METHOD_PREFIX)) {
-				ExampleMod.logInfo(String.format("Bad method signiture for @Command %s.%s.  Name must start with 'do'.",
+				Logging.logInfo(String.format("Bad method signiture for @Command %s.%s.  Name must start with 'do'.",
 						method.getDeclaringClass().getName(), method.getName()));
 				return false;
 			}
 			if (method.getReturnType() != Void.TYPE) {
-				ExampleMod.logInfo(String.format("Bad method signiture for @Command %s.%s.  Return type must be void.",
+				Logging.logInfo(String.format("Bad method signiture for @Command %s.%s.  Return type must be void.",
 						method.getDeclaringClass().getName(), method.getName()));
 				return false;
 			}
 			if (!Character.isUpperCase(method.getName().charAt(COMMAND_METHOD_PREFIX.length()))) {
 				// first character after "do" needs to be upper case
-				ExampleMod.logInfo(String.format("Bad method signiture for @Command %s.%s.  Upper case character must follow 'do'.",
+				Logging.logInfo(String.format("Bad method signiture for @Command %s.%s.  Upper case character must follow 'do'.",
 						method.getDeclaringClass().getName(), method.getName()));
 				return false;
 			}
 			Class<?>[] paramTypes = method.getParameterTypes();
 			if ((paramTypes.length < 1) || (paramTypes[0] != ICommandSender.class)) {
 				// the first parameter must be of type ICommandSender
-				ExampleMod.logInfo(String.format("Bad method signiture for @Command %s.%s.  Missing ICommandSender argument.",
+				Logging.logInfo(String.format("Bad method signiture for @Command %s.%s.  Missing ICommandSender argument.",
 						method.getDeclaringClass().getName(), method.getName()));
 				return false;
 			}

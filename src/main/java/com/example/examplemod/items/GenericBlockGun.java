@@ -30,6 +30,14 @@ public class GenericBlockGun extends GenericItem {
 		GenericCommand.create(commandName, usage, aliases).addTargetWithPersitentSettings(this, commandName, CONFIG_VERSION);
 	}
 
+	protected static BlockPos toBlockPos(Vec3d v) {
+		return new BlockPos(v.x, v.y, v.z);
+	}
+
+	protected static Vec3d toVec3d(BlockPos p) {
+		return new Vec3d(p.getX(), p.getY(), p.getZ());
+	}
+
 	@Setting
 	public double getRange() {
 		return range;
@@ -67,15 +75,6 @@ public class GenericBlockGun extends GenericItem {
 		return trailLength;
 	}
 
-	@Setting
-	public void setTrailLength(int trailLength) {
-		this.trailLength = trailLength;
-	}
-
-	protected static BlockPos toBlockPos(Vec3d v) {
-		return new BlockPos(v.x, v.y, v.z);
-	}
-
 	//----------------------------------------------------------------------------------------
 	// subclass interface
 
@@ -91,8 +90,9 @@ public class GenericBlockGun extends GenericItem {
 	//   handleRemovePosition - cleanup any positions that haven't been cleaned up yet
 	//   handleFinishPosition
 
-	protected static Vec3d toVec3d(BlockPos p) {
-		return new Vec3d(p.getX(), p.getY(), p.getZ());
+	@Setting
+	public void setTrailLength(int trailLength) {
+		this.trailLength = trailLength;
 	}
 
 	/** Called once when the affect starts */

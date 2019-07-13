@@ -1,6 +1,6 @@
 package com.example.examplemod.utilities.commands;
 
-import com.example.examplemod.ExampleMod;
+import com.example.examplemod.utilities.Logging;
 import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
 import com.google.common.collect.Lists;
 import net.minecraft.command.ICommand;
@@ -75,7 +75,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	@Override
 	public void handleFMLEvent(FMLServerStartingEvent event) {
 		event.registerServerCommand(this);
-		ExampleMod.logTrace(this.getName() + " command registered");
+		Logging.logTrace(this.getName() + " command registered");
 	}
 
 	@Override

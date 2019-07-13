@@ -1,7 +1,7 @@
 package com.example.examplemod.utilities.commands;
 
-import com.example.examplemod.ExampleMod;
 import com.example.examplemod.Reference;
+import com.example.examplemod.utilities.Logging;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.common.Loader;
@@ -98,7 +98,7 @@ public class SettingAccessor {
 				} catch (SettingNotFoundException e) {
 					// this shouldn't happen since we only iterate over settings we know
 				} catch (InvalidValueException e) {
-					ExampleMod.logInfo(String.format("Invalid configion key: '%s' value: '%s' ignored", setting, propertyValue));
+					Logging.logInfo(String.format("Invalid configion key: '%s' value: '%s' ignored", setting, propertyValue));
 				}
 			}
 		}

@@ -1,7 +1,7 @@
 package com.example.examplemod.blocks;
 
-import com.example.examplemod.ExampleMod;
 import com.example.examplemod.Reference;
+import com.example.examplemod.utilities.Logging;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -40,14 +40,14 @@ public class GenericBlock extends Block {
 		maxDropAmount = maxDrop;
 		setCreativeTab(tab);
 		blocks.put(name, this);
-		ExampleMod.logInfo("GenericBlock.init");
+		Logging.logInfo("GenericBlock.init");
 	}
 
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event) {
 		for (GenericBlock block : blocks.values()) {
 			event.getRegistry().registerAll(block);
-			ExampleMod.logInfo(block.getRegistryName() + ".registerBlocks");
+			Logging.logInfo(block.getRegistryName() + ".registerBlocks");
 		}
 	}
 
@@ -55,7 +55,7 @@ public class GenericBlock extends Block {
 	public static void registerItemBlocks(RegistryEvent.Register<Item> event) {
 		for (GenericBlock block : blocks.values()) {
 			event.getRegistry().registerAll(new ItemBlock(block).setRegistryName(block.getRegistryName()));
-			ExampleMod.logInfo(block.getRegistryName() + ".registerItemBlocks");
+			Logging.logInfo(block.getRegistryName() + ".registerItemBlocks");
 		}
 	}
 
@@ -63,7 +63,7 @@ public class GenericBlock extends Block {
 	public static void registerRenders(ModelRegistryEvent event) {
 		for (GenericBlock block : blocks.values()) {
 			registerRender(Item.getItemFromBlock(block));
-			ExampleMod.logInfo(block.getRegistryName() + ".registerRenders");
+			Logging.logInfo(block.getRegistryName() + ".registerRenders");
 		}
 	}
 

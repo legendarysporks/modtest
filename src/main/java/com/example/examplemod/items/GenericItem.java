@@ -1,7 +1,7 @@
 package com.example.examplemod.items;
 
-import com.example.examplemod.ExampleMod;
 import com.example.examplemod.Reference;
+import com.example.examplemod.utilities.Logging;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -33,7 +33,7 @@ public class GenericItem extends Item {
 	}
 
 	public GenericItem(String name, CreativeTabs tab, int maxStackSize) {
-		ExampleMod.logTrace(name + " consructed");
+		Logging.logTrace(name + " consructed");
 		setUnlocalizedName(name);
 		setRegistryName(name);
 		setCreativeTab(tab);
@@ -46,7 +46,7 @@ public class GenericItem extends Item {
 	public static void registerItems(RegistryEvent.Register<Item> event) {
 		for (GenericItem i : items.values()) {
 			event.getRegistry().registerAll(i);
-			ExampleMod.logTrace(i.getRegistryName() + ".registerItems");
+			Logging.logTrace(i.getRegistryName() + ".registerItems");
 		}
 	}
 
@@ -55,7 +55,7 @@ public class GenericItem extends Item {
 		for (GenericItem i : items.values()) {
 			ModelLoader.setCustomModelResourceLocation(i, 0, new ModelResourceLocation(i.getRegistryName(),
 					"inventory"));
-			ExampleMod.logInfo(i.getRegistryName() + ".registerRenders");
+			Logging.logInfo(i.getRegistryName() + ".registerRenders");
 		}
 	}
 
@@ -63,7 +63,6 @@ public class GenericItem extends Item {
 		final ResourceLocation soundID = new ResourceLocation(Reference.MODID, soundName);
 		SoundEvent result = new SoundEvent(soundID).setRegistryName(soundID);
 		sounds.put(soundName, result);
-		ExampleMod.logInfo("createSoundEvent( " + soundName + " )");
 		return result;
 	}
 
