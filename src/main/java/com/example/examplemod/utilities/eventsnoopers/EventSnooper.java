@@ -3,20 +3,21 @@ package com.example.examplemod.utilities.eventsnoopers;
 import com.example.examplemod.utilities.Logging;
 import com.example.examplemod.utilities.commands.Command;
 import com.example.examplemod.utilities.commands.GenericCommand;
+import com.example.examplemod.utilities.commands.InvalidValueException;
+import com.example.examplemod.utilities.commands.Setting;
 import net.minecraft.command.ICommandSender;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class EventSnooper {
 	private static final String COMMAND_NAME = "snoop";
 	private static final String COMMAND_USAGE = "/snoop on | off | <event> [ ON | OFF | IGNORE ]";
 	private static final String[] COMMAND_ALIASES = {};
 	public static EventSnooper INSTANCE;
-	private boolean snooping = false;
-	private Set<Class<?>> snoopingTypes = new HashSet<>();
 	private static final String[] packages = {
 			"net.minecraftforge.event.",
 			"net.minecraftforge.event.brewing.",
@@ -34,36 +35,79 @@ public class EventSnooper {
 			"net.minecraftforge.client.event.sound"
 	};
 
-	//---------------------------------------------------------------------------
-	//---------------------------------------------------------------------------
-	private Set<Class<?>> snoopingIgnoreTypes = new HashSet<>();
+	private boolean snooping = false;
+	private Set<Class<?>> snoopingTypes = new HashSet<>();          // persistent through @Setting methods
+	private Set<Class<?>> snoopingIgnoreTypes = new HashSet<>();    // persistent through @Setting methods
 
 	//---------------------------------------------------------------------------
 	//---------------------------------------------------------------------------
+
 
 	public EventSnooper() {
-		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES).addTarget(this);
+		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES)
+				.addTargetWithPersitentSettings(this, COMMAND_NAME, "0.1");
+	}
+
+	//---------------------------------------------------------------------------
+	//---------------------------------------------------------------------------
+
+	private static Class<?> forName(String name) {
+		try {
+			return Class.forName(name);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	public static void init() {
 		INSTANCE = new EventSnooper();
 	}
 
-	@Command
-	public void doOn(ICommandSender sender) {
-		doEnable(sender);
-	}
-
-	@Command
-	public void doOff(ICommandSender sender) {
-		doDisable(sender);
-	}
-
 	public void setBreakpointHere(Event e) {
 		Logging.logInfo(">> event: " + e.getClass().getName());
 	}
 
-	@Command
+	@Setting
+	public String getSnoopingTypes() {
+		return getTypes(snoopingTypes);
+	}
+
+	@Setting
+	public void setSnoopingTypes(String value) throws InvalidValueException {
+		setTypes(value, snoopingTypes);
+	}
+
+	@Setting
+	public String getSnoopingIngnoreTypes() {
+		return getTypes(snoopingIgnoreTypes);
+	}
+
+	@Setting
+	public void setSnoopingIngnoreTypes(String value) throws InvalidValueException {
+		setTypes(value, snoopingIgnoreTypes);
+	}
+
+	private String getTypes(Collection<Class<?>> classes) {
+		return classes.stream().map(Class::getName).collect(Collectors.toList()).toString();
+	}
+
+	private void setTypes(String value, Collection<Class<?>> result) {
+		result.clear();
+		result.addAll(Arrays.stream(value.substring(1, value.length() - 1).split(","))
+				.map(EventSnooper::forName).filter(x -> x != null).collect(Collectors.toList()));
+	}
+
+	@Command(help = "Turn all snooping on")
+	public void doOn(ICommandSender sender) {
+		doEnable(sender);
+	}
+
+	@Command(help = "Turn all snooping off")
+	public void doOff(ICommandSender sender) {
+		doDisable(sender);
+	}
+
+	@Command(help = "Turn all snooping on")
 	public void doEnable(ICommandSender sender) {
 		snooping = true;
 		if (snoopingTypes.size() > 0) {
@@ -71,23 +115,23 @@ public class EventSnooper {
 		}
 	}
 
-	@Command
+	@Command(help = "Turn all snooping off")
 	public void doDisable(ICommandSender sender) {
 		snooping = false;
 		MinecraftForge.EVENT_BUS.unregister(this);
 	}
 
-	@Command
+	@Command(help = "turn on snooping for an event class and it subclasses")
 	public void doOn(ICommandSender sender, String event) {
 		doIt(sender, event, "on");
 	}
 
-	@Command
+	@Command(help = "turn off snooping for an event type")
 	public void doOff(ICommandSender sender, String event) {
 		doIt(sender, event, "off");
 	}
 
-	@Command
+	@Command(help = "turn off snooping events of this specific class")
 	public void doIgnore(ICommandSender sender, String event) {
 		doIt(sender, event, "ignore");
 	}
@@ -97,7 +141,7 @@ public class EventSnooper {
 		doIt(sender, event, "on");
 	}
 
-	@Command
+	@Command(help = "/snoop <eventClass> [ ON | OFF | IGNORE ]")
 	public void doIt(ICommandSender sender, String eventClassName, String onOff) {
 		Class<?> eventClass = findEventClass(eventClassName);
 		if (eventClass != null) {

@@ -92,9 +92,7 @@ public class SettingAccessor {
 			for (String setting : getSettingNames()) {
 				String propertyValue = "";
 				try {
-					Property property = configion.get(Configuration.CATEGORY_GENERAL, setting, get(setting));
-					propertyValue = property.getString();
-					set(setting, propertyValue);
+					setInstanceValue(setting, getConfigurationFileValue(setting));
 				} catch (SettingNotFoundException e) {
 					// this shouldn't happen since we only iterate over settings we know
 				} catch (InvalidValueException e) {
@@ -106,6 +104,13 @@ public class SettingAccessor {
 
 	public void save() {
 		if (configion != null) {
+			for (String setting : getSettingNames()) {
+				try {
+					setConfigurationFileValue(setting, getInstanceValue(setting));
+				} catch (SettingNotFoundException e) {
+					// this shouldn't happen since we only iterate over settings we know
+				}
+			}
 			configion.save();
 		}
 	}
@@ -119,6 +124,39 @@ public class SettingAccessor {
 	}
 
 	public String get(String settingName) throws SettingNotFoundException {
+		return getInstanceValue(settingName);
+	}
+
+	public void set(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
+		setInstanceValue(settingName, value);
+		setConfigurationFileValue(settingName, value);
+		save();
+	}
+
+	public List<String> getSettingNames() {
+		Set<String> set = new HashSet<>();
+		set.addAll(fields.keySet());
+		set.addAll(getters.keySet());
+		set.addAll(setters.keySet());
+		List<String> result = new ArrayList<>(set.size());
+		result.addAll(set);
+		Collections.sort(result);
+		return result;
+	}
+
+	private String getConfigurationFileValue(String settingName) throws SettingNotFoundException {
+		return getConfigurationFileValue(Configuration.CATEGORY_GENERAL, settingName);
+	}
+
+	private String getConfigurationFileValue(String category, String settingName) throws SettingNotFoundException {
+		if (configion != null) {
+			return configion.get(category, settingName, get(settingName)).getString();
+		} else {
+			throw new SettingNotFoundException(category + "." + settingName);
+		}
+	}
+
+	private String getInstanceValue(String settingName) throws SettingNotFoundException {
 		settingName = settingName.toLowerCase();
 		Field field = fields.get(settingName);
 		if (field != null) {
@@ -148,15 +186,25 @@ public class SettingAccessor {
 		throw new SettingNotFoundException(settingName);
 	}
 
-	public boolean set(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
+	private void setConfigurationFileValue(String settingName, String value) {
+		setConfigurationFileValue(Configuration.CATEGORY_GENERAL, settingName, value);
+	}
+
+	private void setConfigurationFileValue(String category, String settingName, String value) {
+		if (configion != null) {
+			Property property = configion.get(category, settingName, value);
+			property.set(value);
+		}
+	}
+
+	private void setInstanceValue(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
 		settingName = settingName.toLowerCase();
 		Field field = fields.get(settingName);
 		if (field != null) {
 			try {
 				field.setAccessible(true);
 				field.set(target, TypeConversionHelper.convertStringToType(settingName, value, field.getType()));
-				updateConfigFile(settingName, value);
-				return true;
+				return;
 			} catch (IllegalAccessException e) {
 				// should not happen since we setAccessible(true) above
 				e.printStackTrace();
@@ -169,8 +217,7 @@ public class SettingAccessor {
 				try {
 					method.setAccessible(true);
 					method.invoke(target, TypeConversionHelper.convertStringToType(settingName, value, method.getParameterTypes()[0]));
-					updateConfigFile(settingName, value);
-					return true;
+					return;
 				} catch (IllegalAccessException | InvocationTargetException e) {
 					// should not happen since we setAccessible(true) above
 					e.printStackTrace();
@@ -180,25 +227,6 @@ public class SettingAccessor {
 			}
 		}
 		throw new SettingNotFoundException(settingName);
-	}
-
-	private void updateConfigFile(String settingName, String value) {
-		if (configion != null) {
-			Property property = configion.get(Configuration.CATEGORY_GENERAL, settingName, value);
-			property.set(value);
-			configion.save();
-		}
-	}
-
-	public List<String> getSettingNames() {
-		Set<String> set = new HashSet<>();
-		set.addAll(fields.keySet());
-		set.addAll(getters.keySet());
-		set.addAll(setters.keySet());
-		List<String> result = new ArrayList<>(set.size());
-		result.addAll(set);
-		Collections.sort(result);
-		return result;
 	}
 }
 

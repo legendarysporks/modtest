@@ -5,6 +5,7 @@ import com.example.examplemod.utilities.commands.Command;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemodtests.utilities.GenericCommandTest;
 import com.example.examplemodtests.utilities.SettingAccessorTest;
+import com.example.examplemodtests.utilities.TypeConversionHelperTest;
 import net.minecraft.command.ICommandSender;
 
 public class RunTestsCommand extends GenericCommand {
@@ -18,11 +19,12 @@ public class RunTestsCommand extends GenericCommand {
 
 	@Command
 	public void doIt(ICommandSender sender) {
+		TestExecution result0 = TestExecution.run(TypeConversionHelperTest.class, Logging.logger);
 		TestExecution result1 = TestExecution.run(SettingAccessorTest.class, Logging.logger);
 		TestExecution result2 = TestExecution.run(GenericCommandTest.class, Logging.logger);
 
-		int testsFailures = result1.testFailures.size() + result2.testFailures.size();
-		int testsRun = result1.testOrder.size() + result2.testOrder.size();
+		int testsFailures = result0.testFailures.size() + result1.testFailures.size() + result2.testFailures.size();
+		int testsRun = result0.testOrder.size() + result1.testOrder.size() + result2.testOrder.size();
 
 		sendMsg(sender, String.format("%d tests run.  %d passed.  %d failed.", testsRun, testsRun - testsFailures, testsFailures));
 	}

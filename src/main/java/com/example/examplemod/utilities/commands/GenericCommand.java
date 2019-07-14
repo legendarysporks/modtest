@@ -10,11 +10,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 
 import java.util.*;
 
 public class GenericCommand implements ICommand, HackFMLEventListener {
-	private static final int LINE_WRAP_LENGTH = 100;
+	private static final int LINE_WRAP_LENGTH = 120;
 	private final List<String> aliasList = new ArrayList<>();
 	private final String usage;
 	private final String name;
@@ -78,6 +79,12 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		Logging.logTrace(this.getName() + " command registered");
 	}
 
+	/** This method saves all settings for this command on server shutdown */
+	@Override
+	public void handleFMLEvent(FMLServerStoppingEvent event) {
+		saveSettings();
+	}
+
 	@Override
 	public String getName() {
 		return name;
@@ -133,11 +140,12 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		throw new SettingNotFoundException(settingName);
 	}
 
-	public boolean set(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
+	public void set(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
 		for (SettingAccessor accessor : settings) {
 			try {
-				return accessor.set(settingName, value);
-			} catch (SettingNotFoundException | InvalidValueException e) {
+				accessor.set(settingName, value);
+				return;
+			} catch (SettingNotFoundException e) {
 			}
 		}
 		throw new SettingNotFoundException(settingName);

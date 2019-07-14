@@ -1,6 +1,11 @@
 package com.example.examplemod.utilities.commands;
 
-class TypeConversionHelper {
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public class TypeConversionHelper {
 	public static boolean isSupportedType(Class<?> type) {
 		return type.isPrimitive()
 				|| (type == Boolean.class)
@@ -12,6 +17,14 @@ class TypeConversionHelper {
 				|| (type == Float.class)
 				|| (type == Double.class)
 				|| (type == String.class);
+	}
+
+	public static Object convertStringToTypeOrNull(String purpose, String value, Class<?> type) {
+		try {
+			return convertStringToType(purpose, value, type);
+		} catch (InvalidValueException e) {
+			return null;
+		}
 	}
 
 	public static Object convertStringToType(String purpose, String value, Class<?> type) throws InvalidValueException {
@@ -41,5 +54,36 @@ class TypeConversionHelper {
 		} catch (NumberFormatException e) {
 			throw new InvalidValueException(purpose, value, "Value '" + value + "' is not a number");
 		}
+	}
+
+	public static void convertStringToCollection(String purpose, String value, Class<?> valueType, Collection result) throws InvalidValueException {
+		String data = value.substring(1, value.length() - 1).trim();     // strip off enclosing {}
+		if (data.length() > 0) {
+			String[] elements = data.split(",");
+			for (String element : elements) {
+				element.trim();
+				result.add(convertStringToType(purpose, element, valueType));
+			}
+		}
+	}
+
+	public static void convertStringToMap(String purpose, String value, Class<?> valueType, Map result) throws InvalidValueException {
+		String data = value.substring(1, value.length() - 1);     // strip off enclosing {}
+		if (data.length() > 0) {
+			String[] elements = data.split(",");
+			for (String element : elements) {
+				element.trim();
+				String[] kv = element.split("=");
+				kv[0] = kv[0].trim();
+				kv[1] = kv[1].trim();
+				result.put(kv[0], convertStringToType(purpose, kv[1], valueType));
+			}
+		}
+	}
+
+	public static <P, R> Collection<R> convertContents(Collection<P> dataIn, Collection<R> dataOut, Function<P, R> func) {
+		dataOut.clear();
+		dataOut.addAll(dataIn.stream().map(func).filter(x -> x != null).sorted().collect(Collectors.toList()));
+		return dataOut;
 	}
 }
