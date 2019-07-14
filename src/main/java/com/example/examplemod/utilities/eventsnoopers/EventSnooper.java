@@ -192,6 +192,22 @@ public class EventSnooper {
 		}
 	}
 
+	@Command
+	public void resetSnoop(ICommandSender sender) {
+		snoopingTypes.clear();
+	}
+
+	@Command
+	public void resetIgnore(ICommandSender sender) {
+		snoopingIgnoreTypes.clear();
+	}
+
+	@Command
+	public void reset(ICommandSender sender) {
+		snoopingTypes.clear();
+		snoopingIgnoreTypes.clear();
+	}
+
 	private List<String> getNameList(Set<Class<?>> classes) {
 		List<String> typeNames = new ArrayList<>(classes.size());
 		for (Class<?> clazz : classes) {
