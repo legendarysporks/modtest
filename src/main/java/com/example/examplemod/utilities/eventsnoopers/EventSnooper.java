@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class EventSnooper {
 	private static final String COMMAND_NAME = "snoop";
 	private static final String COMMAND_USAGE = "/snoop on | off | <event> [ ON | OFF | IGNORE ]";
-	private static final String[] COMMAND_ALIASES = {};
+	private static final String[] COMMAND_ALIASES = {"Snoop", "SNOOP"};
 	public static EventSnooper INSTANCE;
 	private static final String[] packages = {
 			"net.minecraftforge.event.",
@@ -51,14 +51,6 @@ public class EventSnooper {
 	//---------------------------------------------------------------------------
 	//---------------------------------------------------------------------------
 
-	private static Class<?> forName(String name) {
-		try {
-			return Class.forName(name);
-		} catch (Exception e) {
-			return null;
-		}
-	}
-
 	public static void init() {
 		INSTANCE = new EventSnooper();
 	}
@@ -91,8 +83,18 @@ public class EventSnooper {
 		return classes.stream().map(Class::getName).collect(Collectors.toList()).toString();
 	}
 
+	private static Class<?> forName(String name) {
+		try {
+			return Class.forName(name.trim());
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 	private void setTypes(String value, Collection<Class<?>> result) {
 		result.clear();
+		//LOL.  This is the most impenetrable like of code I've ever written.  Impossible to
+		//  trace of debug through.
 		result.addAll(Arrays.stream(value.substring(1, value.length() - 1).split(","))
 				.map(EventSnooper::forName).filter(x -> x != null).collect(Collectors.toList()));
 	}
@@ -122,8 +124,18 @@ public class EventSnooper {
 	}
 
 	@Command(help = "turn on snooping for an event class and it subclasses")
+	public void doEnable(ICommandSender sender, String event) {
+		doIt(sender, event, "on");
+	}
+
+	@Command(help = "turn on snooping for an event class and it subclasses")
 	public void doOn(ICommandSender sender, String event) {
 		doIt(sender, event, "on");
+	}
+
+	@Command(help = "turn off snooping for an event type")
+	public void doDisable(ICommandSender sender, String event) {
+		doIt(sender, event, "off");
 	}
 
 	@Command(help = "turn off snooping for an event type")
@@ -193,17 +205,17 @@ public class EventSnooper {
 	}
 
 	@Command
-	public void resetSnoop(ICommandSender sender) {
+	public void doResetSnoop(ICommandSender sender) {
 		snoopingTypes.clear();
 	}
 
 	@Command
-	public void resetIgnore(ICommandSender sender) {
+	public void doResetIgnore(ICommandSender sender) {
 		snoopingIgnoreTypes.clear();
 	}
 
 	@Command
-	public void reset(ICommandSender sender) {
+	public void doReset(ICommandSender sender) {
 		snoopingTypes.clear();
 		snoopingIgnoreTypes.clear();
 	}

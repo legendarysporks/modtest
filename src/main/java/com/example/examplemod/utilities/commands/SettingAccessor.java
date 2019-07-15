@@ -20,7 +20,7 @@ public class SettingAccessor {
 	private static final String SET = "set";
 	private static final String CONFIG_FILE_SUFFIX = ".cfg";
 	private final Object target;
-	private final Configuration configion;
+	private final Configuration configuration;
 	private final Map<String, Field> fields = new HashMap<>();
 	private final Map<String, Method> getters = new HashMap<>();
 	private final Map<String, Method> setters = new HashMap<>();
@@ -28,23 +28,109 @@ public class SettingAccessor {
 	public SettingAccessor(Object target) {
 		this.target = target;
 		buildSettingsMaps();
-		configion = null;
+		configuration = null;
 	}
 
 	public SettingAccessor(Object target, String configFileName, String configVersion) {
 		this.target = target;
 		buildSettingsMaps();
 		File cfgFile = new File(Loader.instance().getConfigDir(), Reference.MODID + "-" + configFileName + CONFIG_FILE_SUFFIX);
-		boolean isNewConfigFile = !cfgFile.exists();
-		configion = new Configuration(cfgFile, configVersion);
+		configuration = new Configuration(cfgFile, configVersion);
 		load();
-		if (isNewConfigFile) {
-			configion.save();
+	}
+
+	public void load() {
+		if (configuration != null) {
+			configuration.load();
+			for (String setting : getSettingNames()) {
+				String propertyValue = "";
+				try {
+					propertyValue = getConfigurationFileValue(setting);
+					setInstanceValue(setting, propertyValue);
+				} catch (SettingNotFoundException | InvalidValueException e) {
+					// this should only happen if there is an invalid / non-convertable value
+					Logging.logInfo(String.format("Invalid configuration key: '%s' value: '%s' ignored", setting, propertyValue));
+				}
+			}
 		}
 	}
 
+	public void save() {
+		if (configuration != null) {
+			for (String setting : getSettingNames()) {
+				if (hasSettableSetting(setting)) {
+					String propertyValue = "";
+					try {
+						propertyValue = getInstanceValue(setting);
+						setConfigurationFileValue(setting, propertyValue);
+					} catch (SettingNotFoundException e) {
+						// this should probably never happen
+						Logging.logInfo(String.format("Invalid configuration key: '%s' value: '%s' ignored", setting, propertyValue));
+					}
+				}
+			}
+			configuration.save();
+		}
+	}
+
+	public boolean hasGettableSetting(String settingName) {
+		return fields.containsKey(settingName) || getters.containsKey(settingName);
+	}
+
+	public boolean hasSettableSetting(String settingName) {
+		return fields.containsKey(settingName) || setters.containsKey(settingName);
+	}
+
+	public String get(String settingName) throws SettingNotFoundException {
+		// we assume the truth is stored in memory.
+		return getInstanceValue(settingName);
+	}
+
+	public void set(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
+		// we assume the truth is stored in memory.  The configuration file is only updated on save().
+		setInstanceValue(settingName, value);
+	}
+
+	public List<String> getSettingNames() {
+		Set<String> set = new HashSet<>();
+		set.addAll(fields.keySet());
+		set.addAll(getters.keySet());
+		set.addAll(setters.keySet());
+		List<String> result = new ArrayList<>(set.size());
+		result.addAll(set);
+		Collections.sort(result);
+		return result;
+	}
+
+	public Map<String, String> getSettings() {
+		Map<String, String> result = new HashMap<>();
+		for (String setting : getSettingNames()) {
+			try {
+				result.put(setting, getInstanceValue(setting));
+			} catch (SettingNotFoundException e) {
+				// this should probably never happen
+				e.printStackTrace();
+			}
+		}
+		return result;
+	}
+
+	public void setSettings(Map<String, String> settingsMapIn) {
+		for (String setting : getSettingNames()) {
+			try {
+				setInstanceValue(setting, settingsMapIn.get(setting));
+			} catch (SettingNotFoundException | InvalidValueException e) {
+				// this should probably never happen
+				e.printStackTrace();
+			}
+		}
+	}
+
+	//------------------------------------------------------------------------------------------
+	// These methods actually munge the instance variables
+
 	/*
-	go through the class of the target object and pull all the public fields and methods marked with the
+	Pull all the public fields and methods from target marked with the
 	@Setting annotation and put them in the appropriate maps
 	 */
 	private void buildSettingsMaps() {
@@ -86,76 +172,6 @@ public class SettingAccessor {
 		}
 	}
 
-	public void load() {
-		if (configion != null) {
-			configion.load();
-			for (String setting : getSettingNames()) {
-				String propertyValue = "";
-				try {
-					setInstanceValue(setting, getConfigurationFileValue(setting));
-				} catch (SettingNotFoundException e) {
-					// this shouldn't happen since we only iterate over settings we know
-				} catch (InvalidValueException e) {
-					Logging.logInfo(String.format("Invalid configion key: '%s' value: '%s' ignored", setting, propertyValue));
-				}
-			}
-		}
-	}
-
-	public void save() {
-		if (configion != null) {
-			for (String setting : getSettingNames()) {
-				try {
-					setConfigurationFileValue(setting, getInstanceValue(setting));
-				} catch (SettingNotFoundException e) {
-					// this shouldn't happen since we only iterate over settings we know
-				}
-			}
-			configion.save();
-		}
-	}
-
-	public boolean hasGettableSetting(String settingName) {
-		return fields.containsKey(settingName) || getters.containsKey(settingName);
-	}
-
-	public boolean hasSettableSetting(String settingName) {
-		return fields.containsKey(settingName) || setters.containsKey(settingName);
-	}
-
-	public String get(String settingName) throws SettingNotFoundException {
-		return getInstanceValue(settingName);
-	}
-
-	public void set(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
-		setInstanceValue(settingName, value);
-		setConfigurationFileValue(settingName, value);
-		save();
-	}
-
-	public List<String> getSettingNames() {
-		Set<String> set = new HashSet<>();
-		set.addAll(fields.keySet());
-		set.addAll(getters.keySet());
-		set.addAll(setters.keySet());
-		List<String> result = new ArrayList<>(set.size());
-		result.addAll(set);
-		Collections.sort(result);
-		return result;
-	}
-
-	private String getConfigurationFileValue(String settingName) throws SettingNotFoundException {
-		return getConfigurationFileValue(Configuration.CATEGORY_GENERAL, settingName);
-	}
-
-	private String getConfigurationFileValue(String category, String settingName) throws SettingNotFoundException {
-		if (configion != null) {
-			return configion.get(category, settingName, get(settingName)).getString();
-		} else {
-			throw new SettingNotFoundException(category + "." + settingName);
-		}
-	}
-
 	private String getInstanceValue(String settingName) throws SettingNotFoundException {
 		settingName = settingName.toLowerCase();
 		Field field = fields.get(settingName);
@@ -184,17 +200,6 @@ public class SettingAccessor {
 			}
 		}
 		throw new SettingNotFoundException(settingName);
-	}
-
-	private void setConfigurationFileValue(String settingName, String value) {
-		setConfigurationFileValue(Configuration.CATEGORY_GENERAL, settingName, value);
-	}
-
-	private void setConfigurationFileValue(String category, String settingName, String value) {
-		if (configion != null) {
-			Property property = configion.get(category, settingName, value);
-			property.set(value);
-		}
 	}
 
 	private void setInstanceValue(String settingName, String value) throws SettingNotFoundException, InvalidValueException {
@@ -227,6 +232,29 @@ public class SettingAccessor {
 			}
 		}
 		throw new SettingNotFoundException(settingName);
+	}
+
+	//------------------------------------------------------------------------------------------
+	// These methods actually munge the configuration file values
+
+	private String getConfigurationFileValue(String settingName) throws SettingNotFoundException {
+		return getConfigurationFileValue(Configuration.CATEGORY_GENERAL, settingName);
+	}
+
+	private String getConfigurationFileValue(String category, String settingName) throws SettingNotFoundException {
+		assert configuration != null;
+		return configuration.get(category, settingName, get(settingName)).getString();
+	}
+
+	private void setConfigurationFileValue(String settingName, String value) {
+		setConfigurationFileValue(Configuration.CATEGORY_GENERAL, settingName, value);
+	}
+
+	private void setConfigurationFileValue(String category, String settingName, String value) {
+		assert configuration != null;
+		assert hasSettableSetting(settingName);
+		Property property = configuration.get(category, settingName, value);
+		property.set(value);
 	}
 }
 
