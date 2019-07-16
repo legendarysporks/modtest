@@ -1,5 +1,6 @@
 package com.example.examplemod.utilities.eventsnoopers;
 
+import com.example.examplemod.utilities.ClassUtils;
 import com.example.examplemod.utilities.Logging;
 import com.example.examplemod.utilities.commands.Command;
 import com.example.examplemod.utilities.commands.GenericCommand;
@@ -18,22 +19,6 @@ public class EventSnooper {
 	private static final String COMMAND_USAGE = "/snoop on | off | <event> [ ON | OFF | IGNORE ]";
 	private static final String[] COMMAND_ALIASES = {"Snoop", "SNOOP"};
 	public static EventSnooper INSTANCE;
-	private static final String[] packages = {
-			"net.minecraftforge.event.",
-			"net.minecraftforge.event.brewing.",
-			"net.minecraftforge.event.enchanting.",
-			"net.minecraftforge.event.entity.",
-			"net.minecraftforge.event.entity.item.",
-			"net.minecraftforge.event.entity.living.",
-			"net.minecraftforge.event.entity.minecart.",
-			"net.minecraftforge.event.entity.player.",
-			"net.minecraftforge.event.furnace.",
-			"net.minecraftforge.event.terraingen.",
-			"net.minecraftforge.event.village.",
-			"net.minecraftforge.event.world.",
-			"net.minecraftforge.client.event.",
-			"net.minecraftforge.client.event.sound"
-	};
 
 	private boolean snooping = false;
 	private Set<Class<?>> snoopingTypes = new HashSet<>();          // persistent through @Setting methods
@@ -155,7 +140,7 @@ public class EventSnooper {
 
 	@Command(help = "/snoop <eventClass> [ ON | OFF | IGNORE ]")
 	public void doIt(ICommandSender sender, String eventClassName, String onOff) {
-		Class<?> eventClass = findEventClass(eventClassName);
+		Class<? extends Event> eventClass = ClassUtils.findEventClass(eventClassName);
 		if (eventClass != null) {
 			onOff = onOff.toLowerCase();
 			if ("on".equals(onOff)) {
@@ -240,29 +225,6 @@ public class EventSnooper {
 					}
 				}
 			}
-		}
-	}
-
-	private Class<?> findEventClass(String name) {
-		Class<?> result = findClass(name);
-		if (result != null) {
-			return result;
-		} else {
-			for (String packagePrefix : packages) {
-				result = findClass(packagePrefix + name);
-				if (result != null) {
-					return result;
-				}
-			}
-		}
-		return null;
-	}
-
-	private Class<?> findClass(String name) {
-		try {
-			return Class.forName(name);
-		} catch (ClassNotFoundException e) {
-			return null;
 		}
 	}
 }

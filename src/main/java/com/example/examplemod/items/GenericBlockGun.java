@@ -15,18 +15,20 @@ import java.util.*;
 public class GenericBlockGun extends GenericItem {
 	private static final String CONFIG_VERSION = "0.1";
 	private final List<BlockGunAffect> activeAffects = new ArrayList<>();
-	private double range = 30;
-	private int affectDurationInTicks = 3 * 20; // 10 seconds
-	private int trailLength = 15;
-	private long stepDurationInTicks = Math.round(affectDurationInTicks / range);
+	private double crashRange = 30;
+	private int crashAffectDurationInTicks = 3 * 20; // 10 seconds
+	private int crashTrailLength = 15;
+	private long crashStepDurationInTicks = Math.round(crashAffectDurationInTicks / crashRange);
 
 	public GenericBlockGun(String name, String commandName, String usage, String[] aliases) {
 		super(name);
+		setMaxStackSize(1);
 		GenericCommand.create(commandName, usage, aliases).addTargetWithPersitentSettings(this, commandName, CONFIG_VERSION);
 	}
 
 	public GenericBlockGun(String name, String commandName, String usage, String[] aliases, CreativeTabs tab) {
 		super(name, tab);
+		setMaxStackSize(1);
 		GenericCommand.create(commandName, usage, aliases).addTargetWithPersitentSettings(this, commandName, CONFIG_VERSION);
 	}
 
@@ -39,40 +41,40 @@ public class GenericBlockGun extends GenericItem {
 	}
 
 	@Setting
-	public double getRange() {
-		return range;
+	public double getCrashRange() {
+		return crashRange;
 	}
 
 	@Setting
-	public void setRange(double range) {
-		this.range = range;
-		stepDurationInTicks = Math.round(affectDurationInTicks / range);
+	public void setCrashRange(double crashRange) {
+		this.crashRange = crashRange;
+		crashStepDurationInTicks = Math.round(crashAffectDurationInTicks / crashRange);
 	}
 
 	@Setting
-	public int getDurationTicks() {
-		return affectDurationInTicks;
+	public int getCrashDurationTicks() {
+		return crashAffectDurationInTicks;
 	}
 
 	@Setting
-	public void setDurationTicks(int affectDurationInTicks) {
-		this.affectDurationInTicks = affectDurationInTicks;
-		stepDurationInTicks = Math.round(affectDurationInTicks / range);
+	public void setCrashDurationTicks(int affectDurationInTicks) {
+		this.crashAffectDurationInTicks = affectDurationInTicks;
+		crashStepDurationInTicks = Math.round(affectDurationInTicks / crashRange);
 	}
 
 	@Setting
-	public double getVelocity() {
-		return range / affectDurationInTicks;
+	public double getCrashVelocity() {
+		return crashRange / crashAffectDurationInTicks;
 	}
 
 	@Setting
-	public void setVelocity(double velocity) {
-		setDurationTicks((int) Math.round(range / velocity));
+	public void setCrashVelocity(double velocity) {
+		setCrashDurationTicks((int) Math.round(crashRange / velocity));
 	}
 
 	@Setting
-	public int getTrailLength() {
-		return trailLength;
+	public int getCrashTrailLength() {
+		return crashTrailLength;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -82,7 +84,7 @@ public class GenericBlockGun extends GenericItem {
 	//   handleStartPosition - you get a chance to do something at the starting block
 	//   while not at end position
 	//     handleRemovePosition - cleanup previously added positions that cause the list of
-	//             visitedLocations to grow to be greater than trailLength
+	//             visitedLocations to grow to be greater than crashTrailLength
 	//     calculateNextPosition - where are we moving next
 	//     handleAddPosition - add next position along path to end position and do what we
 	//             want to that location
@@ -91,8 +93,8 @@ public class GenericBlockGun extends GenericItem {
 	//   handleFinishPosition
 
 	@Setting
-	public void setTrailLength(int trailLength) {
-		this.trailLength = trailLength;
+	public void setCrashTrailLength(int crashTrailLength) {
+		this.crashTrailLength = crashTrailLength;
 	}
 
 	/** Called once when the affect starts */
@@ -154,7 +156,7 @@ public class GenericBlockGun extends GenericItem {
 		private int currentStep;
 		private Vec3d currentPos;
 		private Vec3d stepSize;
-		private Queue<BlockPos> positionsVisited = new ArrayDeque<>(trailLength);
+		private Queue<BlockPos> positionsVisited = new ArrayDeque<>(crashTrailLength);
 		private long ticksToNextStep = 0;
 
 		public BlockGunAffect(World world, BlockPos start, BlockPos finish) {
@@ -177,10 +179,10 @@ public class GenericBlockGun extends GenericItem {
 			// if we haven't waited long enough to do the next step, just exit
 			if (ticksToNextStep-- > 0) return true;
 
-			// An entire stepDurationInTicks has elapsed, so reset timer and do stuff
-			ticksToNextStep = stepDurationInTicks;
+			// An entire crashStepDurationInTicks has elapsed, so reset timer and do stuff
+			ticksToNextStep = crashStepDurationInTicks;
 
-			if (positionsVisited.size() >= trailLength) {
+			if (positionsVisited.size() >= crashTrailLength) {
 				// We've reached the max trail size, remove an old pixel so we can add a new one.
 				handleRemovePosition(world, positionsVisited.remove());
 			}
