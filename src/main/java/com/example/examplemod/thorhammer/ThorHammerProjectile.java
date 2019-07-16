@@ -34,6 +34,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 	private static final ThorHammerProjectileRenderer renderer = ThorHammerProjectileRenderer.proxy.init();
 	private static Block replacementBlock = Blocks.FIRE;
 	private static int bounces = 1;
+	private static EnumParticleTypes sparkleType = EnumParticleTypes.FLAME;
 
 	private int bouncesRemaining = bounces;
 	private EnumHand handIn;
@@ -84,6 +85,19 @@ public class ThorHammerProjectile extends EntityThrowable {
 
 	public static void setBounces(int newBounces) {
 		bounces = newBounces;
+	}
+
+	public static String getSparkleType() {
+		return sparkleType.toString();
+	}
+
+	public static void setSparkleType(String newSparkleTypeName) throws InvalidValueException {
+		EnumParticleTypes newType = EnumParticleTypes.getByName(newSparkleTypeName);
+		if (newType != null) {
+			sparkleType = newType;
+		} else {
+			new InvalidValueException("sparkleType", newSparkleTypeName, "Unknown particle type");
+		}
 	}
 
 	public void writeEntityToNBT(NBTTagCompound compound) {
@@ -187,7 +201,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 			double y = (double) (rand.nextInt(SPARK_SPEED_MAX) - SPARK_SPEED_MIN) / SPARK_SPEED_DIVISOR;
 			double z = (double) (rand.nextInt(SPARK_SPEED_MAX) - SPARK_SPEED_MIN) / SPARK_SPEED_DIVISOR;
 //			this.world.spawnParticle(EnumParticleTypes.FIREWORKS_SPARK, posX, posY, posZ, x, y, z);
-			this.world.spawnParticle(EnumParticleTypes.FLAME, posX, posY, posZ, x, y, z);
+			this.world.spawnParticle(sparkleType, posX, posY, posZ, x, y, z);
 		}
 	}
 }

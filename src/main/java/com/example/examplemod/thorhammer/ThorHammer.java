@@ -223,6 +223,16 @@ public class ThorHammer extends GenericBlockGun implements HackFMLEventListener 
 		ThorHammerProjectile.setBounces(bounces);
 	}
 
+	@Setting
+	public String getSparkle() {
+		return ThorHammerProjectile.getSparkleType();
+	}
+
+	@Setting
+	public void setSparkle(String sparkleName) throws InvalidValueException {
+		ThorHammerProjectile.setSparkleType(sparkleName);
+	}
+
 	/**
 	 * Called when the equipped item is right clicked.
 	 */
