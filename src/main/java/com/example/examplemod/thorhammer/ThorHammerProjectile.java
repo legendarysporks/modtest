@@ -158,17 +158,19 @@ public class ThorHammerProjectile extends EntityThrowable {
 
 	@Override
 	protected void onImpact(RayTraceResult result) {
-		if (!world.isRemote && (getThrower() != null)) {
-			if (result.entityHit == getThrower()) {
-				EntityPlayer player = (EntityPlayer) getThrower();
-				ItemStack itemstack = player.getHeldItem(handIn);
-				// Note that this will trash whatever was in this hand if it wasn't empty.
-				// Thor's hammer waits for no hand.
-				player.setHeldItem(handIn, new ItemStack(ModItems.thor_hammer));
-				setDead();
-				exlosionStrength = 0;
-			} else if (result.typeOfHit == RayTraceResult.Type.ENTITY) {
-				result.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), DAMAGE);
+		if (!world.isRemote) {
+			if (result.typeOfHit == RayTraceResult.Type.ENTITY) {
+				if (result.entityHit == getThrower()) {
+					EntityPlayer player = (EntityPlayer) getThrower();
+					ItemStack itemstack = player.getHeldItem(handIn);
+					// Note that this will trash whatever was in this hand if it wasn't empty.
+					// Thor's hammer waits for no hand.
+					player.setHeldItem(handIn, new ItemStack(ModItems.thor_hammer));
+					setDead();
+					exlosionStrength = 0;
+				} else {
+					result.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), DAMAGE);
+				}
 			} else if (result.typeOfHit == RayTraceResult.Type.BLOCK) {
 				world.setBlockState(result.getBlockPos(), replacementBlock.getDefaultState());
 			} else if (result.typeOfHit == RayTraceResult.Type.MISS) {
@@ -179,8 +181,10 @@ public class ThorHammerProjectile extends EntityThrowable {
 	private void reverseDirection() {
 		if (!world.isRemote && !isDead) {
 			if (bouncesRemaining-- > 0) {
+				// we still have bouncing to do
 				shoot(-x, -y, -z, velocity, inaccuracy);
 			} else if ((this.getThrower() != null) && this.getThrower().getDistance(this) > CATCH_DISTANCE) {
+				// we're done bouncing and not within catch distance of the thrower.
 				explode();
 			}
 		}

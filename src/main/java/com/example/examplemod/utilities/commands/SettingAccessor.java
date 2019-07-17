@@ -223,7 +223,7 @@ public class SettingAccessor {
 					method.setAccessible(true);
 					method.invoke(target, TypeConversionHelper.convertStringToType(settingName, value, method.getParameterTypes()[0]));
 					return;
-				} catch (IllegalAccessException | InvocationTargetException e) {
+				} catch (IllegalAccessException | InvocationTargetException | InvalidValueException e) {
 					// should not happen since we setAccessible(true) above
 					e.printStackTrace();
 				} finally {
