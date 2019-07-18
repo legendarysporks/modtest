@@ -3,6 +3,7 @@ package com.example.examplemod.thorhammer;
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.Reference;
 import com.example.examplemod.init.ModItems;
+import com.example.examplemod.utilities.Sparkles;
 import com.example.examplemod.utilities.commands.InvalidValueException;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,10 +23,6 @@ public class ThorHammerProjectile extends EntityThrowable {
 	private static final String NAME = "thor_hammer_projectile";
 	private static final int ID = 121;
 	private static final float GRAVITY = 0.0f;
-	private static final int SPARKINESS = 1;
-	private static final int SPARK_SPEED_MAX = 10;
-	private static final int SPARK_SPEED_MIN = 5;
-	private static final double SPARK_SPEED_DIVISOR = 8.0D;
 	private static final int LIFETIME_TICKS = 20;
 	private static final float EXPLOSION_STRENGTH = 1.75F;
 	private static final float DAMAGE = 100f;
@@ -138,7 +135,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 			ticksExisted = 0;
 			reverseDirection();
 		}
-		sparkles();
+		Sparkles.yay(world, posX, posY, posZ, sparkleType);
 	}
 
 	@Override
@@ -158,6 +155,17 @@ public class ThorHammerProjectile extends EntityThrowable {
 
 	@Override
 	protected void onImpact(RayTraceResult result) {
+		/* The contents of a RayTraceResult differ depending on its Type field:
+				BLOCK
+					blockPos
+					sideHit
+					hitVec
+				ENTITY
+					entityHit
+					hitVec
+				MISS
+		 */
+
 		if (!world.isRemote) {
 			if (result.typeOfHit == RayTraceResult.Type.ENTITY) {
 				if (result.entityHit == getThrower()) {
@@ -194,18 +202,8 @@ public class ThorHammerProjectile extends EntityThrowable {
 		if (exlosionStrength > 0) {
 			this.world.createExplosion(this, posX, posY, posZ, exlosionStrength, true);
 		} else {
-			sparkles();
+			Sparkles.yay(world, posX, posY, posZ, sparkleType);
 		}
 		setDead();
-	}
-
-	private void sparkles() {
-		for (int i = 0; i < SPARKINESS; i++) {
-			double x = (double) (rand.nextInt(SPARK_SPEED_MAX) - SPARK_SPEED_MIN) / SPARK_SPEED_DIVISOR;
-			double y = (double) (rand.nextInt(SPARK_SPEED_MAX) - SPARK_SPEED_MIN) / SPARK_SPEED_DIVISOR;
-			double z = (double) (rand.nextInt(SPARK_SPEED_MAX) - SPARK_SPEED_MIN) / SPARK_SPEED_DIVISOR;
-//			this.world.spawnParticle(EnumParticleTypes.FIREWORKS_SPARK, posX, posY, posZ, x, y, z);
-			this.world.spawnParticle(sparkleType, posX, posY, posZ, x, y, z);
-		}
 	}
 }

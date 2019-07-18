@@ -2,6 +2,7 @@ package com.example.examplemod.emp.common;
 
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.Reference;
+import com.example.examplemod.utilities.Sparkles;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.util.EnumParticleTypes;
@@ -10,16 +11,12 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 
-import static net.minecraft.util.math.RayTraceResult.Type.MISS;
+import static net.minecraft.util.math.RayTraceResult.Type.*;
 
 public class EMPProjectile extends EntityThrowable {
 	private static final String NAME = "emp_projectile";
 	private static final int ID = 120;
 	private static float GRAVITY = 0.0f;
-	private static int SPARKINESS = 1;
-	private static int SPARK_SPEED_MAX = 10;
-	private static int SPARK_SPEED_MIN = 5;
-	private static double SPARK_SPEED_DIVISOR = 8.0D;
 	private static int LIFETIME_TICKS = 20;
 	private static float EXPLOSION_STRENGTH = 1.75F;
 	private EntityLivingBase launcher;
@@ -51,13 +48,7 @@ public class EMPProjectile extends EntityThrowable {
 		if (ticksExisted > LIFETIME_TICKS) {
 			explode();
 		}
-
-		for (int i = 0; i < SPARKINESS; i++) {
-			double x = (double) (rand.nextInt(SPARK_SPEED_MAX) - SPARK_SPEED_MIN) / SPARK_SPEED_DIVISOR;
-			double y = (double) (rand.nextInt(SPARK_SPEED_MAX) - SPARK_SPEED_MIN) / SPARK_SPEED_DIVISOR;
-			double z = (double) (rand.nextInt(SPARK_SPEED_MAX) - SPARK_SPEED_MIN) / SPARK_SPEED_DIVISOR;
-			this.world.spawnParticle(EnumParticleTypes.FIREWORKS_SPARK, posX, posY, posZ, x, y, z);
-		}
+		Sparkles.yay(world, posX, posY, posZ, EnumParticleTypes.FIREWORKS_SPARK);
 	}
 
 	@Override
@@ -67,11 +58,25 @@ public class EMPProjectile extends EntityThrowable {
 
 	@Override
 	protected void onImpact(RayTraceResult result) {
-		if (!world.isRemote || (result.typeOfHit == MISS)) {
-			if (result.entityHit == launcher) {
-				return;
+		/* The contents of a RayTraceResult differ depending on its Type field:
+				BLOCK
+					blockPos
+					sideHit
+					hitVec
+				ENTITY
+					entityHit
+					hitVec
+				MISS
+		 */
+		if (!world.isRemote) {
+			if (result.typeOfHit == MISS) {
+			} else if (result.typeOfHit == BLOCK) {
+				explode();
+			} else if (result.typeOfHit == ENTITY) {
+				if (result.entityHit != launcher) {
+					explode();
+				}
 			}
-			explode();
 		}
 	}
 
