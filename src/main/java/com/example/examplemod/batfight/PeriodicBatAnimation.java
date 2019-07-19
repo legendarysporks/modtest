@@ -1,4 +1,4 @@
-package com.example.examplemod.batfight.common;
+package com.example.examplemod.batfight;
 
 /*
 An interface where a frame only changes once per a given time interval.

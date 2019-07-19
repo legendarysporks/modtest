@@ -1,9 +1,8 @@
-package com.example.examplemod.batfight.common;
+package com.example.examplemod.batfight;
 
 import com.example.examplemod.utilities.commands.Command;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import net.minecraft.command.ICommandSender;
-import net.minecraftforge.fml.common.SidedProxy;
 
 /*
 Generic BatFight interface used by the main mod.  Just used to initialize the
@@ -13,10 +12,7 @@ public class BatFight {
 	private static final String NAME = "batfight";
 	private static final String USAGE = "batfight ([add word] | [remove word] | [removeall])";
 	private static final String[] ALIASES = {"bf"};
-
-	@SidedProxy(clientSide = "com.example.examplemod.batfight.client.BatFightClient",
-			serverSide = "com.example.examplemod.batfight.server.BatFightServer")
-	public static BatFight proxy;
+	private static final BatFightRenderer renderer = BatFightRenderer.proxy;
 
 	public BatFight() {
 		GenericCommand.create(NAME, USAGE, ALIASES).addTarget(this);

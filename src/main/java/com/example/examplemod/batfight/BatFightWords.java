@@ -1,4 +1,4 @@
-package com.example.examplemod.batfight.common;
+package com.example.examplemod.batfight;
 
 import com.google.common.collect.Lists;
 

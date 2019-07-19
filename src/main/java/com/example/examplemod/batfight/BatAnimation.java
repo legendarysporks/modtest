@@ -1,4 +1,4 @@
-package com.example.examplemod.batfight.common;
+package com.example.examplemod.batfight;
 
 /*
 An interface for frame based animation.

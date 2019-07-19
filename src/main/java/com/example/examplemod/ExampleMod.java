@@ -1,5 +1,6 @@
 package com.example.examplemod;
 
+import com.example.examplemod.batfight.BatFight;
 import com.example.examplemod.expodingsheep.ExplodingAnimals;
 import com.example.examplemod.init.ModBlocks;
 import com.example.examplemod.init.ModItems;
@@ -19,6 +20,7 @@ public class ExampleMod {
 	/**
 	 * Instance of ExplodingAnimals
 	 */
+	private BatFight batFight;
 	private ExplodingAnimals explodingAnimals;
 	private RunTestsCommand runTestCommand;
 
@@ -32,6 +34,7 @@ public class ExampleMod {
 		ModRecipes.init();
 		EventSnooper.init();
 
+		batFight = new BatFight();
 		explodingAnimals = new ExplodingAnimals();
 		runTestCommand = new RunTestsCommand();
 
