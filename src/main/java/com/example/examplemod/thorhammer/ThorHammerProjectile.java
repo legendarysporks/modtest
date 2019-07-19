@@ -3,6 +3,7 @@ package com.example.examplemod.thorhammer;
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.Reference;
 import com.example.examplemod.init.ModItems;
+import com.example.examplemod.utilities.RendererHelper;
 import com.example.examplemod.utilities.Sparkles;
 import com.example.examplemod.utilities.commands.InvalidValueException;
 import net.minecraft.block.Block;
@@ -28,7 +29,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 	private static final float DAMAGE = 100f;
 	private static final float CATCH_DISTANCE = 2.0f;
 	// provide some reference to the renderer so it's class is loaded/constructed/registered
-	private static final ThorHammerProjectileRenderer renderer = ThorHammerProjectileRenderer.proxy.init();
+	private static final RendererHelper renderer = ThorHammerProjectileRenderer.proxy;
 	private static Block replacementBlock = Blocks.FIRE;
 	private static int bounces = 1;
 	private static EnumParticleTypes sparkleType = EnumParticleTypes.FLAME;

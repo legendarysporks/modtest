@@ -1,36 +1,32 @@
 package com.example.examplemod.thorhammer;
 
 import com.example.examplemod.Reference;
+import com.example.examplemod.utilities.RendererHelper;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
-public class ThorHammerProjectileRendererClient extends ThorHammerProjectileRenderer implements IRenderFactory<ThorHammerProjectile> {
+public class ThorHammerProjectileRendererClientSide extends RendererHelper.ClientSide<ThorHammerProjectile> {
+	private static final ResourceLocation texture =
+			new ResourceLocation(Reference.MODID, "textures/entity/emp_projectile3.png");
 
-	@Override
-	public void handleFMLEvent(FMLPreInitializationEvent event) {
-		super.handleFMLEvent(event);
-		RenderingRegistry.registerEntityRenderingHandler(ThorHammerProjectile.class, this);
+	public ThorHammerProjectileRendererClientSide() {
+		super(ThorHammerProjectile.class);
 	}
 
 	@Override
-	public Render<ThorHammerProjectile> createRenderFor(RenderManager manager) {
+	public Renderer createRenderFor(RenderManager manager) {
 		return new Renderer(manager);
 	}
 
-	public static class Renderer extends Render<ThorHammerProjectile> {
-		private static final ResourceLocation texture =
-				new ResourceLocation(Reference.MODID, "textures/entity/emp_projectile3.png");
+	private static class Renderer extends Render<ThorHammerProjectile> {
 		private ModelBase model;
 
 		public Renderer(RenderManager manager) {
@@ -106,3 +102,4 @@ public class ThorHammerProjectileRendererClient extends ThorHammerProjectileRend
 		}
 	}
 }
+
