@@ -1,40 +1,54 @@
-package com.example.examplemod.emp.client;
+package com.example.examplemod.emp;
 
 import com.example.examplemod.Reference;
-import com.example.examplemod.emp.common.EMPProjectile;
+import com.example.examplemod.utilities.RendererHelper;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 
-public class EMPRenderer extends Render<EMPProjectile> {
-	private static final ResourceLocation texture =
-			new ResourceLocation(Reference.MODID, "textures/entity/emp_projectile3.png");
-	private ModelBase model;
-
-	public EMPRenderer(RenderManager manager) {
-		super(manager);
-		model = new Model();
-	}
-
-	@Nullable
-	@Override
-	protected ResourceLocation getEntityTexture(EMPProjectile entity) {
-		return texture;
+@SideOnly(Side.CLIENT)
+public class EMPRendererClientSide extends RendererHelper.ClientSide<EMPProjectile> {
+	public EMPRendererClientSide() {
+		super(EMPProjectile.class);
 	}
 
 	@Override
-	public void doRender(EMPProjectile entity, double x, double y, double z, float yaw, float partialTick) {
-		GL11.glPushMatrix();
-		bindTexture(texture);
-		GL11.glTranslated(x, y - 1.25D, z);
-		model.render(entity, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-		GL11.glPopMatrix();
+	public Render<EMPProjectile> createRenderFor(RenderManager manager) {
+		return new EMPRenderer(manager);
+	}
+
+	private static class EMPRenderer extends Render<EMPProjectile> {
+		private static final ResourceLocation texture =
+				new ResourceLocation(Reference.MODID, "textures/entity/emp_projectile3.png");
+		private ModelBase model;
+
+		public EMPRenderer(RenderManager manager) {
+			super(manager);
+			model = new Model();
+		}
+
+		@Nullable
+		@Override
+		protected ResourceLocation getEntityTexture(EMPProjectile entity) {
+			return texture;
+		}
+
+		@Override
+		public void doRender(EMPProjectile entity, double x, double y, double z, float yaw, float partialTick) {
+			GL11.glPushMatrix();
+			bindTexture(texture);
+			GL11.glTranslated(x, y - 1.25D, z);
+			model.render(entity, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
+			GL11.glPopMatrix();
+		}
 	}
 
 	private static class Model extends ModelBase {

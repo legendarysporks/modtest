@@ -1,8 +1,8 @@
 package com.example.examplemod.init;
 
 import com.example.examplemod.Reference;
-import com.example.examplemod.emp.common.EMPAmmo;
-import com.example.examplemod.emp.common.EMPGun;
+import com.example.examplemod.emp.EMPAmmo;
+import com.example.examplemod.emp.EMPGun;
 import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.thorhammer.ThorHammer;
 import net.minecraft.item.Item;
@@ -22,6 +22,6 @@ public class ModItems {
 		raw_uru = new GenericItem("raw_uru");
 		thor_hammer = new ThorHammer("thor_hammer");
 		empRound = new EMPAmmo("emp_round");
-		empGun = EMPGun.proxy;
+		empGun = new EMPGun();
 	}
 }

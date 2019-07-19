@@ -1,4 +1,4 @@
-package com.example.examplemod.emp.common;
+package com.example.examplemod.emp;
 
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.Reference;

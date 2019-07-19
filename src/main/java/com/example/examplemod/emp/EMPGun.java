@@ -1,7 +1,8 @@
-package com.example.examplemod.emp.common;
+package com.example.examplemod.emp;
 
 import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.utilities.InventoryUtils;
+import com.example.examplemod.utilities.RendererHelper;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemod.utilities.commands.Setting;
 import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
@@ -11,7 +12,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 public class EMPGun extends GenericItem implements HackFMLEventListener {
@@ -19,6 +19,7 @@ public class EMPGun extends GenericItem implements HackFMLEventListener {
 	public static final String COMMAND_USAGE = "EMP whatever";
 	public static final String[] COMMAND_ALIASES = {"emp"};
 	public static final String COMMAND_CONFIG_FILE_VERSION = "0.1";
+	private static final RendererHelper renderer = EMPRenderer.proxy;
 	private static final Class<? extends Item> AMMO_CLASS = EMPAmmo.class;
 	private static final String NAME = "emp_gun";
 	private static final String[] EMP_SOUND_NAMES = new String[]{
@@ -29,9 +30,6 @@ public class EMPGun extends GenericItem implements HackFMLEventListener {
 			"varmnitrifle_fired",
 	};
 
-	@SidedProxy(clientSide = "com.example.examplemod.emp.client.EMPGunClient",
-			serverSide = "com.example.examplemod.emp.server.EMPGunServer")
-	public static EMPGun proxy;
 	private static SoundEvent[] EMPSounds = new SoundEvent[EMP_SOUND_NAMES.length];
 	@Setting
 	public boolean ALLOWED_IN_CREATIVE = true;
