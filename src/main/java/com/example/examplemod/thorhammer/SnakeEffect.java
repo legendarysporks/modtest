@@ -1,44 +1,56 @@
-package com.example.examplemod.items;
+package com.example.examplemod.thorhammer;
 
-import com.example.examplemod.utilities.commands.GenericCommand;
+import com.example.examplemod.Reference;
 import com.example.examplemod.utilities.commands.Setting;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.*;
 
-public class GenericBlockGun extends GenericItem {
-	private static final String CONFIG_VERSION = "0.1";
+@Mod.EventBusSubscriber(modid = Reference.MODID)
+public class SnakeEffect {
+	public static final String COMMAND_NAME = "SnakeEffect";
+	public static final String COMMAND_USAGE = "Try /SnakeEffect settings";
+	public static final String[] COMMAND_ALIASES = {};
+	public static final String CONFIG_VERSION = "0.1";
+
 	private final List<BlockGunAffect> activeAffects = new ArrayList<>();
 	private double crashRange = 30;
 	private int crashAffectDurationInTicks = 3 * 20; // 10 seconds
 	private int crashTrailLength = 15;
 	private long crashStepDurationInTicks = Math.round(crashAffectDurationInTicks / crashRange);
+	private SnakeEffectImpl impl;
 
-	public GenericBlockGun(String name, String commandName, String usage, String[] aliases) {
-		super(name);
-		setMaxStackSize(1);
-		GenericCommand.create(commandName, usage, aliases).addTargetWithPersitentSettings(this, commandName, CONFIG_VERSION);
+	//----------------------------------------------------------------------------------------
+	// subclass interface
+
+	//   (subclass calls startAffect) - this is what starts things
+	//   handleStartPosition - you get a chance to do something at the starting block
+	//   while not at end position
+	//     handleRemovePosition - cleanup previously added positions that cause the list of
+	//             visitedLocations to grow to be greater than crashTrailLength
+	//     calculateNextPosition - where are we moving next
+	//     handleAddPosition - add next position along path to end position and do what we
+	//             want to that location
+	//   endwhile
+	//   handleRemovePosition - cleanup any positions that haven't been cleaned up yet
+	//   handleFinishPosition
+
+	public SnakeEffect(SnakeEffectImpl impl) {
+		this.impl = impl;
 	}
 
-	public GenericBlockGun(String name, String commandName, String usage, String[] aliases, CreativeTabs tab) {
-		super(name, tab);
-		setMaxStackSize(1);
-		GenericCommand.create(commandName, usage, aliases).addTargetWithPersitentSettings(this, commandName, CONFIG_VERSION);
-	}
-
-	protected static BlockPos toBlockPos(Vec3d v) {
+	public static BlockPos toBlockPos(Vec3d v) {
 		return new BlockPos(v.x, v.y, v.z);
 	}
 
-	protected static Vec3d toVec3d(BlockPos p) {
-		return new Vec3d(p.getX(), p.getY(), p.getZ());
-	}
+	//----------------------------------------------------------------------------------------
+	// Settings
 
 	@Setting
 	public double getCrashRange() {
@@ -77,56 +89,47 @@ public class GenericBlockGun extends GenericItem {
 		return crashTrailLength;
 	}
 
-	//----------------------------------------------------------------------------------------
-	// subclass interface
-
-	//   (subclass calls startAffect) - this is what starts things
-	//   handleStartPosition - you get a chance to do something at the starting block
-	//   while not at end position
-	//     handleRemovePosition - cleanup previously added positions that cause the list of
-	//             visitedLocations to grow to be greater than crashTrailLength
-	//     calculateNextPosition - where are we moving next
-	//     handleAddPosition - add next position along path to end position and do what we
-	//             want to that location
-	//   endwhile
-	//   handleRemovePosition - cleanup any positions that haven't been cleaned up yet
-	//   handleFinishPosition
-
 	@Setting
 	public void setCrashTrailLength(int crashTrailLength) {
 		this.crashTrailLength = crashTrailLength;
 	}
 
-	/** Called once when the affect starts */
-	protected void handleStartPosition(World world, BlockPos pos) {
+	public static Vec3d toVec3d(BlockPos p) {
+		return new Vec3d(p.getX(), p.getY(), p.getZ());
 	}
 
+	//----------------------------------------------------------------------------------------
+	// utility functions
+
 	/** Subclasses should call this to start the gun shot affects */
-	protected void startAffect(World world, BlockPos start, BlockPos finish) {
+	public void startAffect(World world, BlockPos start, BlockPos finish) {
 		if (activeAffects.isEmpty()) {
 			MinecraftForge.EVENT_BUS.register(this);
 		}
 		activeAffects.add(new BlockGunAffect(world, start, finish));
 	}
 
-	/** cleanup affect previously at the given location */
-	protected void handleRemovePosition(World world, BlockPos pos) {
-	}
+	public interface SnakeEffectImpl {
+		/** Called once when the affect starts */
+		default void handleStartPosition(World world, BlockPos pos) {
+		}
 
-	/** add final affect to the location */
-	protected void handleFinishPosition(World world, BlockPos pos) {
-	}
+		/** Return the next position or null if done affecting new locations */
+		default Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d lastPos, Vec3d stepSize) {
+			return lastPos.add(stepSize);
+		}
 
-	//----------------------------------------------------------------------------------------
-	// utility functions
+		/** add initial affect to location.  Return true if the affect should continue going */
+		default void handleAddPosition(World world, BlockPos pos) {
+		}
 
-	/** Return the next position or null if done affecting new locations */
-	protected Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d lastPos, Vec3d stepSize) {
-		return lastPos.add(stepSize);
-	}
+		/** cleanup affect previously at the given location */
+		default void handleRemovePosition(World world, BlockPos pos) {
+		}
 
-	/** add initial affect to location.  Return true if the affect should continue going */
-	protected void handleAddPosition(World world, BlockPos pos) {
+		/** add final affect to the location */
+		default void handleFinishPosition(World world, BlockPos pos) {
+		}
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -169,7 +172,7 @@ public class GenericBlockGun extends GenericItem {
 			stepSize = new Vec3d((double) dx / totalSteps, (double) dy / totalSteps, (double) dz / totalSteps);
 			currentPos = toVec3d(start);
 			currentStep = 0;
-			handleStartPosition(world, start);
+			impl.handleStartPosition(world, start);
 		}
 
 		public boolean doStep() {
@@ -184,12 +187,12 @@ public class GenericBlockGun extends GenericItem {
 
 			if (positionsVisited.size() >= crashTrailLength) {
 				// We've reached the max trail size, remove an old pixel so we can add a new one.
-				handleRemovePosition(world, positionsVisited.remove());
+				impl.handleRemovePosition(world, positionsVisited.remove());
 			}
 
 			if (currentStep < totalSteps) {
 				// We haven't reached the finish yet, add a location
-				Vec3d nextPos = calculateNextPosition(world, positionsVisited, currentPos, stepSize);
+				Vec3d nextPos = impl.calculateNextPosition(world, positionsVisited, currentPos, stepSize);
 				if (nextPos == null) {
 					// there is no next position, so end things gracefully.
 					end();
@@ -202,18 +205,18 @@ public class GenericBlockGun extends GenericItem {
 					if (!positionsVisited.contains(currentBlockPos)) {
 						// add a new position to the list and handle it
 						positionsVisited.add(currentBlockPos);
-						handleAddPosition(world, currentBlockPos);
+						impl.handleAddPosition(world, currentBlockPos);
 					}
 				}
 				return true;
 			} else if (!positionsVisited.isEmpty()) {
 				// we've reached the end so now we just remove positionsVisited along the line 1 by 1
 				// until they are all gone
-				handleRemovePosition(world, positionsVisited.remove());
+				impl.handleRemovePosition(world, positionsVisited.remove());
 				return true;
 			} else {
 				// We've reached the finish and we've removed all positionsVisited remaining.   Done.
-				handleFinishPosition(world, toBlockPos(currentPos));
+				impl.handleFinishPosition(world, toBlockPos(currentPos));
 				return false;
 			}
 		}

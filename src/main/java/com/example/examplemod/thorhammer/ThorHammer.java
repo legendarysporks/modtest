@@ -1,8 +1,9 @@
 package com.example.examplemod.thorhammer;
 
-import com.example.examplemod.items.GenericBlockGun;
+import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.utilities.ClassUtils;
 import com.example.examplemod.utilities.InventoryUtils;
+import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemod.utilities.commands.InvalidValueException;
 import com.example.examplemod.utilities.commands.Setting;
 import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
@@ -29,10 +30,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 
-public class ThorHammer extends GenericBlockGun implements HackFMLEventListener {
+public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	private static final String COMMAND_NAME = "ThorHammer";
 	private static final String COMMAND_USAGE = "Try /ThorHammer settings";
 	private static final String[] COMMAND_ALIASES = {"thorhammer", "thorHammer", "th"};
+	private static final String CONFIG_VERSION = "0.1";
 	private static Block effectBlock = Blocks.MAGMA;
 	private static Block aboveEffectBlock = Blocks.FIRE;
 	private static Class<? extends EntityThrowable> projectileClass = ThorHammerProjectile.class;
@@ -42,13 +44,23 @@ public class ThorHammer extends GenericBlockGun implements HackFMLEventListener 
 	private static float maxVelocity = 2.0f;
 	private static int timeToCharge = 20 * 5;
 
+	private SnakeEffect snakeEffect = new SnakeEffect(new ThorHammerSnakeEffect());
+
 	public ThorHammer(String name) {
-		super(name, COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES);
+		super(name);
+		setMaxStackSize(1);
+		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES)
+				.addTargetWithPersitentSettings(this, COMMAND_NAME, CONFIG_VERSION)
+				.addTargetWithPersitentSettings(snakeEffect, SnakeEffect.COMMAND_NAME, SnakeEffect.CONFIG_VERSION);
 		subscribeToFMLEvents();
 	}
 
 	public ThorHammer(String name, CreativeTabs tab) {
-		super(name, COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES, tab);
+		super(name, tab);
+		setMaxStackSize(1);
+		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES)
+				.addTargetWithPersitentSettings(this, COMMAND_NAME, CONFIG_VERSION)
+				.addTargetWithPersitentSettings(snakeEffect, SnakeEffect.COMMAND_NAME, SnakeEffect.CONFIG_VERSION);
 		subscribeToFMLEvents();
 	}
 
@@ -60,90 +72,117 @@ public class ThorHammer extends GenericBlockGun implements HackFMLEventListener 
 		ThorHammerProjectile.registerModEntity();
 	}
 
-
-	//----------------------------------------------------------------------------------------------------
-	// Handle smashing block with hammer
-	//----------------------------------------------------------------------------------------------------
 	private static boolean isSolid(World w, Vec3d v) {
 		// water, and air are not solid
-		IBlockState state = w.getBlockState(toBlockPos(v));
+		IBlockState state = w.getBlockState(SnakeEffect.toBlockPos(v));
 		return state.getMaterial().isSolid()
 				&& (state.getBlock() != effectBlock)
 				&& (state.getBlock() != aboveEffectBlock);
 	}
 
 	private static boolean isBreakable(World world, Vec3d v) {
-		return isBreakable(world, toBlockPos(v));
+		return isBreakable(world, SnakeEffect.toBlockPos(v));
+	}
+
+	//----------------------------------------------------------------------------------------------------
+	// Settings
+	//----------------------------------------------------------------------------------------------------
+	@Setting
+	public static float getMinVelocity() {
+		return minVelocity;
 	}
 
 	private static boolean isBreakable(World world, BlockPos pos) {
 		return world.getBlockState(pos).getBlockHardness(world, pos) >= 0;
 	}
 
-	@Override
-	protected Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d currentPos, Vec3d stepSize) {
-		Vec3d abovePos = currentPos.addVector(0.0d, 1.0d, 0.0d);
-		Vec3d forwardPos = currentPos.add(stepSize);
-		Vec3d belowPos = currentPos.subtract(0.0d, 1.0d, 0.0d);
-		Vec3d nextPos;
-		if (isSolid(world, abovePos) && !prevPos.contains(toBlockPos(abovePos))) {
-			nextPos = abovePos;
-		} else if (isSolid(world, forwardPos)) {
-			nextPos = forwardPos;
-		} else if (isSolid(world, belowPos)) {
-			nextPos = belowPos;
-		} else {
-			// we can't move.  We're stuck.  So stop messing around and finish
-			nextPos = null;
-		}
-
-		// we know where we want to go.  Check if we can go there.
-		if (nextPos != null && isBreakable(world, nextPos)) {
-			return nextPos;
-		} else {
-			return null;
-		}
-	}
-
+	//----------------------------------------------------------------------------------------------------
+	// Handle smashing block with hammer
+	//----------------------------------------------------------------------------------------------------
 	@Override
 	public boolean onBlockDestroyed(ItemStack stack, World worldIn, IBlockState state, BlockPos pos, EntityLivingBase entityLiving) {
 		if (!worldIn.isRemote) {
 			// get direction player is looking (normalized)
 			Vec3d lookVec = entityLiving.getLookVec();
 			// extend that to maximum range of gun
-			Vec3d finishDistance = lookVec.scale(getCrashRange());
+			Vec3d finishDistance = lookVec.scale(snakeEffect.getCrashRange());
 			// start the affect from start to finish
-			startAffect(worldIn, pos, new BlockPos(pos.getX() + finishDistance.x, pos.getY(), pos.getZ() + finishDistance.z));
+			snakeEffect.startAffect(worldIn, pos, new BlockPos(pos.getX() + finishDistance.x, pos.getY(), pos.getZ() + finishDistance.z));
 			return false;
 		} else {
 			return super.onBlockDestroyed(stack, worldIn, state, pos, entityLiving);
 		}
 	}
 
-	/** add initial affect to location. */
+	//----------------------------------------------------------------------------------------------------
+	// Handle throwing hammer
+	//----------------------------------------------------------------------------------------------------
 	@Override
-	protected void handleAddPosition(World world, BlockPos pos) {
-		// turn block to magma and set it on fire.
-		world.setBlockState(pos, effectBlock.getDefaultState());
-		BlockPos above = pos.up();
-		if (world.getBlockState(above).getMaterial() == Material.AIR) {
-			world.setBlockState(above, aboveEffectBlock.getDefaultState());
+	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand handIn) {
+		ItemStack itemstack = player.getHeldItem(EnumHand.MAIN_HAND);
+		if (handIn != EnumHand.MAIN_HAND) {
+			return new ActionResult<>(EnumActionResult.FAIL, itemstack);
+		} else {
+			ItemStack ammo = InventoryUtils.asA(itemstack, ammoClass);
+
+			if ((ammo != null) && !ammo.isEmpty()) {
+				player.setActiveHand(handIn);
+				return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
+			} else {
+				// out of ammo.  FAIL.
+				return new ActionResult<>(EnumActionResult.FAIL, itemstack);
+			}
 		}
 	}
 
-	/** add final affect to the location */
 	@Override
-	protected void handleRemovePosition(World world, BlockPos pos) {
-		world.setBlockState(pos, Blocks.AIR.getDefaultState());
-		BlockPos above = pos.up();
-		if (world.getBlockState(above).getBlock() == aboveEffectBlock) {
-			world.setBlockToAir(above);
+	public void onPlayerStoppedUsing(ItemStack ammo, World world, EntityLivingBase entityLiving, int timeLeft) {
+		EntityPlayer player = (EntityPlayer) entityLiving;
+		if (player.getActiveHand() == EnumHand.MAIN_HAND) {
+			if ((ammo != null) && !ammo.isEmpty()) {
+				player.setActiveHand(EnumHand.MAIN_HAND);
+				ammo.grow(-1);
+				player.swingArm(EnumHand.MAIN_HAND);
+//			int soundNumber = player.world.rand.nextInt(EMPSounds.length);
+//			SoundEvent sound = EMPSounds[soundNumber];
+//			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
+				if (!world.isRemote) {
+					try {
+
+						Constructor<? extends EntityThrowable> constructor =
+								projectileClass.getConstructor(World.class, EntityPlayer.class, EnumHand.class);
+						EntityThrowable projectile = (EntityThrowable) constructor.newInstance(world, player, EnumHand.MAIN_HAND);
+						projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f,
+								getShotVelocity(ammo, timeLeft), INACCURACY);
+						world.spawnEntity(projectile);
+					} catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+					}
+				}
+			} else {
+				// out of ammo && not the main hand.  FAIL.
+				// can this even happen?
+			}
 		}
+	}
+
+	private float getShotVelocity(ItemStack ammo, int timeLeft) {
+		// calculate velocity based on percentage of MaxItemUseDuration button held
+		int itemDuration = getMaxItemUseDuration(ammo);
+		int timeUsed = itemDuration - timeLeft;
+		int timeCharged = Math.min(timeToCharge, timeUsed);
+		float result = maxVelocity * ((float) timeCharged / (float) timeToCharge);
+		result = Math.max(result, minVelocity);
+		return result;
+	}
+
+	@Override
+	public int getMaxItemUseDuration(ItemStack stack) {
+		return 72000;
 	}
 
 	@Setting
-	public static float getMinVelocity() {
-		return minVelocity;
+	public String getLowerBlock() {
+		return effectBlock.getRegistryName().toString();
 	}
 
 	@Setting
@@ -164,6 +203,55 @@ public class ThorHammer extends GenericBlockGun implements HackFMLEventListener 
 	@Setting
 	public static int getTimeToCharge() {
 		return timeToCharge;
+	}
+
+	private static class ThorHammerSnakeEffect implements SnakeEffect.SnakeEffectImpl {
+		@Override
+		public Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d currentPos, Vec3d stepSize) {
+			Vec3d abovePos = currentPos.addVector(0.0d, 1.0d, 0.0d);
+			Vec3d forwardPos = currentPos.add(stepSize);
+			Vec3d belowPos = currentPos.subtract(0.0d, 1.0d, 0.0d);
+			Vec3d nextPos;
+			if (isSolid(world, abovePos) && !prevPos.contains(SnakeEffect.toBlockPos(abovePos))) {
+				nextPos = abovePos;
+			} else if (isSolid(world, forwardPos)) {
+				nextPos = forwardPos;
+			} else if (isSolid(world, belowPos)) {
+				nextPos = belowPos;
+			} else {
+				// we can't move.  We're stuck.  So stop messing around and finish
+				nextPos = null;
+			}
+
+			// we know where we want to go.  Check if we can go there.
+			if (nextPos != null && isBreakable(world, nextPos)) {
+				return nextPos;
+			} else {
+				return null;
+			}
+		}
+
+		/** add initial affect to location. */
+		@Override
+		public void handleAddPosition(World world, BlockPos pos) {
+			// turn block to magma and set it on fire.
+			world.setBlockState(pos, effectBlock.getDefaultState());
+			BlockPos above = pos.up();
+			if (world.getBlockState(above).getMaterial() == Material.AIR) {
+				world.setBlockState(above, aboveEffectBlock.getDefaultState());
+			}
+		}
+
+		/** add final affect to the location */
+		@Override
+		public void handleRemovePosition(World world, BlockPos pos) {
+			world.setBlockState(pos, Blocks.AIR.getDefaultState());
+			BlockPos above = pos.up();
+			if (world.getBlockState(above).getBlock() == aboveEffectBlock) {
+				world.setBlockToAir(above);
+			}
+		}
+
 	}
 
 	@Setting
@@ -261,79 +349,5 @@ public class ThorHammer extends GenericBlockGun implements HackFMLEventListener 
 	@Setting
 	public static void setTimeToCharge(int timeToCharge) {
 		ThorHammer.timeToCharge = timeToCharge;
-	}
-
-	//----------------------------------------------------------------------------------------------------
-	// Handle throwing hammer
-	//----------------------------------------------------------------------------------------------------
-	@Override
-	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand handIn) {
-		ItemStack itemstack = player.getHeldItem(EnumHand.MAIN_HAND);
-		if (handIn != EnumHand.MAIN_HAND) {
-			return new ActionResult<>(EnumActionResult.FAIL, itemstack);
-		} else {
-			ItemStack ammo = InventoryUtils.asA(itemstack, ammoClass);
-
-			if ((ammo != null) && !ammo.isEmpty()) {
-				player.setActiveHand(handIn);
-				return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
-			} else {
-				// out of ammo.  FAIL.
-				return new ActionResult<>(EnumActionResult.FAIL, itemstack);
-			}
-		}
-	}
-
-	@Override
-	public void onPlayerStoppedUsing(ItemStack ammo, World world, EntityLivingBase entityLiving, int timeLeft) {
-		EntityPlayer player = (EntityPlayer) entityLiving;
-		if (player.getActiveHand() == EnumHand.MAIN_HAND) {
-			if ((ammo != null) && !ammo.isEmpty()) {
-				player.setActiveHand(EnumHand.MAIN_HAND);
-				ammo.grow(-1);
-				player.swingArm(EnumHand.MAIN_HAND);
-//			int soundNumber = player.world.rand.nextInt(EMPSounds.length);
-//			SoundEvent sound = EMPSounds[soundNumber];
-//			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
-				if (!world.isRemote) {
-					try {
-
-						Constructor<? extends EntityThrowable> constructor =
-								projectileClass.getConstructor(World.class, EntityPlayer.class, EnumHand.class);
-						EntityThrowable projectile = (EntityThrowable) constructor.newInstance(world, player, EnumHand.MAIN_HAND);
-						projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f,
-								getShotVelocity(ammo, timeLeft), INACCURACY);
-						world.spawnEntity(projectile);
-					} catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-					}
-				}
-			} else {
-				// out of ammo && not the main hand.  FAIL.
-				// can this even happen?
-			}
-		}
-	}
-
-	private float getShotVelocity(ItemStack ammo, int timeLeft) {
-		// calculate velocity based on percentage of MaxItemUseDuration button held
-		int itemDuration = getMaxItemUseDuration(ammo);
-		int timeUsed = itemDuration - timeLeft;
-		int timeCharged = Math.min(timeToCharge, timeUsed);
-		float result = maxVelocity * ((float) timeCharged / (float) timeToCharge);
-		result = Math.max(result, minVelocity);
-		return result;
-	}
-
-	@Override
-	public int getMaxItemUseDuration(ItemStack stack) {
-		return 72000;
-	}
-
-	//----------------------------------------------------------------------------------------------------
-	// Settings
-	//----------------------------------------------------------------------------------------------------
-	@Setting
-	public String getLowerBlock() {
-		return effectBlock.getRegistryName().toString();
 	}
 }
