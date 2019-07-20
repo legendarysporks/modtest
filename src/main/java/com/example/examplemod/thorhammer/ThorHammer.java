@@ -72,6 +72,9 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 		ThorHammerProjectile.registerModEntity();
 	}
 
+	//----------------------------------------------------------------------------------------------------
+	// Handle smashing block with hammer
+	//----------------------------------------------------------------------------------------------------
 	private static boolean isSolid(World w, Vec3d v) {
 		// water, and air are not solid
 		IBlockState state = w.getBlockState(SnakeEffect.toBlockPos(v));
@@ -84,21 +87,10 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 		return isBreakable(world, SnakeEffect.toBlockPos(v));
 	}
 
-	//----------------------------------------------------------------------------------------------------
-	// Settings
-	//----------------------------------------------------------------------------------------------------
-	@Setting
-	public static float getMinVelocity() {
-		return minVelocity;
-	}
-
 	private static boolean isBreakable(World world, BlockPos pos) {
 		return world.getBlockState(pos).getBlockHardness(world, pos) >= 0;
 	}
 
-	//----------------------------------------------------------------------------------------------------
-	// Handle smashing block with hammer
-	//----------------------------------------------------------------------------------------------------
 	@Override
 	public boolean onBlockDestroyed(ItemStack stack, World worldIn, IBlockState state, BlockPos pos, EntityLivingBase entityLiving) {
 		if (!worldIn.isRemote) {
@@ -113,6 +105,101 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 			return super.onBlockDestroyed(stack, worldIn, state, pos, entityLiving);
 		}
 	}
+
+	private static class ThorHammerSnakeEffect implements SnakeEffect.SnakeEffectImpl {
+		@Override
+		public Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d currentPos, Vec3d stepSize) {
+			Vec3d abovePos = currentPos.addVector(0.0d, 1.0d, 0.0d);
+			Vec3d forwardPos = currentPos.add(stepSize);
+			Vec3d belowPos = currentPos.subtract(0.0d, 1.0d, 0.0d);
+			Vec3d nextPos;
+			if (isSolid(world, abovePos) && !prevPos.contains(SnakeEffect.toBlockPos(abovePos))) {
+				nextPos = abovePos;
+			} else if (isSolid(world, forwardPos)) {
+				nextPos = forwardPos;
+			} else if (isSolid(world, belowPos)) {
+				nextPos = belowPos;
+			} else {
+				// we can't move.  We're stuck.  So stop messing around and finish
+				nextPos = null;
+			}
+
+			// we know where we want to go.  Check if we can go there.
+			if (nextPos != null && isBreakable(world, nextPos)) {
+				return nextPos;
+			} else {
+				return null;
+			}
+		}
+
+		/** add initial affect to location. */
+		@Override
+		public void handleAddPosition(World world, BlockPos pos) {
+			// turn block to magma and set it on fire.
+			world.setBlockState(pos, effectBlock.getDefaultState());
+			BlockPos above = pos.up();
+			if (world.getBlockState(above).getMaterial() == Material.AIR) {
+				world.setBlockState(above, aboveEffectBlock.getDefaultState());
+			}
+		}
+
+		/** add final affect to the location */
+		@Override
+		public void handleRemovePosition(World world, BlockPos pos) {
+			world.setBlockState(pos, Blocks.AIR.getDefaultState());
+			BlockPos above = pos.up();
+			if (world.getBlockState(above).getBlock() == aboveEffectBlock) {
+				world.setBlockToAir(above);
+			}
+		}
+
+	}
+
+	@Setting
+	public String getLowerBlock() {
+		return effectBlock.getRegistryName().toString();
+	}
+
+	@Setting
+	public void setLowerBlock(String blockName) throws InvalidValueException {
+		Block b = Block.getBlockFromName(blockName);
+		if (b != null) {
+			effectBlock = b;
+		} else {
+			throw new InvalidValueException("lowerBlock", blockName, "Not a block");
+		}
+	}
+
+	@Setting
+	public String getUpperBlock() {
+		return aboveEffectBlock.getRegistryName().toString();
+	}
+
+	@Setting
+	public void setUpperBlock(String blockName) throws InvalidValueException {
+		Block b = Block.getBlockFromName(blockName);
+		if (b != null) {
+			aboveEffectBlock = b;
+		} else {
+			throw new InvalidValueException("upperBlock", blockName, "Not a block");
+		}
+	}
+
+	@Setting
+	public String getAmmoItem() {
+		return ammoClass.getName();
+	}
+
+	@Setting
+	public void setAmmoItem(String ammo) throws InvalidValueException {
+		Class<? extends Item> clazz = ClassUtils.findItemClass(ammo);
+		if (clazz != null) {
+			ammoClass = clazz;
+		} else {
+			throw new InvalidValueException("ammoItem", ammo, "Not an item");
+		}
+	}
+
 
 	//----------------------------------------------------------------------------------------------------
 	// Handle throwing hammer
@@ -181,8 +268,8 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	}
 
 	@Setting
-	public String getLowerBlock() {
-		return effectBlock.getRegistryName().toString();
+	public static float getMinVelocity() {
+		return minVelocity;
 	}
 
 	@Setting
@@ -205,93 +292,19 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 		return timeToCharge;
 	}
 
-	private static class ThorHammerSnakeEffect implements SnakeEffect.SnakeEffectImpl {
-		@Override
-		public Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d currentPos, Vec3d stepSize) {
-			Vec3d abovePos = currentPos.addVector(0.0d, 1.0d, 0.0d);
-			Vec3d forwardPos = currentPos.add(stepSize);
-			Vec3d belowPos = currentPos.subtract(0.0d, 1.0d, 0.0d);
-			Vec3d nextPos;
-			if (isSolid(world, abovePos) && !prevPos.contains(SnakeEffect.toBlockPos(abovePos))) {
-				nextPos = abovePos;
-			} else if (isSolid(world, forwardPos)) {
-				nextPos = forwardPos;
-			} else if (isSolid(world, belowPos)) {
-				nextPos = belowPos;
-			} else {
-				// we can't move.  We're stuck.  So stop messing around and finish
-				nextPos = null;
-			}
-
-			// we know where we want to go.  Check if we can go there.
-			if (nextPos != null && isBreakable(world, nextPos)) {
-				return nextPos;
-			} else {
-				return null;
-			}
-		}
-
-		/** add initial affect to location. */
-		@Override
-		public void handleAddPosition(World world, BlockPos pos) {
-			// turn block to magma and set it on fire.
-			world.setBlockState(pos, effectBlock.getDefaultState());
-			BlockPos above = pos.up();
-			if (world.getBlockState(above).getMaterial() == Material.AIR) {
-				world.setBlockState(above, aboveEffectBlock.getDefaultState());
-			}
-		}
-
-		/** add final affect to the location */
-		@Override
-		public void handleRemovePosition(World world, BlockPos pos) {
-			world.setBlockState(pos, Blocks.AIR.getDefaultState());
-			BlockPos above = pos.up();
-			if (world.getBlockState(above).getBlock() == aboveEffectBlock) {
-				world.setBlockToAir(above);
-			}
-		}
-
+	@Setting
+	public static void setTimeToCharge(int timeToCharge) {
+		ThorHammer.timeToCharge = timeToCharge;
 	}
 
 	@Setting
-	public void setLowerBlock(String blockName) throws InvalidValueException {
-		Block b = Block.getBlockFromName(blockName);
-		if (b != null) {
-			effectBlock = b;
-		} else {
-			throw new InvalidValueException("lowerBlock", blockName, "Not a block");
-		}
+	public int getBounces() {
+		return ThorHammerProjectile.getBounces();
 	}
 
 	@Setting
-	public String getUpperBlock() {
-		return aboveEffectBlock.getRegistryName().toString();
-	}
-
-	@Setting
-	public void setUpperBlock(String blockName) throws InvalidValueException {
-		Block b = Block.getBlockFromName(blockName);
-		if (b != null) {
-			aboveEffectBlock = b;
-		} else {
-			throw new InvalidValueException("upperBlock", blockName, "Not a block");
-		}
-	}
-
-	@Setting
-	public String getAmmoItem() {
-		return ammoClass.getName();
-	}
-
-	@Setting
-	public void setAmmoItem(String ammo) throws InvalidValueException {
-		Class<? extends Item> clazz = ClassUtils.findItemClass(ammo);
-		if (clazz != null) {
-			ammoClass = clazz;
-		} else {
-			throw new InvalidValueException("ammoItem", ammo, "Not an item");
-		}
+	public void setBounces(int bounces) {
+		ThorHammerProjectile.setBounces(bounces);
 	}
 
 	@Setting
@@ -327,16 +340,6 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	}
 
 	@Setting
-	public int getBounces() {
-		return ThorHammerProjectile.getBounces();
-	}
-
-	@Setting
-	public void setBounces(int bounces) {
-		ThorHammerProjectile.setBounces(bounces);
-	}
-
-	@Setting
 	public String getSparkle() {
 		return ThorHammerProjectile.getSparkleType();
 	}
@@ -344,10 +347,5 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	@Setting
 	public void setSparkle(String sparkleName) throws InvalidValueException {
 		ThorHammerProjectile.setSparkleType(sparkleName);
-	}
-
-	@Setting
-	public static void setTimeToCharge(int timeToCharge) {
-		ThorHammer.timeToCharge = timeToCharge;
 	}
 }

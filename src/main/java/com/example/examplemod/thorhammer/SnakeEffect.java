@@ -26,6 +26,10 @@ public class SnakeEffect {
 	private long crashStepDurationInTicks = Math.round(crashAffectDurationInTicks / crashRange);
 	private SnakeEffectImpl impl;
 
+	public SnakeEffect(SnakeEffectImpl impl) {
+		this.impl = impl;
+	}
+
 	//----------------------------------------------------------------------------------------
 	// subclass interface
 
@@ -41,12 +45,35 @@ public class SnakeEffect {
 	//   handleRemovePosition - cleanup any positions that haven't been cleaned up yet
 	//   handleFinishPosition
 
-	public SnakeEffect(SnakeEffectImpl impl) {
-		this.impl = impl;
+	/** clients should call this to start the snake affects */
+	public void startAffect(World world, BlockPos start, BlockPos finish) {
+		if (activeAffects.isEmpty()) {
+			MinecraftForge.EVENT_BUS.register(this);
+		}
+		activeAffects.add(new BlockGunAffect(world, start, finish));
 	}
 
-	public static BlockPos toBlockPos(Vec3d v) {
-		return new BlockPos(v.x, v.y, v.z);
+	public interface SnakeEffectImpl {
+		/** Called once when the affect starts */
+		default void handleStartPosition(World world, BlockPos pos) {
+		}
+
+		/** Return the next position or null if done affecting new locations */
+		default Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d lastPos, Vec3d stepSize) {
+			return lastPos.add(stepSize);
+		}
+
+		/** add initial affect to location.  Return true if the affect should continue going */
+		default void handleAddPosition(World world, BlockPos pos) {
+		}
+
+		/** cleanup affect previously at the given location */
+		default void handleRemovePosition(World world, BlockPos pos) {
+		}
+
+		/** add final affect to the location */
+		default void handleFinishPosition(World world, BlockPos pos) {
+		}
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -94,45 +121,19 @@ public class SnakeEffect {
 		this.crashTrailLength = crashTrailLength;
 	}
 
+	//----------------------------------------------------------------------------------------
+	// utility functions
+
+	public static BlockPos toBlockPos(Vec3d v) {
+		return new BlockPos(v.x, v.y, v.z);
+	}
+
 	public static Vec3d toVec3d(BlockPos p) {
 		return new Vec3d(p.getX(), p.getY(), p.getZ());
 	}
 
 	//----------------------------------------------------------------------------------------
-	// utility functions
-
-	/** Subclasses should call this to start the gun shot affects */
-	public void startAffect(World world, BlockPos start, BlockPos finish) {
-		if (activeAffects.isEmpty()) {
-			MinecraftForge.EVENT_BUS.register(this);
-		}
-		activeAffects.add(new BlockGunAffect(world, start, finish));
-	}
-
-	public interface SnakeEffectImpl {
-		/** Called once when the affect starts */
-		default void handleStartPosition(World world, BlockPos pos) {
-		}
-
-		/** Return the next position or null if done affecting new locations */
-		default Vec3d calculateNextPosition(World world, Collection<BlockPos> prevPos, Vec3d lastPos, Vec3d stepSize) {
-			return lastPos.add(stepSize);
-		}
-
-		/** add initial affect to location.  Return true if the affect should continue going */
-		default void handleAddPosition(World world, BlockPos pos) {
-		}
-
-		/** cleanup affect previously at the given location */
-		default void handleRemovePosition(World world, BlockPos pos) {
-		}
-
-		/** add final affect to the location */
-		default void handleFinishPosition(World world, BlockPos pos) {
-		}
-	}
-
-	//----------------------------------------------------------------------------------------
+	// animation routines
 
 	/** tick.  Deal with affect */
 	@SubscribeEvent
