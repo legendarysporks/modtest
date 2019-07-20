@@ -37,8 +37,10 @@ public class ThorHammer extends GenericBlockGun implements HackFMLEventListener 
 	private static Block aboveEffectBlock = Blocks.FIRE;
 	private static Class<? extends EntityThrowable> projectileClass = ThorHammerProjectile.class;
 	private static Class<? extends Item> ammoClass = ThorHammer.class;
-	private static float VELOCITY = 1.0f;
-	private static float INACCURACY = 0.0f;
+	private static final float INACCURACY = 0.0f;
+	private static float minVelocity = 0.5f;
+	private static float maxVelocity = 2.0f;
+	private static int timeToCharge = 20 * 5;
 
 	public ThorHammer(String name) {
 		super(name, COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES);
@@ -59,6 +61,9 @@ public class ThorHammer extends GenericBlockGun implements HackFMLEventListener 
 	}
 
 
+	//----------------------------------------------------------------------------------------------------
+	// Handle smashing block with hammer
+	//----------------------------------------------------------------------------------------------------
 	private static boolean isSolid(World w, Vec3d v) {
 		// water, and air are not solid
 		IBlockState state = w.getBlockState(toBlockPos(v));
@@ -137,8 +142,28 @@ public class ThorHammer extends GenericBlockGun implements HackFMLEventListener 
 	}
 
 	@Setting
-	public String getLowerBlock() {
-		return effectBlock.getRegistryName().toString();
+	public static float getMinVelocity() {
+		return minVelocity;
+	}
+
+	@Setting
+	public static void setMinVelocity(float minVelocity) {
+		ThorHammer.minVelocity = minVelocity;
+	}
+
+	@Setting
+	public static float getMaxVelocity() {
+		return maxVelocity;
+	}
+
+	@Setting
+	public static void setMaxVelocity(float maxVelocity) {
+		ThorHammer.maxVelocity = maxVelocity;
+	}
+
+	@Setting
+	public static int getTimeToCharge() {
+		return timeToCharge;
 	}
 
 	@Setting
@@ -233,36 +258,82 @@ public class ThorHammer extends GenericBlockGun implements HackFMLEventListener 
 		ThorHammerProjectile.setSparkleType(sparkleName);
 	}
 
-	/**
-	 * Called when the equipped item is right clicked.
-	 */
+	@Setting
+	public static void setTimeToCharge(int timeToCharge) {
+		ThorHammer.timeToCharge = timeToCharge;
+	}
+
+	//----------------------------------------------------------------------------------------------------
+	// Handle throwing hammer
+	//----------------------------------------------------------------------------------------------------
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand handIn) {
-		ItemStack itemstack = player.getHeldItem(handIn);
-		ItemStack ammo = InventoryUtils.findInInventory(player, ammoClass);
+		ItemStack itemstack = player.getHeldItem(EnumHand.MAIN_HAND);
+		if (handIn != EnumHand.MAIN_HAND) {
+			return new ActionResult<>(EnumActionResult.FAIL, itemstack);
+		} else {
+			ItemStack ammo = InventoryUtils.asA(itemstack, ammoClass);
 
-		if ((ammo != null) && !ammo.isEmpty()) {
-			player.setActiveHand(handIn);
-			ammo.grow(-1);
-			player.swingArm(handIn);
+			if ((ammo != null) && !ammo.isEmpty()) {
+				player.setActiveHand(handIn);
+				return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
+			} else {
+				// out of ammo.  FAIL.
+				return new ActionResult<>(EnumActionResult.FAIL, itemstack);
+			}
+		}
+	}
+
+	@Override
+	public void onPlayerStoppedUsing(ItemStack ammo, World world, EntityLivingBase entityLiving, int timeLeft) {
+		EntityPlayer player = (EntityPlayer) entityLiving;
+		if (player.getActiveHand() == EnumHand.MAIN_HAND) {
+			if ((ammo != null) && !ammo.isEmpty()) {
+				player.setActiveHand(EnumHand.MAIN_HAND);
+				ammo.grow(-1);
+				player.swingArm(EnumHand.MAIN_HAND);
 //			int soundNumber = player.world.rand.nextInt(EMPSounds.length);
 //			SoundEvent sound = EMPSounds[soundNumber];
 //			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
-			if (!world.isRemote) {
-				try {
-					Constructor<? extends EntityThrowable> constructor =
-							projectileClass.getConstructor(World.class, EntityPlayer.class, EnumHand.class);
-					EntityThrowable projectile = (EntityThrowable) constructor.newInstance(world, player, handIn);
-					projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f, VELOCITY, INACCURACY);
-					world.spawnEntity(projectile);
-				} catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-					return new ActionResult<>(EnumActionResult.FAIL, itemstack);
+				if (!world.isRemote) {
+					try {
+
+						Constructor<? extends EntityThrowable> constructor =
+								projectileClass.getConstructor(World.class, EntityPlayer.class, EnumHand.class);
+						EntityThrowable projectile = (EntityThrowable) constructor.newInstance(world, player, EnumHand.MAIN_HAND);
+						projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f,
+								getShotVelocity(ammo, timeLeft), INACCURACY);
+						world.spawnEntity(projectile);
+					} catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+					}
 				}
+			} else {
+				// out of ammo && not the main hand.  FAIL.
+				// can this even happen?
 			}
-			return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
-		} else {
-			// out of ammo.  FAIL.
-			return new ActionResult<>(EnumActionResult.FAIL, itemstack);
 		}
+	}
+
+	private float getShotVelocity(ItemStack ammo, int timeLeft) {
+		// calculate velocity based on percentage of MaxItemUseDuration button held
+		int itemDuration = getMaxItemUseDuration(ammo);
+		int timeUsed = itemDuration - timeLeft;
+		int timeCharged = Math.min(timeToCharge, timeUsed);
+		float result = maxVelocity * ((float) timeCharged / (float) timeToCharge);
+		result = Math.max(result, minVelocity);
+		return result;
+	}
+
+	@Override
+	public int getMaxItemUseDuration(ItemStack stack) {
+		return 72000;
+	}
+
+	//----------------------------------------------------------------------------------------------------
+	// Settings
+	//----------------------------------------------------------------------------------------------------
+	@Setting
+	public String getLowerBlock() {
+		return effectBlock.getRegistryName().toString();
 	}
 }

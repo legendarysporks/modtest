@@ -27,7 +27,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 	private static final int LIFETIME_TICKS = 20;
 	private static final float EXPLOSION_STRENGTH = 1.75F;
 	private static final float DAMAGE = 100f;
-	private static final float CATCH_DISTANCE = 2.0f;
+	private static final float CATCH_DISTANCE = 1.0f;
 	// provide some reference to the renderer so it's class is loaded/constructed/registered
 	private static final RendererHelper renderer = ThorHammerProjectileRenderer.proxy;
 	private static Block replacementBlock = Blocks.FIRE;
@@ -170,12 +170,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 		if (!world.isRemote) {
 			if (result.typeOfHit == RayTraceResult.Type.ENTITY) {
 				if (result.entityHit == getThrower()) {
-					EntityPlayer player = (EntityPlayer) getThrower();
-					ItemStack itemstack = player.getHeldItem(handIn);
-					// Note that this will trash whatever was in this hand if it wasn't empty.
-					// Thor's hammer waits for no hand.
-					player.setHeldItem(handIn, new ItemStack(ModItems.thor_hammer));
-					setDead();
+					catchHammer((EntityPlayer) getThrower());
 					exlosionStrength = 0;
 				} else {
 					result.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), DAMAGE);
@@ -189,12 +184,17 @@ public class ThorHammerProjectile extends EntityThrowable {
 
 	private void reverseDirection() {
 		if (!world.isRemote && !isDead) {
-			if (bouncesRemaining-- > 0) {
-				// we still have bouncing to do
-				shoot(-x, -y, -z, velocity, inaccuracy);
-			} else if ((this.getThrower() != null) && this.getThrower().getDistance(this) > CATCH_DISTANCE) {
-				// we're done bouncing and not within catch distance of the thrower.
-				explode();
+			if (this.getThrower() != null && this.getThrower().getDistance(this) <= CATCH_DISTANCE) {
+				// we're within the catch distance.
+				catchHammer((EntityPlayer) this.getThrower());
+			} else {
+				if (bouncesRemaining-- > 0) {
+					// we still have bouncing to do
+					shoot(-x, -y, -z, velocity, inaccuracy);
+				} else {
+					// don't know who the throw is, so BOOM!
+					explode();
+				}
 			}
 		}
 	}
@@ -205,6 +205,13 @@ public class ThorHammerProjectile extends EntityThrowable {
 		} else {
 			Sparkles.yay(world, posX, posY, posZ, sparkleType);
 		}
+		setDead();
+	}
+
+	public void catchHammer(EntityPlayer player) {
+		// Note that this will trash whatever was in this hand if it wasn't empty.
+		// Thor's hammer waits for no hand.
+		player.setHeldItem(player.getActiveHand(), new ItemStack(ModItems.thor_hammer));
 		setDead();
 	}
 }

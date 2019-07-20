@@ -52,7 +52,15 @@ public class InventoryUtils {
 		}
 	}
 
-	private static boolean isA(ItemStack stack, Class<? extends Item> itemClass) {
+	public static ItemStack asA(ItemStack stack, Class<? extends Item> itemClass) {
+		if (isA(stack, itemClass)) {
+			return stack;
+		} else {
+			return null;
+		}
+	}
+
+	public static boolean isA(ItemStack stack, Class<? extends Item> itemClass) {
 		return itemClass.isInstance(stack.getItem());
 	}
 }
