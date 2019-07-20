@@ -24,7 +24,9 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.Event;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -51,7 +53,8 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 		setMaxStackSize(1);
 		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES)
 				.addTargetWithPersitentSettings(this, COMMAND_NAME, CONFIG_VERSION)
-				.addTargetWithPersitentSettings(snakeEffect, SnakeEffect.COMMAND_NAME, SnakeEffect.CONFIG_VERSION);
+				.addTargetWithPersitentSettings(snakeEffect,
+						COMMAND_NAME + "-" + SnakeEffect.COMMAND_NAME, SnakeEffect.CONFIG_VERSION);
 		subscribeToFMLEvents();
 	}
 
@@ -60,7 +63,8 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 		setMaxStackSize(1);
 		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES)
 				.addTargetWithPersitentSettings(this, COMMAND_NAME, CONFIG_VERSION)
-				.addTargetWithPersitentSettings(snakeEffect, SnakeEffect.COMMAND_NAME, SnakeEffect.CONFIG_VERSION);
+				.addTargetWithPersitentSettings(snakeEffect,
+						COMMAND_NAME + "-" + SnakeEffect.COMMAND_NAME, SnakeEffect.CONFIG_VERSION);
 		subscribeToFMLEvents();
 	}
 
@@ -92,14 +96,16 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	}
 
 	@Override
-	public boolean onBlockDestroyed(ItemStack stack, World worldIn, IBlockState state, BlockPos pos, EntityLivingBase entityLiving) {
+	public boolean onBlockDestroyed(ItemStack stack, World worldIn, IBlockState state, BlockPos pos,
+			EntityLivingBase entityLiving) {
 		if (!worldIn.isRemote) {
 			// get direction player is looking (normalized)
 			Vec3d lookVec = entityLiving.getLookVec();
 			// extend that to maximum range of gun
 			Vec3d finishDistance = lookVec.scale(snakeEffect.getCrashRange());
 			// start the affect from start to finish
-			snakeEffect.startAffect(worldIn, pos, new BlockPos(pos.getX() + finishDistance.x, pos.getY(), pos.getZ() + finishDistance.z));
+			snakeEffect.startAffect(worldIn, pos,
+					new BlockPos(pos.getX() + finishDistance.x, pos.getY(), pos.getZ() + finishDistance.z));
 			return false;
 		} else {
 			return super.onBlockDestroyed(stack, worldIn, state, pos, entityLiving);
@@ -214,6 +220,7 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 
 			if ((ammo != null) && !ammo.isEmpty()) {
 				player.setActiveHand(handIn);
+				WindUpEvent.postEvent(getTimeToCharge());
 				return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
 			} else {
 				// out of ammo.  FAIL.
@@ -235,7 +242,7 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 //			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
 				if (!world.isRemote) {
 					try {
-
+						ThrowEvent.postEvent();
 						Constructor<? extends EntityThrowable> constructor =
 								projectileClass.getConstructor(World.class, EntityPlayer.class, EnumHand.class);
 						EntityThrowable projectile = (EntityThrowable) constructor.newInstance(world, player, EnumHand.MAIN_HAND);
@@ -347,5 +354,23 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	@Setting
 	public void setSparkle(String sparkleName) throws InvalidValueException {
 		ThorHammerProjectile.setSparkleType(sparkleName);
+	}
+
+	public static class WindUpEvent extends Event {
+		public final int chargeDuration;
+
+		public WindUpEvent(int chargeDuration) {
+			this.chargeDuration = chargeDuration;
+		}
+
+		public static void postEvent(int chargeDuration) {
+			MinecraftForge.EVENT_BUS.post(new WindUpEvent(chargeDuration));
+		}
+	}
+
+	public static class ThrowEvent extends Event {
+		public static void postEvent() {
+			MinecraftForge.EVENT_BUS.post(new ThrowEvent());
+		}
 	}
 }

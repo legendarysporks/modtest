@@ -4,10 +4,14 @@ import com.example.examplemod.utilities.commands.*;
 import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.passive.*;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -24,16 +28,16 @@ public class ExplodingAnimals implements HackFMLEventListener {
 	private static final String CONFIG_VERSION = "0.1";
 	private static final TriggerInfo[] triggers = {
 			new TriggerInfo("chicken", EntityChicken.class),
-			new TriggerInfo("cow", EntityCow.class),
+			new TriggerInfo("cow", EntityCow.class, "minecraft:beef", "evansmod:emp_round"),
 			new TriggerInfo("donkey", EntityDonkey.class),
 			new TriggerInfo("horse", EntityHorse.class),
 			new TriggerInfo("llama", EntityLlama.class),
 			new TriggerInfo("mule", EntityMule.class),
 			new TriggerInfo("ocelot", EntityOcelot.class),
-			new TriggerInfo("pig", EntityPig.class),
+			new TriggerInfo("pig", EntityPig.class, "minecraft:cake", "minecraft:portchop"),
 			new TriggerInfo("parrot", EntityParrot.class),
 			new TriggerInfo("rabbit", EntityRabbit.class),
-			new TriggerInfo("sheep", EntitySheep.class),
+			new TriggerInfo("sheep", EntitySheep.class, "minecraft:mutton", "evansmod:raw_uru"),
 			new TriggerInfo("wolf", EntityWolf.class),
 	};
 	private static final HashMap<Class<? extends EntityAnimal>, TriggerInfo> typeToInfoMap = new HashMap<>();
@@ -74,6 +78,19 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		TriggerInfo trigger = typeToInfoMap.get(target.getClass());
 		if (trigger != null) {
 			trigger.handleAttach(world, event.getEntityPlayer(), (EntityAnimal) target);
+		}
+	}
+
+	@SubscribeEvent
+	public void onEvent(LivingDropsEvent event) {
+		Entity entity = event.getEntity();
+		TriggerInfo triggerInfo = typeToInfoMap.get(entity.getClass());
+		if ((triggerInfo != null) && triggerInfo.hasDrops()) {
+			event.getDrops().clear();
+			for (ItemStack stack : triggerInfo.getDrops()) {
+				event.getDrops().add(new EntityItem(entity.getEntityWorld(), entity.posX,
+						entity.posY, entity.posZ, stack));
+			}
 		}
 	}
 
@@ -170,9 +187,15 @@ public class ExplodingAnimals implements HackFMLEventListener {
 		public boolean smoking;
 		@Setting
 		public boolean enabled;
-		public SettingAccessor settings;
+		public final SettingAccessor settings;
+		private final List<ItemStack> drops;
+		private final String[] dropNames;
 
 		public TriggerInfo(String animalName, Class<? extends EntityAnimal> animal) {
+			this(animalName, animal, new String[0]);
+		}
+
+		public TriggerInfo(String animalName, Class<? extends EntityAnimal> animal, String... dropNames) {
 			name = animalName;
 			enabled = true;
 			targerAnimal = animal;
@@ -181,6 +204,24 @@ public class ExplodingAnimals implements HackFMLEventListener {
 			explosionDamage = defaultDamage;
 			smoking = defaultSmoking;
 			settings = new SettingAccessor(this);
+			drops = new ArrayList<>();
+			this.dropNames = dropNames;
+		}
+
+		public boolean hasDrops() {
+			return dropNames.length > 0;
+		}
+
+		public List<ItemStack> getDrops() {
+			if (drops.size() != dropNames.length) {
+				for (String dropName : dropNames) {
+					Item item = Item.getByNameOrId(dropName);
+					if (item != null) {
+						drops.add(new ItemStack(item));
+					}
+				}
+			}
+			return drops;
 		}
 
 		public void handleAttach(World world, EntityPlayer player, EntityAnimal animal) {

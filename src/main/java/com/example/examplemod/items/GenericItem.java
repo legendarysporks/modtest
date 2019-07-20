@@ -45,6 +45,7 @@ public class GenericItem extends Item {
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event) {
 		for (GenericItem i : items.values()) {
+			//TODO hey jf - could this just call register() or maybe pass the entire collection?
 			event.getRegistry().registerAll(i);
 			Logging.logTrace(i.getRegistryName() + ".registerItems");
 		}

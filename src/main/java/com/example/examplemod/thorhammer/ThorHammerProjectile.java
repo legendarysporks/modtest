@@ -184,7 +184,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 
 	private void reverseDirection() {
 		if (!world.isRemote && !isDead) {
-			if (this.getThrower() != null && this.getThrower().getDistance(this) <= CATCH_DISTANCE) {
+			if (getThrower() != null && this.getThrower().getDistance(this) <= CATCH_DISTANCE) {
 				// we're within the catch distance.
 				catchHammer((EntityPlayer) this.getThrower());
 			} else {
