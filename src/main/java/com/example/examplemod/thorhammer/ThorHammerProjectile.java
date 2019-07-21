@@ -16,6 +16,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
@@ -30,7 +31,8 @@ public class ThorHammerProjectile extends EntityThrowable {
 	private static final float CATCH_DISTANCE = 1.0f;
 	// provide some reference to the renderer so it's class is loaded/constructed/registered
 	private static final RendererHelper renderer = ThorHammerProjectileRenderer.proxy;
-	private static Block replacementBlock = Blocks.FIRE;
+	private static Block replacementBlock = Blocks.AIR;
+	private static EnumParticleTypes replacementEffect = EnumParticleTypes.LAVA;
 	private static int bounces = 1;
 	private static EnumParticleTypes sparkleType = EnumParticleTypes.FLAME;
 
@@ -64,16 +66,29 @@ public class ThorHammerProjectile extends EntityThrowable {
 				true);
 	}
 
-	public static String getDestroyedAffectBlock() {
+	public static String getDamageBlock() {
 		return replacementBlock.getRegistryName().toString();
 	}
 
-	public static void setDestroyedAffectBlock(String blockName) throws InvalidValueException {
+	public static void setDamageBlock(String blockName) throws InvalidValueException {
 		Block b = Block.getBlockFromName(blockName);
 		if (b != null) {
 			replacementBlock = b;
 		} else {
 			throw new InvalidValueException("destroyedAffectBlock", blockName, "Block not found");
+		}
+	}
+
+	public static String getDamageAffect() {
+		return replacementEffect.getParticleName();
+	}
+
+	public static void setDamageAffect(String replacementAffectName) throws InvalidValueException {
+		EnumParticleTypes newType = EnumParticleTypes.getByName(replacementAffectName);
+		if (newType != null) {
+			replacementEffect = newType;
+		} else {
+			new InvalidValueException("sparkleType", replacementAffectName, "Unknown particle type");
 		}
 	}
 
@@ -85,11 +100,11 @@ public class ThorHammerProjectile extends EntityThrowable {
 		bounces = newBounces;
 	}
 
-	public static String getSparkleType() {
+	public static String getSparkle() {
 		return sparkleType.getParticleName();
 	}
 
-	public static void setSparkleType(String newSparkleTypeName) throws InvalidValueException {
+	public static void setSparkle(String newSparkleTypeName) throws InvalidValueException {
 		EnumParticleTypes newType = EnumParticleTypes.getByName(newSparkleTypeName);
 		if (newType != null) {
 			sparkleType = newType;
@@ -107,7 +122,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 		compound.setDouble(Reference.MODID + "ThorHammerProjectile.z", z);
 		compound.setFloat(Reference.MODID + "ThorHammerProjectile.velocity", velocity);
 		compound.setFloat(Reference.MODID + "ThorHammerProjectile.inaccuracy", inaccuracy);
-		compound.setString(Reference.MODID + "ThorHammerProjectile.replacementBlock", getDestroyedAffectBlock());
+		compound.setString(Reference.MODID + "ThorHammerProjectile.replacementBlock", getDamageBlock());
 	}
 
 	/**
@@ -123,7 +138,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 		velocity = compound.getFloat(Reference.MODID + "ThorHammerProjectile.velocity");
 		inaccuracy = compound.getFloat(Reference.MODID + "ThorHammerProjectile.inaccuracy");
 		try {
-			setDestroyedAffectBlock(compound.getString(Reference.MODID + "ThorHammerProjectile.replacementBlock"));
+			setDamageBlock(compound.getString(Reference.MODID + "ThorHammerProjectile.replacementBlock"));
 		} catch (InvalidValueException e) {
 			// just ignore this.  Nothing we can do.
 		}
@@ -169,18 +184,20 @@ public class ThorHammerProjectile extends EntityThrowable {
 				MISS
 		 */
 
-		if (!world.isRemote) {
-			if (result.typeOfHit == RayTraceResult.Type.ENTITY) {
-				if (result.entityHit == getThrower()) {
-					catchHammer((EntityPlayer) getThrower());
-					exlosionStrength = 0;
-				} else {
-					result.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), DAMAGE);
-				}
-			} else if (result.typeOfHit == RayTraceResult.Type.BLOCK) {
-				world.setBlockState(result.getBlockPos(), replacementBlock.getDefaultState());
-			} else if (result.typeOfHit == RayTraceResult.Type.MISS) {
+		if (result.typeOfHit == RayTraceResult.Type.ENTITY) {
+			if (result.entityHit == getThrower()) {
+				catchHammer((EntityPlayer) getThrower());
+				exlosionStrength = 0;
+			} else {
+				result.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), DAMAGE);
 			}
+		} else if (result.typeOfHit == RayTraceResult.Type.BLOCK) {
+			BlockPos pos = result.getBlockPos();
+			world.setBlockState(pos, replacementBlock.getDefaultState());
+			if (replacementBlock == Blocks.AIR) {
+				Sparkles.yay(world, posX, posY, posZ, replacementEffect);
+			}
+		} else if (result.typeOfHit == RayTraceResult.Type.MISS) {
 		}
 	}
 

@@ -373,21 +373,31 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 
 	@Setting
 	public String getDamageBlock() {
-		return ThorHammerProjectile.getDestroyedAffectBlock();
+		return ThorHammerProjectile.getDamageBlock();
 	}
 
 	@Setting
 	public void setDamageBlock(String blockName) throws InvalidValueException {
-		ThorHammerProjectile.setDestroyedAffectBlock(blockName);
+		ThorHammerProjectile.setDamageBlock(blockName);
+	}
+
+	@Setting
+	public String getDamageAffect() {
+		return ThorHammerProjectile.getDamageAffect();
+	}
+
+	@Setting
+	public void setDamageAffect(String affectName) throws InvalidValueException {
+		ThorHammerProjectile.setDamageAffect(affectName);
 	}
 
 	@Setting
 	public String getSparkle() {
-		return ThorHammerProjectile.getSparkleType();
+		return ThorHammerProjectile.getSparkle();
 	}
 
 	@Setting
 	public void setSparkle(String sparkleName) throws InvalidValueException {
-		ThorHammerProjectile.setSparkleType(sparkleName);
+		ThorHammerProjectile.setSparkle(sparkleName);
 	}
 }
