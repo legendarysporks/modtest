@@ -88,9 +88,9 @@ public class ThorHammerGuiRendererClientSide extends ThorHammerGuiRenderer imple
 		if (ticksLeft != DONT_RENDER) {
 			final int top = 10;
 			final int left = 10;
-			final int color = 0x00FFAA00;
-			final int grey = 0x00211600;
-			final int red = 0x000000FF;
+			final int indicatorColor = 0xFF00BFFF;
+			final int frameColor = 0xFFB0C4DE;
+			final int backgroundColor = 0xFFF0F8FF;
 			final int boxHeight = 5;
 			final int boxWidth = 50;
 
@@ -106,17 +106,20 @@ public class ThorHammerGuiRendererClientSide extends ThorHammerGuiRenderer imple
 			GlStateManager.translate(0, 0, 0);
 			GlStateManager.scale(1, 1, 1);
 			RenderHelper.disableStandardItemLighting();
-			GlStateManager.disableAlpha();
+			GlStateManager.disableBlend();
+			GlStateManager.disableTexture2D();
 
 			//draw box around charge indicator
-			Gui.drawRect(left, top + 1, left + 1, bottom, red);
-			Gui.drawRect(left, top, right + 1, top + 1, red);
-			Gui.drawRect(left, bottom, right + 1, bottom + 1, red);
-			Gui.drawRect(right, top + 1, right + 1, bottom, red);
+			Gui.drawRect(left, top, right, bottom, backgroundColor);
+
+			Gui.drawRect(left - 1, top, left, bottom, frameColor);                //vertical left
+			Gui.drawRect(left - 1, top - 1, right + 1, top, frameColor);          //horizontal top
+			Gui.drawRect(left - 1, bottom, right + 1, bottom + 1, frameColor);    //horizontal bottom
+			Gui.drawRect(right, top, right + 1, bottom, frameColor);              //vertical right
 
 			right = left + boxWidth * ticksUsed / timeToCharge;
 
-			Gui.drawRect(left, top, right, bottom, red);
+			Gui.drawRect(left, top, right, bottom, indicatorColor);
 
 			GlStateManager.popMatrix();
 			GlStateManager.popAttrib();
