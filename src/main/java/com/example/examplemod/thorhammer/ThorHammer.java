@@ -1,8 +1,10 @@
 package com.example.examplemod.thorhammer;
 
+import com.example.examplemod.Reference;
 import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.utilities.ClassUtils;
 import com.example.examplemod.utilities.InventoryUtils;
+import com.example.examplemod.utilities.RendererHelper;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemod.utilities.commands.InvalidValueException;
 import com.example.examplemod.utilities.commands.Setting;
@@ -25,6 +27,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
 
@@ -32,6 +35,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 
+@Mod.EventBusSubscriber(modid = Reference.MODID)
 public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	private static final String COMMAND_NAME = "ThorHammer";
 	private static final String COMMAND_USAGE = "Try /ThorHammer settings";
@@ -39,6 +43,8 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	private static final String CONFIG_VERSION = "0.1";
 	private static Block effectBlock = Blocks.MAGMA;
 	private static Block aboveEffectBlock = Blocks.FIRE;
+	// provide some reference to the renderer so it's class is loaded/constructed/registered
+	private static final RendererHelper renderer = ThorHammerGuiRenderer.proxy;
 	private static Class<? extends EntityThrowable> projectileClass = ThorHammerProjectile.class;
 	private static Class<? extends Item> ammoClass = ThorHammer.class;
 	private static final float INACCURACY = 0.0f;
