@@ -1,18 +1,15 @@
 package com.example.examplemod.thorhammer;
 
-import com.example.examplemod.Reference;
 import com.example.examplemod.utilities.commands.Setting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.*;
 
-@Mod.EventBusSubscriber(modid = Reference.MODID)
 public class SnakeEffect {
 	public static final String COMMAND_NAME = "SnakeEffect";
 	public static final String COMMAND_USAGE = "Try /SnakeEffect settings";

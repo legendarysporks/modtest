@@ -86,7 +86,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 	}
 
 	public static String getSparkleType() {
-		return sparkleType.toString();
+		return sparkleType.getParticleName();
 	}
 
 	public static void setSparkleType(String newSparkleTypeName) throws InvalidValueException {
@@ -136,7 +136,9 @@ public class ThorHammerProjectile extends EntityThrowable {
 			ticksExisted = 0;
 			reverseDirection();
 		}
-		Sparkles.yay(world, posX, posY, posZ, sparkleType);
+		if (ticksExisted % 5 == 0) { // don't sparkle every tick
+			Sparkles.yay(world, posX, posY, posZ, sparkleType);
+		}
 	}
 
 	@Override

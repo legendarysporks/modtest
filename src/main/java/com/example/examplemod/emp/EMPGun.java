@@ -3,6 +3,7 @@ package com.example.examplemod.emp;
 import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.utilities.InventoryUtils;
 import com.example.examplemod.utilities.RendererHelper;
+import com.example.examplemod.utilities.SoundUtils;
 import com.example.examplemod.utilities.commands.GenericCommand;
 import com.example.examplemod.utilities.commands.Setting;
 import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
@@ -49,7 +50,7 @@ public class EMPGun extends GenericItem implements HackFMLEventListener {
 	@Override
 	public void handleFMLEvent(FMLPreInitializationEvent event) {
 		for (int i = 0; i < EMP_SOUND_NAMES.length; i++) {
-			EMPSounds[i] = createSoundEvent(EMP_SOUND_NAMES[i]);
+			EMPSounds[i] = SoundUtils.createSoundEvent(EMP_SOUND_NAMES[i]);
 		}
 		EMPProjectile.registerModEntity();
 	}

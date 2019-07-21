@@ -13,7 +13,7 @@ import java.util.HashMap;
 public class SoundUtils {
 	private static HashMap<String, SoundEvent> sounds = new HashMap<>();
 
-	protected static SoundEvent createSoundEvent(String soundName) {
+	public static SoundEvent createSoundEvent(String soundName) {
 		final ResourceLocation soundID = new ResourceLocation(Reference.MODID, soundName);
 		SoundEvent result = new SoundEvent(soundID).setRegistryName(soundID);
 		sounds.put(soundName, result);

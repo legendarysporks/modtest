@@ -5,7 +5,6 @@ import com.example.examplemod.utilities.Logging;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -58,20 +57,5 @@ public class GenericItem extends Item {
 					"inventory"));
 			Logging.logInfo(i.getRegistryName() + ".registerRenders");
 		}
-	}
-
-	protected static SoundEvent createSoundEvent(String soundName) {
-		final ResourceLocation soundID = new ResourceLocation(Reference.MODID, soundName);
-		SoundEvent result = new SoundEvent(soundID).setRegistryName(soundID);
-		sounds.put(soundName, result);
-		return result;
-	}
-
-	@SubscribeEvent
-	public static void registerSoundEvents(RegistryEvent.Register<SoundEvent> event) {
-		for (SoundEvent e : sounds.values()) {
-			event.getRegistry().register(e);
-		}
-		sounds.clear();
 	}
 }

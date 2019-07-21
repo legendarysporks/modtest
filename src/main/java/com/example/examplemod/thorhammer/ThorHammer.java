@@ -1,6 +1,5 @@
 package com.example.examplemod.thorhammer;
 
-import com.example.examplemod.Reference;
 import com.example.examplemod.items.GenericItem;
 import com.example.examplemod.utilities.ClassUtils;
 import com.example.examplemod.utilities.InventoryUtils;
@@ -26,16 +25,12 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.Event;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 
-@Mod.EventBusSubscriber(modid = Reference.MODID)
 public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	private static final String COMMAND_NAME = "ThorHammer";
 	private static final String COMMAND_USAGE = "Try /ThorHammer settings";
@@ -48,7 +43,7 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	private static Class<? extends EntityThrowable> projectileClass = ThorHammerProjectile.class;
 	private static Class<? extends Item> ammoClass = ThorHammer.class;
 	private static final float INACCURACY = 0.0f;
-	private static float minVelocity = 0.5f;
+	private static float minVelocity = 0.25f;
 	private static float maxVelocity = 2.0f;
 	private static int timeToCharge = 20 * 5;
 
@@ -58,9 +53,7 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 		super(name);
 		setMaxStackSize(1);
 		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES)
-				.addTargetWithPersitentSettings(this, COMMAND_NAME, CONFIG_VERSION)
-				.addTargetWithPersitentSettings(snakeEffect,
-						COMMAND_NAME + "-" + SnakeEffect.COMMAND_NAME, SnakeEffect.CONFIG_VERSION);
+				.addTargetWithPersitentSettings(this, COMMAND_NAME, CONFIG_VERSION);
 		subscribeToFMLEvents();
 	}
 
@@ -68,9 +61,7 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 		super(name, tab);
 		setMaxStackSize(1);
 		GenericCommand.create(COMMAND_NAME, COMMAND_USAGE, COMMAND_ALIASES)
-				.addTargetWithPersitentSettings(this, COMMAND_NAME, CONFIG_VERSION)
-				.addTargetWithPersitentSettings(snakeEffect,
-						COMMAND_NAME + "-" + SnakeEffect.COMMAND_NAME, SnakeEffect.CONFIG_VERSION);
+				.addTargetWithPersitentSettings(this, COMMAND_NAME, CONFIG_VERSION);
 		subscribeToFMLEvents();
 	}
 
@@ -212,6 +203,46 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 		}
 	}
 
+	@Setting
+	public double getCrashRange() {
+		return snakeEffect.getCrashRange();
+	}
+
+	@Setting
+	public void setCrashRange(double crashRange) {
+		snakeEffect.setCrashRange(crashRange);
+	}
+
+	@Setting
+	public int getCrashDurationTicks() {
+		return snakeEffect.getCrashDurationTicks();
+	}
+
+	@Setting
+	public void setCrashDurationTicks(int affectDurationInTicks) {
+		snakeEffect.setCrashDurationTicks(affectDurationInTicks);
+	}
+
+	@Setting
+	public double getCrashVelocity() {
+		return snakeEffect.getCrashVelocity();
+	}
+
+	@Setting
+	public void setCrashVelocity(double velocity) {
+		snakeEffect.setCrashVelocity(velocity);
+	}
+
+	@Setting
+	public int getCrashTrailLength() {
+		return snakeEffect.getCrashTrailLength();
+	}
+
+	@Setting
+	public void setCrashTrailLength(int crashTrailLength) {
+		snakeEffect.setCrashTrailLength(crashTrailLength);
+	}
+
 
 	//----------------------------------------------------------------------------------------------------
 	// Handle throwing hammer
@@ -226,7 +257,6 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 
 			if ((ammo != null) && !ammo.isEmpty()) {
 				player.setActiveHand(handIn);
-				WindUpEvent.postEvent(getTimeToCharge());
 				return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
 			} else {
 				// out of ammo.  FAIL.
@@ -248,7 +278,6 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 //			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
 				if (!world.isRemote) {
 					try {
-						ThrowEvent.postEvent();
 						Constructor<? extends EntityThrowable> constructor =
 								projectileClass.getConstructor(World.class, EntityPlayer.class, EnumHand.class);
 						EntityThrowable projectile = (EntityThrowable) constructor.newInstance(world, player, EnumHand.MAIN_HAND);
@@ -267,17 +296,17 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 
 	private float getShotVelocity(ItemStack ammo, int timeLeft) {
 		// calculate velocity based on percentage of MaxItemUseDuration button held
-		int itemDuration = getMaxItemUseDuration(ammo);
-		int timeUsed = itemDuration - timeLeft;
-		int timeCharged = Math.min(timeToCharge, timeUsed);
-		float result = maxVelocity * ((float) timeCharged / (float) timeToCharge);
-		result = Math.max(result, minVelocity);
+		float velocityRange = maxVelocity - minVelocity;
+		int maxChargeTime = getTimeToCharge();
+		int timeUsed = maxChargeTime - timeLeft;
+		int timeCharged = Math.min(maxChargeTime, timeUsed);
+		float result = minVelocity + velocityRange * ((float) timeCharged / (float) maxChargeTime);
 		return result;
 	}
 
 	@Override
 	public int getMaxItemUseDuration(ItemStack stack) {
-		return 72000;
+		return getTimeToCharge();
 	}
 
 	@Setting
@@ -360,23 +389,5 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	@Setting
 	public void setSparkle(String sparkleName) throws InvalidValueException {
 		ThorHammerProjectile.setSparkleType(sparkleName);
-	}
-
-	public static class WindUpEvent extends Event {
-		public final int chargeDuration;
-
-		public WindUpEvent(int chargeDuration) {
-			this.chargeDuration = chargeDuration;
-		}
-
-		public static void postEvent(int chargeDuration) {
-			MinecraftForge.EVENT_BUS.post(new WindUpEvent(chargeDuration));
-		}
-	}
-
-	public static class ThrowEvent extends Event {
-		public static void postEvent() {
-			MinecraftForge.EVENT_BUS.post(new ThrowEvent());
-		}
 	}
 }
