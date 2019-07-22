@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 class MethodDispatcher {
-	/** CommandDispatcher deals with command methods for a single instance object */
+	/** MethodDispatcher deals with command methods for a single instance object */
 	private static final String COMMAND_METHOD_PREFIX = "do";
 	private static final String ROOT_COMMAND = COMMAND_METHOD_PREFIX + "it";    //doIt
 	private final Object target;
@@ -84,38 +84,6 @@ class MethodDispatcher {
 			return false;
 		}
 	}
-
-/*	// old execute method that did a complete lookup/dispatch here.  It was split into
-	// three methods so the lookup could be done breadth first across multiple dispatchers
-	// by the command.
-	public boolean execute(MinecraftServer server, ICommandSender sender, String[] args) {
-		World world = sender.getEntityWorld();
-
-		if (!world.isRemote) {
-			MethodInvoker method;
-			if (args.length == 0) {
-				// root command with no arguments
-				method = commands.get(new MethodInvokerKey(1));
-			} else {
-				// check sub commands
-				String possibleCommandMethodName = COMMAND_METHOD_PREFIX + args[0].toLowerCase();
-				method = commands.get(new MethodInvokerKey(possibleCommandMethodName, args.length));
-				if (method == null) {
-					// root command with arguments
-					method = commands.get(new MethodInvokerKey(args.length + 1));
-				}
-			}
-
-			if (method != null) {
-				// we found a matching method for the command and agruments
-				if (method.hasPermission(sender)) {
-					method.invoke(target, sender, args);
-					return true;
-				}
-			}
-		}
-		return false;
-	} */
 
 	public boolean invokeRootCommand(ICommandSender sender, String[] args) {
 		assert args.length == 0;

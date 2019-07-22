@@ -40,7 +40,7 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 	public static GenericCommand create(String name, String usage, String... aliases) {
 		if (moduleCommand == null) {
 			// create a module command when the first command is created.
-			moduleCommand = new GenericCommand(Reference.MODID, "/" + Reference.MODID, Reference.MODCOMMAND);
+			moduleCommand = new GenericCommand(Reference.MODID, "/" + Reference.MODID, Reference.MODCOMMANDALIASES);
 			moduleCommand.addTarget(new ModuleCommand());
 		}
 		GenericCommand cmd = new GenericCommand(name, usage, aliases);
