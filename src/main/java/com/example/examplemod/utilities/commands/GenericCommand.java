@@ -1,5 +1,6 @@
 package com.example.examplemod.utilities.commands;
 
+import com.example.examplemod.Reference;
 import com.example.examplemod.utilities.Logging;
 import com.example.examplemod.utilities.hackfmlevents.HackFMLEventListener;
 import com.google.common.collect.Lists;
@@ -15,7 +16,9 @@ import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import java.util.*;
 
 public class GenericCommand implements ICommand, HackFMLEventListener {
-	private static final int LINE_WRAP_LENGTH = 120;
+	private static final int LINE_WRAP_LENGTH = 160;
+	private static final List<GenericCommand> commands = new ArrayList<>();
+	private static GenericCommand moduleCommand = null;
 	private final List<String> aliasList = new ArrayList<>();
 	private final String usage;
 	private final String name;
@@ -30,8 +33,19 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		subscribeToFMLEvents();
 	}
 
+	public static GenericCommand create(String name, String usage) {
+		return create(name, usage, new String[0]);
+	}
+
 	public static GenericCommand create(String name, String usage, String... aliases) {
-		return new GenericCommand(name, usage, aliases);
+		if (moduleCommand == null) {
+			// create a module command when the first command is created.
+			moduleCommand = new GenericCommand(Reference.MODID, "/" + Reference.MODID, Reference.MODCOMMAND);
+			moduleCommand.addTarget(new ModuleCommand());
+		}
+		GenericCommand cmd = new GenericCommand(name, usage, aliases);
+		commands.add(cmd);
+		return cmd;
 	}
 
 	public static void sendMsg(ICommandSender sender, String msg) {
@@ -233,6 +247,10 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 		return getName().compareTo(o.getName());
 	}
 
+	//----------------------------------------------------------------------------------------------------
+	// basic command line commands
+	//----------------------------------------------------------------------------------------------------
+
 	/* Help for the root command.   Ex. /<name> help */
 	@Command(help = "A command to get help on commands")
 	public void doHelp(ICommandSender sender) {
@@ -300,6 +318,28 @@ public class GenericCommand implements ICommand, HackFMLEventListener {
 			sendMsg(sender, setting + " set to " + value);
 		} catch (Exception e) {
 			sendMsg(sender, e.getMessage());
+		}
+	}
+
+	@Command(help = "List aliases for this command")
+	public void doAliases(ICommandSender sender) {
+		sendMsg(sender, aliasList.toString());
+	}
+
+	//----------------------------------------------------------------------------------------------------
+	// Root module command
+	//----------------------------------------------------------------------------------------------------
+	private static class ModuleCommand {
+		@Command
+		public void doIt(ICommandSender sender) {
+			doHelp(sender);
+		}
+
+		@Command
+		public void doHelp(ICommandSender sender) {
+			for (GenericCommand cmd : commands) {
+				sendMsg(sender, "    " + cmd.getName() + " - " + cmd.getUsage(sender));
+			}
 		}
 	}
 }
