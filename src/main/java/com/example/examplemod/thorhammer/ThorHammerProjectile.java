@@ -7,6 +7,7 @@ import com.example.examplemod.utilities.RendererHelper;
 import com.example.examplemod.utilities.Sparkles;
 import com.example.examplemod.utilities.commands.InvalidValueException;
 import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.init.Blocks;
@@ -159,6 +160,10 @@ public class ThorHammerProjectile extends EntityThrowable {
 	@Override
 	protected float getGravityVelocity() {
 		return GRAVITY;
+	}
+
+	public void throwHammer(Entity entityThrower, float velocity, float inaccuracy) {
+		shoot(entityThrower, entityThrower.rotationPitch, entityThrower.rotationYaw, 0.0f, velocity, inaccuracy);
 	}
 
 	@Override

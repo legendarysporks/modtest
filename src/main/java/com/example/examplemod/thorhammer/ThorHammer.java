@@ -1,7 +1,6 @@
 package com.example.examplemod.thorhammer;
 
 import com.example.examplemod.items.GenericItem;
-import com.example.examplemod.utilities.ClassUtils;
 import com.example.examplemod.utilities.InventoryUtils;
 import com.example.examplemod.utilities.RendererHelper;
 import com.example.examplemod.utilities.commands.GenericCommand;
@@ -12,12 +11,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
@@ -27,8 +23,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 
 public class ThorHammer extends GenericItem implements HackFMLEventListener {
@@ -40,8 +34,6 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	private static Block aboveEffectBlock = Blocks.FIRE;
 	// provide some reference to the renderer so it's class is loaded/constructed/registered
 	private static final RendererHelper renderer = ThorHammerGuiRenderer.proxy;
-	private static Class<? extends EntityThrowable> projectileClass = ThorHammerProjectile.class;
-	private static Class<? extends Item> ammoClass = ThorHammer.class;
 	private static final float INACCURACY = 0.0f;
 	private static float minVelocity = 0.25f;
 	private static float maxVelocity = 2.0f;
@@ -189,21 +181,6 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	}
 
 	@Setting
-	public String getAmmoItem() {
-		return ammoClass.getName();
-	}
-
-	@Setting
-	public void setAmmoItem(String ammo) throws InvalidValueException {
-		Class<? extends Item> clazz = ClassUtils.findItemClass(ammo);
-		if (clazz != null) {
-			ammoClass = clazz;
-		} else {
-			throw new InvalidValueException("ammoItem", ammo, "Not an item");
-		}
-	}
-
-	@Setting
 	public double getCrashRange() {
 		return snakeEffect.getCrashRange();
 	}
@@ -253,7 +230,7 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 		if (handIn != EnumHand.MAIN_HAND) {
 			return new ActionResult<>(EnumActionResult.FAIL, itemstack);
 		} else {
-			ItemStack ammo = InventoryUtils.asA(itemstack, ammoClass);
+			ItemStack ammo = InventoryUtils.asA(itemstack, ThorHammer.class);
 
 			if ((ammo != null) && !ammo.isEmpty()) {
 				player.setActiveHand(handIn);
@@ -277,15 +254,9 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 //			SoundEvent sound = EMPSounds[soundNumber];
 //			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
 				if (!world.isRemote) {
-					try {
-						Constructor<? extends EntityThrowable> constructor =
-								projectileClass.getConstructor(World.class, EntityPlayer.class, EnumHand.class);
-						EntityThrowable projectile = (EntityThrowable) constructor.newInstance(world, player, EnumHand.MAIN_HAND);
-						projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0f,
-								getShotVelocity(ammo, timeLeft), INACCURACY);
-						world.spawnEntity(projectile);
-					} catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-					}
+					ThorHammerProjectile hammerProjectile = new ThorHammerProjectile(world, player, EnumHand.MAIN_HAND);
+					hammerProjectile.throwHammer(player, getShotVelocity(ammo, timeLeft), INACCURACY);
+					world.spawnEntity(hammerProjectile);
 				}
 			} else {
 				// out of ammo && not the main hand.  FAIL.
@@ -347,28 +318,6 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 	@Setting
 	public void setBounces(int bounces) {
 		ThorHammerProjectile.setBounces(bounces);
-	}
-
-	@Setting
-	public String getProjectileEntity() {
-		return projectileClass.getName();
-	}
-
-	@Setting
-	public void setProjectileEntity(String blockName) throws InvalidValueException {
-		Class<? extends Entity> projClazz = ClassUtils.findEntityClass(blockName, EntityThrowable.class);
-		if (projClazz != null) {
-			Class<? extends EntityThrowable> projEntityClass = (Class<? extends EntityThrowable>) projClazz;
-			try {
-				projEntityClass.getConstructor(World.class, EntityLivingBase.class);
-				projectileClass = projEntityClass;
-			} catch (NoSuchMethodException e) {
-				// doesn't have the required constructor
-				throw new InvalidValueException("projectileEntity", blockName, "Entity with proper constructor not found");
-			}
-		} else {
-			throw new InvalidValueException("projectileEntity", blockName, "EntityThrowable not found");
-		}
 	}
 
 	@Setting
