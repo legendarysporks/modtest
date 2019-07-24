@@ -45,7 +45,7 @@ public class ThorHammerProjectileRendererClientSide extends RendererHelper.Clien
 			GL11.glPushMatrix();
 			bindTexture(texture);
 			GL11.glTranslated(x, y, z);
-			GL11.glRotatef(180, 0, 0, 0);
+			GL11.glRotatef(180, 0, 0, 1);
 
 //			model.render(entity, (float)x, (float)y, (float)z, 0.0F, 0.0F, 1.0f/16.0f);
 			model.renderHammer(1.0f / 16.0f);
