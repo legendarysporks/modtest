@@ -194,7 +194,9 @@ public class ThorHammerProjectile extends EntityThrowable {
 				catchHammer((EntityPlayer) getThrower());
 				exlosionStrength = 0;
 			} else {
+				Entity victim = result.entityHit;
 				result.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), DAMAGE);
+				world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, victim.posX, victim.posY, victim.posZ, 1.0D, 0.0D, 0.0D);
 			}
 		} else if (result.typeOfHit == RayTraceResult.Type.BLOCK) {
 			BlockPos pos = result.getBlockPos();
