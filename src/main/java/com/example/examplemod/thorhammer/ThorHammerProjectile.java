@@ -20,9 +20,11 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 
 public class ThorHammerProjectile extends EntityThrowable {
+	private static final String NBT_TAG = Reference.MODID + ".ThorHammerProjectile";
 	private static final String NAME = "thor_hammer_projectile";
 	private static final int ID = 121;
 	private static final float GRAVITY = 0.0f;
@@ -67,6 +69,9 @@ public class ThorHammerProjectile extends EntityThrowable {
 				true);
 	}
 
+	//----------------------------------------------------------------------------------------------------
+	// for use by @Settings methods
+	//----------------------------------------------------------------------------------------------------
 	public static String getDamageBlock() {
 		return replacementBlock.getRegistryName().toString();
 	}
@@ -89,7 +94,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 		if (newType != null) {
 			replacementEffect = newType;
 		} else {
-			new InvalidValueException("sparkleType", replacementAffectName, "Unknown particle type");
+			throw new InvalidValueException("sparkleType", replacementAffectName, "Unknown particle type");
 		}
 	}
 
@@ -110,20 +115,18 @@ public class ThorHammerProjectile extends EntityThrowable {
 		if (newType != null) {
 			sparkleType = newType;
 		} else {
-			new InvalidValueException("sparkleType", newSparkleTypeName, "Unknown particle type");
+			throw new InvalidValueException("sparkleType", newSparkleTypeName, "Unknown particle type");
 		}
 	}
 
-	public void writeEntityToNBT(NBTTagCompound compound) {
-		super.writeEntityToNBT(compound);
-		compound.setInteger(Reference.MODID + "ThorHammerProjectile.bouncesRemaining", bouncesRemaining);
-		compound.setString(Reference.MODID + "ThorHammerProjectile.handIn", handIn.toString());
-		compound.setDouble(Reference.MODID + "ThorHammerProjectile.x", x);
-		compound.setDouble(Reference.MODID + "ThorHammerProjectile.y", y);
-		compound.setDouble(Reference.MODID + "ThorHammerProjectile.z", z);
-		compound.setFloat(Reference.MODID + "ThorHammerProjectile.velocity", velocity);
-		compound.setFloat(Reference.MODID + "ThorHammerProjectile.inaccuracy", inaccuracy);
-		compound.setString(Reference.MODID + "ThorHammerProjectile.replacementBlock", getDamageBlock());
+	//----------------------------------------------------------------------------------------------------
+	// Client/Server syncing and persistence
+	//----------------------------------------------------------------------------------------------------
+
+	public NBTTagCompound writeToNBT(NBTTagCompound entityCompound) {
+		super.writeEntityToNBT(entityCompound);
+		entityCompound.setTag(NBT_TAG, writeLocalDataToNBT(new NBTTagCompound()));
+		return entityCompound;
 	}
 
 	/**
@@ -131,18 +134,44 @@ public class ThorHammerProjectile extends EntityThrowable {
 	 */
 	public void readEntityFromNBT(NBTTagCompound compound) {
 		super.readEntityFromNBT(compound);
-		bouncesRemaining = compound.getInteger(Reference.MODID + "ThorHammerProjectile.bouncesRemaining");
-		handIn = EnumHand.valueOf(compound.getString(Reference.MODID + "ThorHammerProjectile.handIn"));
-		x = compound.getDouble(Reference.MODID + "ThorHammerProjectile.x");
-		y = compound.getDouble(Reference.MODID + "ThorHammerProjectile.y");
-		z = compound.getDouble(Reference.MODID + "ThorHammerProjectile.z");
-		velocity = compound.getFloat(Reference.MODID + "ThorHammerProjectile.velocity");
-		inaccuracy = compound.getFloat(Reference.MODID + "ThorHammerProjectile.inaccuracy");
+		if (compound.hasKey(NBT_TAG, Constants.NBT.TAG_COMPOUND)) {
+			readLocalDataFromNBT(compound.getCompoundTag(NBT_TAG));
+		}
+	}
+
+	protected NBTTagCompound writeLocalDataToNBT(NBTTagCompound compound) {
+		compound.setInteger("bouncesRemaining", bouncesRemaining);
+		compound.setString("handIn", handIn.toString());
+		compound.setDouble("x", x);
+		compound.setDouble("y", y);
+		compound.setDouble("z", z);
+		compound.setFloat("velocity", velocity);
+		compound.setFloat("inaccuracy", inaccuracy);
+		compound.setString("replacementBlock", getDamageBlock());
+		return compound;
+	}
+
+	protected void readLocalDataFromNBT(NBTTagCompound compound) {
+		bouncesRemaining = compound.getInteger("bouncesRemaining");
+		handIn = EnumHand.valueOf(compound.getString("handIn"));
+		x = compound.getDouble("x");
+		y = compound.getDouble("y");
+		z = compound.getDouble("z");
+		velocity = compound.getFloat("velocity");
+		inaccuracy = compound.getFloat("inaccuracy");
 		try {
-			setDamageBlock(compound.getString(Reference.MODID + "ThorHammerProjectile.replacementBlock"));
+			setDamageBlock(compound.getString("replacementBlock"));
 		} catch (InvalidValueException e) {
 			// just ignore this.  Nothing we can do.
 		}
+	}
+
+	//----------------------------------------------------------------------------------------------------
+	// Behavior
+	//----------------------------------------------------------------------------------------------------
+
+	public void throwHammer(Entity entityThrower, float velocity, float inaccuracy) {
+		shoot(entityThrower, entityThrower.rotationPitch, entityThrower.rotationYaw, 0.0f, velocity, inaccuracy);
 	}
 
 	@Override
@@ -160,10 +189,6 @@ public class ThorHammerProjectile extends EntityThrowable {
 	@Override
 	protected float getGravityVelocity() {
 		return GRAVITY;
-	}
-
-	public void throwHammer(Entity entityThrower, float velocity, float inaccuracy) {
-		shoot(entityThrower, entityThrower.rotationPitch, entityThrower.rotationYaw, 0.0f, velocity, inaccuracy);
 	}
 
 	@Override
@@ -191,12 +216,12 @@ public class ThorHammerProjectile extends EntityThrowable {
 
 		if (result.typeOfHit == RayTraceResult.Type.ENTITY) {
 			if (result.entityHit == getThrower()) {
-				catchHammer((EntityPlayer) getThrower());
+				catchHammer((EntityPlayer) result.entityHit);
 				exlosionStrength = 0;
 			} else {
-				Entity victim = result.entityHit;
 				result.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), DAMAGE);
-				//world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, victim.posX, victim.posY, victim.posZ, 1.0D, 0.0D, 0.0D);
+//				Entity victim = result.entityHit;
+//				world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, victim.posX, victim.posY, victim.posZ, 1.0D, 0.0D, 0.0D);
 			}
 		} else if (result.typeOfHit == RayTraceResult.Type.BLOCK) {
 			BlockPos pos = result.getBlockPos();
@@ -204,7 +229,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 			if (replacementBlock == Blocks.AIR) {
 				Sparkles.yay(world, posX, posY, posZ, replacementEffect);
 			}
-		} else if (result.typeOfHit == RayTraceResult.Type.MISS) {
+//		} else if (result.typeOfHit == RayTraceResult.Type.MISS) {
 		}
 	}
 
@@ -234,7 +259,7 @@ public class ThorHammerProjectile extends EntityThrowable {
 		setDead();
 	}
 
-	public void catchHammer(EntityPlayer player) {
+	private void catchHammer(EntityPlayer player) {
 		// Note that this will trash whatever was in this hand if it wasn't empty.
 		// Thor's hammer waits for no hand.
 		player.setHeldItem(player.getActiveHand(), new ItemStack(ModItems.thor_hammer));
