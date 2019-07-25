@@ -34,25 +34,35 @@ public class ThorHammerGuiRendererClientSide extends ThorHammerGuiRenderer imple
 
 	@SubscribeEvent
 	public void onUseItem(LivingEntityUseItemEvent.Start event) {
-		timeToCharge = event.getDuration();
-		ticksLeft = event.getDuration();
-	}
-
-	@SubscribeEvent
-	public void onUseItem(LivingEntityUseItemEvent.Tick event) {
-		if (ticksLeft > 0) {
-			ticksLeft--;
+		if (isThorHammerEvent(event)) {
+			timeToCharge = event.getDuration();
+			ticksLeft = event.getDuration();
 		}
 	}
 
-	@SubscribeEvent
-	public void onUseItem(LivingEntityUseItemEvent.Stop event) {
-		ticksLeft = DONT_RENDER;
+	@SubscribeEvent(receiveCanceled = true)
+	public void onUseItem(LivingEntityUseItemEvent.Tick event) {
+		if (isThorHammerEvent(event)) {
+			if (event.isCanceled()) {
+				ticksLeft = DONT_RENDER;
+			} else if (ticksLeft > 0) {
+				ticksLeft--;
+			}
+		}
 	}
 
-	@SubscribeEvent
+	@SubscribeEvent(receiveCanceled = true)
+	public void onUseItem(LivingEntityUseItemEvent.Stop event) {
+		if (isThorHammerEvent(event)) {
+			ticksLeft = DONT_RENDER;
+		}
+	}
+
+	@SubscribeEvent(receiveCanceled = true)
 	public void onUseItem(LivingEntityUseItemEvent.Finish event) {
-		ticksLeft = DONT_RENDER;
+		if (isThorHammerEvent(event)) {
+			ticksLeft = DONT_RENDER;
+		}
 	}
 
 	//	@SubscribeEvent
@@ -124,5 +134,9 @@ public class ThorHammerGuiRendererClientSide extends ThorHammerGuiRenderer imple
 			GlStateManager.popMatrix();
 			GlStateManager.popAttrib();
 		}
+	}
+
+	private boolean isThorHammerEvent(LivingEntityUseItemEvent event) {
+		return event.getItem().getItem() instanceof ThorHammer;
 	}
 }

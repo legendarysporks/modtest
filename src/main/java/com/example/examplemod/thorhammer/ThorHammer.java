@@ -19,6 +19,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -254,7 +255,9 @@ public class ThorHammer extends GenericItem implements HackFMLEventListener {
 //			SoundEvent sound = EMPSounds[soundNumber];
 //			world.playSound(player, player.getPosition(), sound, SoundCategory.PLAYERS, 1.0f, 1.0f);
 				if (!world.isRemote) {
-					ThorHammerProjectile hammerProjectile = new ThorHammerProjectile(world, player, EnumHand.MAIN_HAND);
+					Vec2f pitchYaw = entityLiving.getPitchYaw();
+					ThorHammerProjectile hammerProjectile = new ThorHammerProjectile(world, player, EnumHand.MAIN_HAND,
+							pitchYaw.x, pitchYaw.y);
 					hammerProjectile.throwHammer(player, getShotVelocity(ammo, timeLeft), INACCURACY);
 					world.spawnEntity(hammerProjectile);
 				}

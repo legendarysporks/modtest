@@ -6,6 +6,7 @@ import com.example.examplemod.init.ModItems;
 import com.example.examplemod.utilities.RendererHelper;
 import com.example.examplemod.utilities.Sparkles;
 import com.example.examplemod.utilities.commands.InvalidValueException;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,8 +23,9 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
-public class ThorHammerProjectile extends EntityThrowable {
+public class ThorHammerProjectile extends EntityThrowable implements IEntityAdditionalSpawnData {
 	private static final String NBT_TAG = Reference.MODID + ".ThorHammerProjectile";
 	private static final String NAME = "thor_hammer_projectile";
 	private static final int ID = 121;
@@ -41,6 +43,8 @@ public class ThorHammerProjectile extends EntityThrowable {
 
 	private int bouncesRemaining = bounces;
 	private EnumHand handIn;
+	private float initialPitch;
+	private float initialYaw;
 	private double x;
 	private double y;
 	private double z;
@@ -52,9 +56,11 @@ public class ThorHammerProjectile extends EntityThrowable {
 		super(world);
 	}
 
-	public ThorHammerProjectile(World world, EntityPlayer entity, EnumHand handIn) {
+	public ThorHammerProjectile(World world, EntityPlayer entity, EnumHand handIn, float pitch, float yaw) {
 		super(world, entity);
 		this.handIn = handIn;
+		this.initialPitch = pitch;
+		this.initialYaw = yaw;
 	}
 
 	public static void registerModEntity() {
@@ -72,6 +78,14 @@ public class ThorHammerProjectile extends EntityThrowable {
 	//----------------------------------------------------------------------------------------------------
 	// for use by @Settings methods
 	//----------------------------------------------------------------------------------------------------
+	public float getInitialPitch() {
+		return initialPitch;
+	}
+
+	public float getInitialYaw() {
+		return initialYaw;
+	}
+
 	public static String getDamageBlock() {
 		return replacementBlock.getRegistryName().toString();
 	}
@@ -122,6 +136,16 @@ public class ThorHammerProjectile extends EntityThrowable {
 	//----------------------------------------------------------------------------------------------------
 	// Client/Server syncing and persistence
 	//----------------------------------------------------------------------------------------------------
+
+	public void writeSpawnData(ByteBuf buffer) {
+		buffer.writeFloat(initialPitch);
+		buffer.writeFloat(initialYaw);
+	}
+
+	public void readSpawnData(ByteBuf buffer) {
+		initialPitch = buffer.readFloat();
+		initialYaw = buffer.readFloat();
+	}
 
 	public NBTTagCompound writeToNBT(NBTTagCompound entityCompound) {
 		super.writeEntityToNBT(entityCompound);

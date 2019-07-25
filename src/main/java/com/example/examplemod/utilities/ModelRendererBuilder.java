@@ -191,20 +191,6 @@ public class ModelRendererBuilder {
 			return builder;
 		}
 
-		public static void addChildRenderer(ModelRenderer parent, ModelRenderer child) {
-			// move child rotation point to be relative to parent
-			child.rotationPointX -= parent.rotationPointX;
-			child.rotationPointY -= parent.rotationPointY;
-			child.rotationPointZ -= parent.rotationPointZ;
-			// make rotations relative to parent
-			child.rotateAngleX -= parent.rotateAngleX;
-			child.rotateAngleY -= parent.rotateAngleY;
-			child.rotateAngleZ -= parent.rotateAngleZ;
-			// create relationship
-			parent.addChild(child);
-		}
-
-
 		/*
 
 			private static Vec3f angleCrap(float pitchDegrees, float yawDegrees) {
@@ -259,5 +245,18 @@ public class ModelRendererBuilder {
 
 
 		 */
+	}
+
+	public static void addChildRenderer(ModelRenderer parent, ModelRenderer child) {
+		// move child rotation point to be relative to parent
+		child.rotationPointX -= parent.rotationPointX;
+		child.rotationPointY -= parent.rotationPointY;
+		child.rotationPointZ -= parent.rotationPointZ;
+		// make rotations relative to parent
+		child.rotateAngleX -= parent.rotateAngleX;
+		child.rotateAngleY -= parent.rotateAngleY;
+		child.rotateAngleZ -= parent.rotateAngleZ;
+		// create relationship
+		parent.addChild(child);
 	}
 }
