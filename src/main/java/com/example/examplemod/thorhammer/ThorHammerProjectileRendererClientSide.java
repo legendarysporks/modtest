@@ -30,11 +30,11 @@ public class ThorHammerProjectileRendererClientSide extends RendererHelper.Clien
 	}
 
 	private static class Renderer extends Render<ThorHammerProjectile> {
-		private Model3 model;
+		private HammerModel model;
 
 		public Renderer(RenderManager manager) {
 			super(manager);
-			model = new Model3();
+			model = new HammerModel();
 		}
 
 		@Override
@@ -71,101 +71,62 @@ public class ThorHammerProjectileRendererClientSide extends RendererHelper.Clien
 		}
 	}
 
-	private static class Model3 extends ModelBase {
-		public ModelRenderer shape0;
+	private static class HammerModel extends ModelBase {
 		public ModelRenderer shape1;
 		public ModelRenderer shape2;
-		public ModelRenderer shape3;
+		public ModelRenderer baseShape;
 		public ModelRenderer shape4;
 
-		public Model3() {
+		public HammerModel() {
 			textureWidth = 66;
 			textureHeight = 66;
 
-			if (false) {
-				this.shape2 = new ModelRenderer(this, 0, 24);
-				this.shape2.setRotationPoint(0.0F, 3.0F, 0.0F);
-				this.shape2.addBox(-5.0F, -4.0F, -6.0F, 10, 8, 12, true);
-				this.setRotateAngle(shape2, 0.0F, 0.0f, 0.0F);
-				this.shape3 = new ModelRenderer(this, 0, 44);
-				this.shape3.setRotationPoint(0.0F, 3.0F, 0.0F);
-				this.shape3.addBox(-4.0F, -5.0F, -6.0F, 8, 10, 12, true);
-				this.setRotateAngle(shape3, 0.0F, 0.0f, 0.0F);
-				this.shape1 = new ModelRenderer(this, 0, 0);
-				this.shape1.setRotationPoint(0.0F, 16.0F, 0.0F);
-				this.shape1.addBox(-1.0F, -8.0F, -1.0F, 2, 16, 2, true);
-				this.setRotateAngle(shape1, 0.0F, 0.0f, 0.0F);
-				this.shape4 = new ModelRenderer(this, 8, 0);
-				this.shape4.setRotationPoint(0.0F, 3.0F, 0.0F);
-				this.shape4.addBox(-4.0F, -4.0F, -8.0F, 8, 8, 16, true);
-				this.setRotateAngle(shape4, 0.0F, 0.0f, 0.0F);
-			} else if (true) {
-				shape2 = new ModelRenderer(this, 0, 24);
-				shape2.setRotationPoint(0.0F, 3.0F, 0.0F);
-				shape2.addBox(-5.0F, -4.0F, -6.0F, 10, 8, 12, true);
-				setRotateAngle(shape2, 0.0F, 0.0f, 0.0F);
-				shape3 = new ModelRenderer(this, 0, 44);
-				shape3.setRotationPoint(0.0F, 3.0F, 0.0F);
-				shape3.addBox(-4.0F, -5.0F, -6.0F, 8, 10, 12, true);
-				setRotateAngle(shape3, 0.0F, 0.0f, 0.0F);
-				shape1 = new ModelRenderer(this, 0, 0);
-				shape1.setRotationPoint(0.0F, 16.0F, 0.0F);
-				shape1.addBox(-1.0F, -8.0F, -1.0F, 2, 16, 2, true);
-				setRotateAngle(shape1, 0.0F, 0.0f, 0.0F);
-				shape4 = new ModelRenderer(this, 8, 0);
-				shape4.setRotationPoint(0.0F, 3.0F, 0.0F);
-				shape4.addBox(-4.0F, -4.0F, -8.0F, 8, 8, 16, true);
-				setRotateAngle(shape4, 0.0F, 0.0f, 0.0F);
-				ModelRendererBuilder.addChildRenderer(shape3, shape1);
-				shape1 = null;
-				ModelRendererBuilder.addChildRenderer(shape3, shape2);
-				shape2 = null;
-				ModelRendererBuilder.addChildRenderer(shape3, shape4);
-				shape4 = null;
-			} else if (true) {
-				shape2 = ModelRendererBuilder.model(this)
-						.textureOffset(0, 24)
-						.rotationPoint(0.0F, 3.0F, 0.0F)
-						.box()
-						.at(-5.0F, -4.0F, -6.0F)
-						.sizedTo(10, 8, 12)
-						.rotation(0.0F, 0.39269908169872414F, 0.0F)
-						.create();
+			shape2 = ModelRendererBuilder.model(this)
+					.textureOffset(0, 24)
+					.rotationPoint(0.0F, 3.0F, 0.0F)
+					.box()
+					.at(-5.0F, -4.0F, -6.0F)
+					.sizedTo(10, 8, 12)
+					.rotation(0.0F, 0.39269908169872414F, 0.0F)
+					.create();
 
-				shape3 = ModelRendererBuilder.model(this)
-						.textureOffset(0, 44)
-						.rotationPoint(0.0F, 3.0F, 0.0F)
-						.box()
-						.at(-4.0F, -5.0F, -6.0F)
-						.sizedTo(8, 10, 12)
-						.rotation(0.0F, 0.39269908169872414F, 0.0F)
-						.create();
+			baseShape = ModelRendererBuilder.model(this)
+					.textureOffset(0, 44)
+					.rotationPoint(0.0F, 3.0F, 0.0F)
+					.box()
+					.at(-4.0F, -5.0F, -6.0F)
+					.sizedTo(8, 10, 12)
+					.rotation(0.0F, 0.39269908169872414F, 0.0F)
+					.create();
 
-				shape1 = ModelRendererBuilder.model(this)
-						.textureOffset(0, 0)
-						.rotationPoint(0.0F, 16.0F, 0.0F)
-						.box()
-						.at(-1.0F, -8.0F, -1.0F)
-						.sizedTo(2, 16, 2)
-						.rotation(0.0F, 0.39269908169872414F, 0.0F)
-						.create();
+			shape1 = ModelRendererBuilder.model(this)
+					.textureOffset(0, 0)
+					.rotationPoint(0.0F, 16.0F, 0.0F)
+					.box()
+					.at(-1.0F, -8.0F, -1.0F)
+					.sizedTo(2, 16, 2)
+					.rotation(0.0F, 0.39269908169872414F, 0.0F)
+					.create();
 
-				shape4 = ModelRendererBuilder.model(this)
-						.textureOffset(8, 0)
-						.rotationPoint(0.0F, 3.0F, 0.0F)
-						.box()
-						.at(-4.0F, -4.0F, -8.0F)
-						.sizedTo(8, 8, 16)
-						.rotation(0.0F, 0.39269908169872414F, 0.0F)
-						.create();
-			}
+			shape4 = ModelRendererBuilder.model(this)
+					.textureOffset(8, 0)
+					.rotationPoint(0.0F, 3.0F, 0.0F)
+					.box()
+					.at(-4.0F, -4.0F, -8.0F)
+					.sizedTo(8, 8, 16)
+					.rotation(0.0F, 0.39269908169872414F, 0.0F)
+					.create();
+
+			ModelRendererBuilder.addChildRenderer(baseShape, shape1);
+			shape1 = null;
+			ModelRendererBuilder.addChildRenderer(baseShape, shape2);
+			shape2 = null;
+			ModelRendererBuilder.addChildRenderer(baseShape, shape4);
+			shape4 = null;
 		}
 
 		public void renderHammer(float f5) {
-			if (shape2 != null) shape2.render(f5);
-			if (shape3 != null) shape3.render(f5);
-			if (shape1 != null) shape1.render(f5);
-			if (shape4 != null) shape4.render(f5);
+			baseShape.render(f5);
 		}
 
 		@Override

@@ -81,6 +81,7 @@ public class ModelRendererBuilder {
 
 		private BoxBuilder(Builder builder) {
 			this.builder = builder;
+			reset();
 		}
 
 		public BoxBuilder set(float xPos, float yPos, float zPos, int xSize, int ySize, int zSize) {
@@ -160,25 +161,33 @@ public class ModelRendererBuilder {
 		}
 
 		public BoxBuilder box() {
+			// flush the current box under construction
 			builder.renderer.addBox(xPos, yPos, zPos, xSize, ySize, zSize, true);
+			reset();
+			return this;
+		}
+
+		private void reset() {
 			xPos = 0;
 			yPos = 0;
 			zPos = 0;
 			xSize = 0;
 			ySize = 0;
 			zSize = 0;
-			return this;
 		}
 
 		public Builder textureOffset(int x, int y) {
+			box();
 			return builder.textureOffset(x, y);
 		}
 
 		public Builder rotationPoint(float x, float y, float z) {
+			box();
 			return builder.rotationPoint(x, y, z);
 		}
 
 		public Builder rotation(float x, float y, float z) {
+			box();
 			return builder.rotation(x, y, z);
 		}
 
