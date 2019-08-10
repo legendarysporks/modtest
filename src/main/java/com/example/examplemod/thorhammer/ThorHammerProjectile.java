@@ -169,6 +169,8 @@ public class ThorHammerProjectile extends EntityThrowable implements IEntityAddi
 		compound.setDouble("x", x);
 		compound.setDouble("y", y);
 		compound.setDouble("z", z);
+		compound.setFloat("initialPitch", initialPitch);
+		compound.setFloat("initialYaw", initialYaw);
 		compound.setFloat("velocity", velocity);
 		compound.setFloat("inaccuracy", inaccuracy);
 		compound.setString("replacementBlock", getDamageBlock());
@@ -181,6 +183,8 @@ public class ThorHammerProjectile extends EntityThrowable implements IEntityAddi
 		x = compound.getDouble("x");
 		y = compound.getDouble("y");
 		z = compound.getDouble("z");
+		initialPitch = compound.getFloat("initialPitch");
+		initialYaw = compound.getFloat("initialYaw");
 		velocity = compound.getFloat("velocity");
 		inaccuracy = compound.getFloat("inaccuracy");
 		try {

@@ -6,6 +6,7 @@ import com.example.examplemod.utilities.RendererHelper;
 import com.sun.javafx.geom.Vec3f;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
@@ -48,6 +49,19 @@ public class ThorHammerProjectileRendererClientSide extends RendererHelper.Clien
 			bindTexture(texture);
 			GL11.glTranslated(x, y, z);
 			GL11.glRotatef(180, 0, 0, 1);
+
+			float yRotate = (entity.getInitialYaw() < 0) ? 360.0f + entity.getInitialYaw() : entity.getInitialYaw();
+			System.out.println(String.format("Pitch: %f   Yaw: %f", entity.getInitialPitch(), yRotate));
+//          it looks like yaw goes from -359.x to 359.x depending on how the player "winds up".
+
+/*
+xzLen = cos(pitch)
+x = xzLen * cos(yaw)
+y = sin(pitch)
+z = xzLen * sin(-yaw)
+ */
+			GlStateManager.rotate(yRotate, 0.0F, 1.0F, 0.0F);
+
 //			GL11.glRotatef((float)(yaw*180/Math.PI), 0, 1, 0);
 
 /*			Vec3f v = getVectorForRotation(entity.getInitialPitch(), entity.getInitialYaw());
