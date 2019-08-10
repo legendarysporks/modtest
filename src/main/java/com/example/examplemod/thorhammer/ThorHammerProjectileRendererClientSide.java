@@ -49,8 +49,8 @@ public class ThorHammerProjectileRendererClientSide extends RendererHelper.Clien
 			bindTexture(texture);
 			GL11.glTranslated(x, y, z);
 			GL11.glRotatef(180, 0, 0, 1);
-
-			float yRotate = (entity.getInitialYaw() < 0) ? 360.0f + entity.getInitialYaw() : entity.getInitialYaw();
+			float initialYaw = entity.getInitialYaw()-22.5f;
+			float yRotate = (initialYaw < 0) ? 360.0f + initialYaw : initialYaw;
 			System.out.println(String.format("Pitch: %f   Yaw: %f", entity.getInitialPitch(), yRotate));
 //          it looks like yaw goes from -359.x to 359.x depending on how the player "winds up".
 
